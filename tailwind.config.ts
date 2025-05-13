@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -63,16 +62,16 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom CRM colors
+				// Custom CRM colors - setting GHF to use the same color as SALT
 				salt: {
 					DEFAULT: '#0891b2', // Cyan
 					light: '#06b6d4',
 					dark: '#0e7490'
 				},
 				ghf: {
-					DEFAULT: '#9333ea', // Purple
-					light: '#a855f7',
-					dark: '#7e22ce'
+					DEFAULT: '#0891b2', // Same as SALT 
+					light: '#06b6d4',
+					dark: '#0e7490'
 				}
 			},
 			borderRadius: {

@@ -20,10 +20,8 @@ const ProfileSwitcher = () => {
     toast.success(`Switched to ${profile} profile`);
   };
 
-  // Set profile-specific styles
-  const getProfileColor = (profile: Profile) => {
-    return profile === 'SALT' ? 'bg-salt hover:bg-salt-dark' : 'bg-ghf hover:bg-ghf-dark';
-  };
+  // Always use SALT color as default for all profiles
+  const profileButtonColor = 'bg-salt hover:bg-salt-dark';
 
   return (
     <DropdownMenu>
@@ -31,7 +29,7 @@ const ProfileSwitcher = () => {
         <Button
           variant="default"
           size="sm"
-          className={`${getProfileColor(currentProfile)} gap-1`}
+          className={`${profileButtonColor} gap-1`}
         >
           {currentProfile}
           <ChevronDown size={16} />
@@ -47,9 +45,9 @@ const ProfileSwitcher = () => {
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => handleProfileChange('GHF')}
-          className={`flex items-center ${currentProfile === 'GHF' ? 'bg-ghf/20' : ''}`}
+          className={`flex items-center ${currentProfile === 'GHF' ? 'bg-salt/20' : ''}`}
         >
-          <div className={`w-3 h-3 rounded-full bg-ghf mr-2`}></div>
+          <div className={`w-3 h-3 rounded-full bg-salt mr-2`}></div>
           GHF
         </DropdownMenuItem>
       </DropdownMenuContent>
