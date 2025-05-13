@@ -21,7 +21,7 @@ const TopNavMenu = () => {
     { to: '/leads', icon: <Users size={18} />, label: 'Leads' },
     { to: '/meetings', icon: <Calendar size={18} />, label: 'Reuniões' },
     { to: '/follow-up', icon: <MessageSquare size={18} />, label: 'Follow-up' },
-    { to: '/ai-agent', icon: <Bot size={18} />, label: 'Agente IA' },
+    { to: '/ai-agent', icon: <Bot size={18} />, label: 'Gestão Agente IA' },
     { to: '/settings', icon: <Cog size={18} />, label: 'Configurações' },
   ];
 

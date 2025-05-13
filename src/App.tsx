@@ -12,7 +12,7 @@ import Kanban from "./pages/Kanban";
 import Leads from "./pages/Leads";
 import Meetings from "./pages/Meetings";
 import FollowUp from "./pages/FollowUp";
-import AIAgent from "./pages/AIAgent";
+import GestaoAgenteIA from "./pages/GestaoAgenteIA";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import AppShell from "./components/layout/AppShell";
@@ -56,7 +56,7 @@ const App = () => (
               } />
               <Route path="/ai-agent" element={
                 <AppShell>
-                  <AIAgent />
+                  <GestaoAgenteIA />
                 </AppShell>
               } />
               <Route path="/settings" element={

@@ -11,7 +11,7 @@ const NavMenu = () => {
     { to: '/leads', icon: <Users size={20} />, label: 'Leads' },
     { to: '/meetings', icon: <Calendar size={20} />, label: 'Reuniões' },
     { to: '/follow-up', icon: <MessageSquare size={20} />, label: 'Follow-up' },
-    { to: '/ai-agent', icon: <Bot size={20} />, label: 'Agente IA' },
+    { to: '/ai-agent', icon: <Bot size={20} />, label: 'Gestão Agente IA' },
     { to: '/settings', icon: <Cog size={20} />, label: 'Configurações' },
   ];
 
