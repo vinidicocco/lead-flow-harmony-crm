@@ -24,7 +24,6 @@ const Toaster = ({ ...props }: ToasterProps) => {
       }}
       closeButton
       richColors
-      closeButtonAriaLabel="Fechar"
       loadingIcon
       {...props}
     />

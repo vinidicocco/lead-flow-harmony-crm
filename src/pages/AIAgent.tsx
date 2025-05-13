@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,8 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
 import { BotMessageSquare, SendHorizontal, User } from 'lucide-react';
 
+type MessageRole = 'user' | 'assistant';
+
+interface Message {
+  role: MessageRole;
+  content: string;
+}
+
 const AIAgent = () => {
-  const [messages, setMessages] = useState<{role: 'user' | 'assistant', content: string}[]>([
+  const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
       content: 'Olá! Sou seu assistente virtual de vendas. Como posso ajudar você hoje?'
@@ -20,7 +26,7 @@ const AIAgent = () => {
     if (!input.trim()) return;
     
     // Adiciona a mensagem do usuário
-    const newMessages = [...messages, { role: 'user', content: input }];
+    const newMessages = [...messages, { role: 'user' as MessageRole, content: input }];
     setMessages(newMessages);
     setInput('');
     setIsLoading(true);
@@ -43,7 +49,7 @@ const AIAgent = () => {
         response = 'Entendi. Posso ajudar com diversas questões sobre gerenciamento de leads, agendamento de reuniões, estratégias de vendas e uso do sistema. Poderia detalhar um pouco mais sua dúvida?';
       }
       
-      setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+      setMessages(prev => [...prev, { role: 'assistant' as MessageRole, content: response }]);
       setIsLoading(false);
     }, 1500);
   };
