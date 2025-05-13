@@ -17,7 +17,7 @@ const TopNavMenu = () => {
 
   const links = [
     { to: '/', icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
-    { to: '/kanban', icon: <Kanban size={18} />, label: 'Kanban' },
+    { to: '/kanban', icon: <Kanban size={18} />, label: 'CRM' },
     { to: '/leads', icon: <Users size={18} />, label: 'Leads' },
     { to: '/meetings', icon: <Calendar size={18} />, label: 'Reuniões' },
     { to: '/follow-up', icon: <MessageSquare size={18} />, label: 'Follow-up' },
