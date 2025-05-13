@@ -35,8 +35,12 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
                 />
               </div>
             ) : (
-              <div className={`w-10 h-10 rounded-md ${profileStyle} text-white flex items-center justify-center text-lg font-bold`}>
-                {currentProfile}
+              <div className="w-10 h-10 rounded-md bg-black flex items-center justify-center">
+                <img 
+                  src="/lovable-uploads/fd91fbcc-643d-49e8-84a7-5988b6024237.png" 
+                  alt="SALT Logo" 
+                  className="w-full h-full object-contain"
+                />
               </div>
             )}
             <h1 className="font-bold hidden sm:block">{currentProfile} CRM</h1>
