@@ -14,7 +14,7 @@ const ProfileSwitcher = () => {
   };
 
   return (
-    <div className="flex gap-2 mt-2">
+    <div className="flex gap-2">
       <Button
         variant={currentProfile === 'SALT' ? 'default' : 'outline'}
         size="sm"
