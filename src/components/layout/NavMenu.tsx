@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Kanban, Users, Calendar, MessageSquare, Cog } from 'lucide-react';
+import { LayoutDashboard, Kanban, Users, Calendar, MessageSquare, Bot, Cog } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NavMenu = () => {
@@ -9,9 +9,10 @@ const NavMenu = () => {
     { to: '/', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
     { to: '/kanban', icon: <Kanban size={20} />, label: 'Kanban' },
     { to: '/leads', icon: <Users size={20} />, label: 'Leads' },
-    { to: '/meetings', icon: <Calendar size={20} />, label: 'Meetings' },
+    { to: '/meetings', icon: <Calendar size={20} />, label: 'Reuniões' },
     { to: '/follow-up', icon: <MessageSquare size={20} />, label: 'Follow-up' },
-    { to: '/settings', icon: <Cog size={20} />, label: 'Settings' },
+    { to: '/ai-agent', icon: <Bot size={20} />, label: 'Agente IA' },
+    { to: '/settings', icon: <Cog size={20} />, label: 'Configurações' },
   ];
 
   return (

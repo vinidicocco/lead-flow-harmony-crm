@@ -14,22 +14,34 @@ const KanbanBoard = () => {
   const [leads, setLeads] = useState<Lead[]>(allLeads);
   const [draggedLead, setDraggedLead] = useState<Lead | null>(null);
 
-  // Define the kanban columns
-  const columns = [
-    { id: 'new', title: 'New Leads' },
-    { id: 'contacted', title: 'Contacted' },
-    { id: 'qualified', title: 'Qualified' },
-    { id: 'proposal', title: 'Proposal' },
-    { id: 'negotiation', title: 'Negotiation' },
-    { id: 'won', title: 'Won' },
-    { id: 'lost', title: 'Lost' }
-  ];
+  // Define the profile-specific kanban columns
+  const columns = useMemo(() => {
+    if (currentProfile === 'SALT') {
+      return [
+        { id: 'new', title: 'Novo Lead' },
+        { id: 'contacted', title: 'Contato Iniciado' },
+        { id: 'qualified', title: 'Simulação Enviada' },
+        { id: 'proposal', title: 'Aguardando Documentos' },
+        { id: 'negotiation', title: 'Encaminhado à Administradora' },
+        { id: 'won', title: 'Finalizado' }
+      ];
+    } else { // GHF
+      return [
+        { id: 'lost', title: 'Lead Cancelado' },
+        { id: 'contacted', title: 'Contato Estabelecido' },
+        { id: 'qualified', title: 'Análise do Contrato' },
+        { id: 'negotiation', title: 'Negociação' },
+        { id: 'proposal', title: 'Aguardando Pagamento' },
+        { id: 'won', title: 'Finalizado' }
+      ];
+    }
+  }, [currentProfile]);
 
   // Format currency
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'BRL',
       maximumFractionDigits: 0,
     }).format(value);
   };
@@ -51,7 +63,7 @@ const KanbanBoard = () => {
     if (draggedLead) {
       const updatedLeads = leads.map(lead => {
         if (lead.id === draggedLead.id) {
-          toast.success(`Moved ${lead.name} to ${status}`);
+          toast.success(`Movido ${lead.name} para ${status}`);
           return { ...lead, status: status as Lead['status'] };
         }
         return lead;
@@ -75,8 +87,8 @@ const KanbanBoard = () => {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">{currentProfile} Kanban Board</h1>
-        <Button onClick={() => setLeads(allLeads)}>Reset Board</Button>
+        <h1 className="text-3xl font-bold">{currentProfile} CRM Kanban</h1>
+        <Button onClick={() => setLeads(allLeads)}>Resetar Quadro</Button>
       </div>
       
       <div className="kanban-board overflow-x-auto pb-6">
@@ -117,7 +129,7 @@ const KanbanBoard = () => {
                       {formatCurrency(lead.value)}
                     </span>
                     <span className="text-xs text-gray-500">
-                      {new Date(lead.updatedAt).toLocaleDateString()}
+                      {new Date(lead.updatedAt).toLocaleDateString('pt-BR')}
                     </span>
                   </div>
                 </div>
