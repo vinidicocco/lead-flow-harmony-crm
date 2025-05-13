@@ -1,18 +1,15 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Avatar } from '@/components/ui/avatar';
-import { BotMessageSquare, SendHorizontal, User, BarChart2, MessageSquare, Calendar, Users, FileText } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { AgentMetricCard } from '@/components/agent/AgentMetricCard';
-import { AgentChat } from '@/components/agent/AgentChat';
-import { AgentPerformanceChart } from '@/components/agent/AgentPerformanceChart';
-import { AgentActivityList } from '@/components/agent/AgentActivityList';
-import { AgentConfigPanel } from '@/components/agent/AgentConfigPanel';
 import { useAuth } from '@/context/AuthContext';
+
+// Imported refactored components
+import { AgentDashboard } from '@/components/agent/AgentDashboard';
+import { AgentChatTab } from '@/components/agent/AgentChatTab';
+import { AgentKnowledgeBase } from '@/components/agent/AgentKnowledgeBase';
+import { AgentConfigPanel } from '@/components/agent/AgentConfigPanel';
 
 const GestaoAgenteIA = () => {
   const { toast } = useToast();
@@ -39,7 +36,7 @@ const GestaoAgenteIA = () => {
     { data: "07/05", mensagens: 58, leads: 7, reunioes: 3 },
   ];
   
-  // Dados simulados para a lista de atividades recentes - corrigido para o tipo adequado
+  // Dados simulados para a lista de atividades recentes
   const recentActivities = [
     { id: 1, type: "message" as const, content: 'Respondeu a 3 perguntas de Amanda Silva sobre financiamento', time: '14:32', status: 'success' as const },
     { id: 2, type: "qualification" as const, content: 'Qualificou João Mendes como lead interessado', time: '13:45', status: 'success' as const },
@@ -88,119 +85,26 @@ const GestaoAgenteIA = () => {
           <TabsTrigger value="config">Configurações</TabsTrigger>
         </TabsList>
 
-        {/* Dashboard */}
+        {/* Dashboard Tab */}
         <TabsContent value="dashboard" className="space-y-6">
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
-            <AgentMetricCard 
-              title="Mensagens Enviadas"
-              value={agentMetrics.mensagensEnviadas}
-              icon={<MessageSquare className="h-5 w-5" />}
-              description="Total desde a ativação"
-              trend="+12% esta semana"
-              trendUp={true}
-            />
-            <AgentMetricCard 
-              title="Conversas Ativas"
-              value={agentMetrics.conversasAtivas}
-              icon={<Users className="h-5 w-5" />}
-              description="Leads em conversação"
-              trend="+3 desde ontem"
-              trendUp={true}
-            />
-            <AgentMetricCard 
-              title="Leads Qualificados"
-              value={agentMetrics.leadsQualificados}
-              icon={<Users className="h-5 w-5" />}
-              description="Total desde a ativação"
-              trend="+5 esta semana"
-              trendUp={true}
-            />
-            <AgentMetricCard 
-              title="Reuniões Marcadas"
-              value={agentMetrics.reunioesMarcadas}
-              icon={<Calendar className="h-5 w-5" />}
-              description="Total desde a ativação"
-              trend="+2 esta semana"
-              trendUp={true}
-            />
-            <AgentMetricCard 
-              title="Taxa de Conversão"
-              value={`${agentMetrics.taxaConversao}%`}
-              icon={<BarChart2 className="h-5 w-5" />}
-              description="Leads qualificados/reuniões"
-              trend="+2% esta semana"
-              trendUp={true}
-            />
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card className="md:col-span-2">
-              <CardHeader>
-                <CardTitle>Desempenho do Agente</CardTitle>
-                <CardDescription>Atividade dos últimos 7 dias</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <AgentPerformanceChart data={performanceData} />
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Atividades Recentes</CardTitle>
-                <CardDescription>Últimas ações do agente</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <AgentActivityList activities={recentActivities} />
-              </CardContent>
-            </Card>
-          </div>
+          <AgentDashboard 
+            agentMetrics={agentMetrics}
+            performanceData={performanceData}
+            recentActivities={recentActivities}
+          />
         </TabsContent>
 
-        {/* Chat com Agente */}
+        {/* Chat Tab */}
         <TabsContent value="chat" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Chat com Agente IA SDR</CardTitle>
-              <CardDescription>
-                Converse diretamente com o agente para treinamento e testes
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <AgentChat onDocumentUpload={handleDocumentUpload} />
-            </CardContent>
-          </Card>
+          <AgentChatTab onDocumentUpload={handleDocumentUpload} />
         </TabsContent>
 
-        {/* Base de Conhecimento */}
+        {/* Base de Conhecimento Tab */}
         <TabsContent value="conhecimento" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Base de Conhecimento</CardTitle>
-              <CardDescription>
-                Gerencie os documentos e informações que o agente pode acessar
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col gap-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-medium">Documentos na Base</h3>
-                  <Button onClick={handleDocumentUpload}>Adicionar Documento</Button>
-                </div>
-                <Card className="bg-muted/50">
-                  <CardContent className="p-4">
-                    <p className="text-center text-muted-foreground py-8">
-                      Esta funcionalidade requer a integração com Supabase para gestão completa da base de conhecimento.
-                      <br/>
-                      Por favor, configure a integração nas configurações de API.
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
+          <AgentKnowledgeBase onDocumentUpload={handleDocumentUpload} />
         </TabsContent>
 
-        {/* Configurações */}
+        {/* Configurações Tab */}
         <TabsContent value="config" className="space-y-4">
           <AgentConfigPanel 
             onSave={handleConfigSave} 
