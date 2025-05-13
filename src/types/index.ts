@@ -7,6 +7,7 @@ export interface User {
   email: string;
   avatar?: string;
   profile: Profile;
+  isAdmin?: boolean;
 }
 
 export interface Lead {

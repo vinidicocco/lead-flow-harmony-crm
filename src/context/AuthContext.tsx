@@ -19,14 +19,16 @@ const mockUsers: User[] = [
     name: 'SALT User',
     email: 'salt@example.com',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=salt',
-    profile: 'SALT'
+    profile: 'SALT',
+    isAdmin: true // This user is an admin
   },
   {
     id: '2',
     name: 'GHF User',
     email: 'ghf@example.com',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ghf',
-    profile: 'GHF'
+    profile: 'GHF',
+    isAdmin: false // Regular user
   }
 ];
 

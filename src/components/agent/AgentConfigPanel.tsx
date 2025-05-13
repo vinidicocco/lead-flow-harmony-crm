@@ -8,9 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 interface AgentConfigPanelProps {
   onSave: (config: any) => void;
+  isAdmin?: boolean;
 }
 
-export const AgentConfigPanel: React.FC<AgentConfigPanelProps> = ({ onSave }) => {
+export const AgentConfigPanel: React.FC<AgentConfigPanelProps> = ({ onSave, isAdmin = false }) => {
   const [config, setConfig] = useState({
     agentName: 'Leandro',
     personality: 'professional',
@@ -68,11 +69,11 @@ export const AgentConfigPanel: React.FC<AgentConfigPanelProps> = ({ onSave }) =>
           </div>
           
           <div className="space-y-2">
-            <label className="text-sm font-medium">Mensagem de Boas-vindas</label>
+            <label className="text-sm font-medium">Exemplo de personalidade</label>
             <Textarea
               value={config.welcomeMessage}
               onChange={(e) => handleChange('welcomeMessage', e.target.value)}
-              placeholder="Mensagem inicial que o agente enviará"
+              placeholder="Digite aqui informações sobre a personalidade e ou comportamento especifico."
               rows={3}
             />
           </div>
@@ -97,58 +98,68 @@ export const AgentConfigPanel: React.FC<AgentConfigPanelProps> = ({ onSave }) =>
         </CardContent>
       </Card>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Integrações</CardTitle>
-          <CardDescription>Configure as integrações do agente com serviços externos</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">OpenAI API Key</label>
-            <Input
-              type="password"
-              value={config.openaiApiKey}
-              onChange={(e) => handleChange('openaiApiKey', e.target.value)}
-              placeholder="sk-..."
-            />
-            <p className="text-xs text-muted-foreground">Necessário para o processamento de linguagem natural</p>
-          </div>
-          
-          <div className="space-y-2">
-            <label className="text-sm font-medium">URL do Webhook N8N</label>
-            <Input
-              value={config.n8nWebhookUrl}
-              onChange={(e) => handleChange('n8nWebhookUrl', e.target.value)}
-              placeholder="https://n8n.seudominio.com/webhook/..."
-            />
-            <p className="text-xs text-muted-foreground">Para integração com fluxos de automação</p>
-          </div>
-          
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Instância WhatsApp</label>
-            <Select
-              value={config.whatsappInstance}
-              onValueChange={(value) => handleChange('whatsappInstance', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione a instância" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="default">Principal (Default)</SelectItem>
-                <SelectItem value="sales">Vendas</SelectItem>
-                <SelectItem value="support">Suporte</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">Instância da Evolution API a ser utilizada</p>
-          </div>
-          
-          <div className="pt-4">
-            <Button className="w-full" onClick={handleSave}>
-              Salvar Configurações
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {isAdmin && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Integrações</CardTitle>
+            <CardDescription>Configure as integrações do agente com serviços externos</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">OpenAI API Key</label>
+              <Input
+                type="password"
+                value={config.openaiApiKey}
+                onChange={(e) => handleChange('openaiApiKey', e.target.value)}
+                placeholder="sk-..."
+              />
+              <p className="text-xs text-muted-foreground">Necessário para o processamento de linguagem natural</p>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">URL do Webhook N8N</label>
+              <Input
+                value={config.n8nWebhookUrl}
+                onChange={(e) => handleChange('n8nWebhookUrl', e.target.value)}
+                placeholder="https://n8n.seudominio.com/webhook/..."
+              />
+              <p className="text-xs text-muted-foreground">Para integração com fluxos de automação</p>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Instância WhatsApp</label>
+              <Select
+                value={config.whatsappInstance}
+                onValueChange={(value) => handleChange('whatsappInstance', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a instância" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="default">Principal (Default)</SelectItem>
+                  <SelectItem value="sales">Vendas</SelectItem>
+                  <SelectItem value="support">Suporte</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Instância da Evolution API a ser utilizada</p>
+            </div>
+            
+            <div className="pt-4">
+              <Button className="w-full" onClick={handleSave}>
+                Salvar Configurações
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      {!isAdmin && (
+        <div className="flex items-center justify-center">
+          <Button className="w-full mt-4" onClick={handleSave}>
+            Salvar Configurações
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

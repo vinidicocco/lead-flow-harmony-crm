@@ -12,9 +12,11 @@ import { AgentChat } from '@/components/agent/AgentChat';
 import { AgentPerformanceChart } from '@/components/agent/AgentPerformanceChart';
 import { AgentActivityList } from '@/components/agent/AgentActivityList';
 import { AgentConfigPanel } from '@/components/agent/AgentConfigPanel';
+import { useAuth } from '@/context/AuthContext';
 
 const GestaoAgenteIA = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
   
   // Estado simulado para as métricas do agente
@@ -200,7 +202,10 @@ const GestaoAgenteIA = () => {
 
         {/* Configurações */}
         <TabsContent value="config" className="space-y-4">
-          <AgentConfigPanel onSave={handleConfigSave} />
+          <AgentConfigPanel 
+            onSave={handleConfigSave} 
+            isAdmin={user?.isAdmin} 
+          />
         </TabsContent>
       </Tabs>
     </div>
