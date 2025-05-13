@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,7 +13,6 @@ import {
   Legend,
   LineChart, Line,
   FunnelChart, Funnel,
-  FunnelItem,
   LabelList
 } from 'recharts';
 import { ChartContainer } from "@/components/ui/chart";

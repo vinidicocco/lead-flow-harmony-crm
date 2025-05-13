@@ -130,7 +130,7 @@ const AIAgentPage = () => {
         <div className="flex items-center gap-3">
           <h1 className="text-3xl font-bold">Agente IA SDR</h1>
           <Badge 
-            variant={isAgentRunning ? "success" : "secondary"}
+            variant={isAgentRunning ? "default" : "secondary"}
             className={`${isAgentRunning ? 'bg-green-500' : ''}`}
           >
             {isAgentRunning ? 'Ativo' : 'Inativo'}
