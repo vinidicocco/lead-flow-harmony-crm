@@ -1,11 +1,10 @@
 
 import React from 'react';
-import { Sidebar, SidebarContent, SidebarHeader, SidebarFooter } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { useProfile } from '@/context/ProfileContext';
 import { useAuth } from '@/context/AuthContext';
 import { LogOut, User } from 'lucide-react';
-import NavMenu from './NavMenu';
+import TopNavMenu from './TopNavMenu';
 import ProfileSwitcher from './ProfileSwitcher';
 
 interface AppShellProps {
@@ -21,30 +20,34 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
     : 'bg-ghf-light';
 
   return (
-    <div className="min-h-screen flex w-full">
-      <Sidebar className="border-r">
-        <SidebarHeader className="border-b p-4 flex flex-col items-center">
-          <div className={`w-12 h-12 rounded-lg ${profileStyle} text-white flex items-center justify-center text-xl font-bold mb-2`}>
-            {currentProfile}
+    <div className="min-h-screen flex flex-col w-full">
+      {/* Top Navigation Bar */}
+      <header className="border-b bg-background">
+        <div className="container mx-auto px-4 py-2 flex items-center justify-between">
+          {/* Left side - Logo and Profile */}
+          <div className="flex items-center gap-4">
+            <div className={`w-10 h-10 rounded-md ${profileStyle} text-white flex items-center justify-center text-lg font-bold`}>
+              {currentProfile}
+            </div>
+            <h1 className="font-bold hidden sm:block">{currentProfile} CRM</h1>
+            <ProfileSwitcher />
           </div>
-          <h1 className="text-lg font-bold">{currentProfile} CRM</h1>
-          <ProfileSwitcher />
-        </SidebarHeader>
-        <SidebarContent>
-          <NavMenu />
-        </SidebarContent>
-        <SidebarFooter className="border-t p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden mr-3">
+
+          {/* Center - Navigation */}
+          <TopNavMenu />
+
+          {/* Right side - User info and logout */}
+          <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center">
+              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden mr-2">
                 {user?.avatar ? (
                   <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
                 ) : (
-                  <User size={20} />
+                  <User size={16} />
                 )}
               </div>
-              <div>
-                <p className="font-medium">{user?.name}</p>
+              <div className="hidden lg:block">
+                <p className="font-medium text-sm">{user?.name}</p>
                 <p className="text-xs text-gray-500">{user?.email}</p>
               </div>
             </div>
@@ -52,10 +55,14 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
               <LogOut size={18} />
             </Button>
           </div>
-        </SidebarFooter>
-      </Sidebar>
+        </div>
+      </header>
+
+      {/* Main Content */}
       <main className="flex-1 overflow-auto">
-        {children}
+        <div className="container mx-auto px-4 py-6">
+          {children}
+        </div>
       </main>
     </div>
   );
