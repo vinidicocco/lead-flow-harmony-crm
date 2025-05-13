@@ -6,7 +6,8 @@ import {
   CardContent, 
   CardHeader, 
   CardTitle,
-  CardFooter 
+  CardFooter,
+  CardDescription 
 } from "@/components/ui/card";
 import { 
   Tabs, 
@@ -20,12 +21,15 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toast } from 'sonner';
-import { Bot, MessageSquare, Play, StopCircle } from 'lucide-react';
+import { Bot, MessageSquare, Play, StopCircle, Workflow, Link2, Database } from 'lucide-react';
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const AIAgentPage = () => {
   const { currentProfile } = useProfile();
   const [isAgentRunning, setIsAgentRunning] = useState(false);
   const [message, setMessage] = useState('');
+  const [n8nWebhookUrl, setN8nWebhookUrl] = useState('');
+  const [isTesting, setIsTesting] = useState(false);
   
   // Mock conversation history
   const [conversations, setConversations] = useState([
@@ -91,6 +95,11 @@ const AIAgentPage = () => {
     setMessage('');
     toast.success('Mensagem enviada com sucesso');
     
+    // Se o n8n estiver configurado, envie os dados para o webhook
+    if (n8nWebhookUrl) {
+      triggerN8nWorkflow(message);
+    }
+    
     // Simulate a response after a short delay
     setTimeout(() => {
       const simulatedResponse = {
@@ -122,6 +131,60 @@ const AIAgentPage = () => {
         ]
       });
     }, 2000);
+  };
+  
+  const triggerN8nWorkflow = async (messageContent) => {
+    try {
+      const response = await fetch(n8nWebhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        mode: 'no-cors',
+        body: JSON.stringify({
+          profile: currentProfile,
+          leadId: selectedConversation.id,
+          leadName: selectedConversation.lead,
+          message: messageContent,
+          timestamp: new Date().toISOString()
+        })
+      });
+      
+      console.log('n8n workflow triggered');
+    } catch (error) {
+      console.error('Error triggering n8n workflow:', error);
+    }
+  };
+  
+  const testN8nConnection = async () => {
+    if (!n8nWebhookUrl) {
+      toast.error('Por favor, insira a URL do webhook n8n');
+      return;
+    }
+    
+    setIsTesting(true);
+    
+    try {
+      await fetch(n8nWebhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        mode: 'no-cors',
+        body: JSON.stringify({
+          test: true,
+          profile: currentProfile,
+          timestamp: new Date().toISOString()
+        })
+      });
+      
+      toast.success('Conexão com n8n testada com sucesso!');
+    } catch (error) {
+      console.error('Error testing n8n connection:', error);
+      toast.error('Erro ao testar conexão com n8n');
+    } finally {
+      setIsTesting(false);
+    }
   };
   
   return (
@@ -253,6 +316,7 @@ const AIAgentPage = () => {
               <TabsList className="w-full">
                 <TabsTrigger value="general" className="flex-1">Geral</TabsTrigger>
                 <TabsTrigger value="messages" className="flex-1">Mensagens</TabsTrigger>
+                <TabsTrigger value="n8n" className="flex-1">Integração n8n</TabsTrigger>
                 <TabsTrigger value="schedule" className="flex-1">Agendamento</TabsTrigger>
               </TabsList>
               
@@ -296,6 +360,88 @@ const AIAgentPage = () => {
                 <div className="space-y-2">
                   <h3 className="font-medium">Mensagem de Agendamento</h3>
                   <Textarea defaultValue="Ótimo! Gostaria de agendar uma reunião com um de nossos consultores para discutirmos mais detalhes?" />
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="n8n" className="pt-4 space-y-4">
+                <Alert>
+                  <Workflow className="h-4 w-4" />
+                  <AlertDescription>
+                    Conecte seu agente IA ao n8n para automatizar fluxos de trabalho e integrar com outras ferramentas.
+                  </AlertDescription>
+                </Alert>
+                
+                <div className="space-y-2">
+                  <h3 className="font-medium">URL do Webhook n8n</h3>
+                  <div className="flex gap-2">
+                    <Input 
+                      placeholder="https://seu-n8n.com/webhook/..." 
+                      value={n8nWebhookUrl}
+                      onChange={(e) => setN8nWebhookUrl(e.target.value)}
+                    />
+                    <Button 
+                      onClick={testN8nConnection}
+                      disabled={isTesting || !n8nWebhookUrl}
+                      variant="outline"
+                    >
+                      {isTesting ? 'Testando...' : 'Testar Conexão'}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500">Insira a URL do webhook fornecida pelo seu n8n para receber dados do agente</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <h3 className="font-medium">Ações Automáticas</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium">Enviar dados da conversa para n8n</p>
+                        <p className="text-xs text-gray-500">Envie todas as interações do agente para o n8n</p>
+                      </div>
+                      <Switch defaultChecked />
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium">Atualizar status do lead via n8n</p>
+                        <p className="text-xs text-gray-500">Permite que o n8n atualize o status do lead</p>
+                      </div>
+                      <Switch defaultChecked />
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium">Agendar reuniões via n8n</p>
+                        <p className="text-xs text-gray-500">Permite que o n8n agende reuniões no calendário</p>
+                      </div>
+                      <Switch defaultChecked />
+                    </div>
+                  </div>
+                </div>
+                
+                <Card className="bg-gray-50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">Dados enviados para n8n</CardTitle>
+                    <CardDescription>Esses dados serão enviados para o seu webhook n8n</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="bg-gray-100 p-3 rounded text-xs font-mono overflow-x-auto">
+                      {`{
+  "profile": "${currentProfile}",
+  "leadId": "lead_123",
+  "leadName": "Nome do Lead",
+  "message": "Conteúdo da mensagem",
+  "timestamp": "2023-05-13T10:30:00Z"
+}`}
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <div className="flex items-center gap-2 pt-2">
+                  <Link2 className="h-4 w-4 text-gray-500" />
+                  <a href="https://n8n.io/integrations" target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">
+                    Saiba mais sobre integrações n8n
+                  </a>
                 </div>
               </TabsContent>
               
