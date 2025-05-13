@@ -37,13 +37,13 @@ const GestaoAgenteIA = () => {
     { data: "07/05", mensagens: 58, leads: 7, reunioes: 3 },
   ];
   
-  // Dados simulados para a lista de atividades recentes
+  // Dados simulados para a lista de atividades recentes - corrigido para o tipo adequado
   const recentActivities = [
-    { id: 1, type: 'message', content: 'Respondeu a 3 perguntas de Amanda Silva sobre financiamento', time: '14:32', status: 'success' },
-    { id: 2, type: 'qualification', content: 'Qualificou João Mendes como lead interessado', time: '13:45', status: 'success' },
-    { id: 3, type: 'meeting', content: 'Agendou reunião com Rafael Santos para amanhã às 10h', time: '11:20', status: 'pending' },
-    { id: 4, type: 'document', content: 'Enviou contrato para Mariana Oliveira', time: '09:15', status: 'success' },
-    { id: 5, type: 'message', content: 'Não conseguiu qualificar o lead Pedro Alves', time: 'Ontem', status: 'failed' },
+    { id: 1, type: "message" as const, content: 'Respondeu a 3 perguntas de Amanda Silva sobre financiamento', time: '14:32', status: 'success' },
+    { id: 2, type: "qualification" as const, content: 'Qualificou João Mendes como lead interessado', time: '13:45', status: 'success' },
+    { id: 3, type: "meeting" as const, content: 'Agendou reunião com Rafael Santos para amanhã às 10h', time: '11:20', status: 'pending' },
+    { id: 4, type: "document" as const, content: 'Enviou contrato para Mariana Oliveira', time: '09:15', status: 'success' },
+    { id: 5, type: "message" as const, content: 'Não conseguiu qualificar o lead Pedro Alves', time: 'Ontem', status: 'failed' },
   ];
 
   const handleConfigSave = (config) => {
