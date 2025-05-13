@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -55,20 +56,20 @@ const Dashboard = () => {
   const funnelData = useMemo(() => {
     if (currentProfile === 'SALT') {
       return [
-        { name: 'Novo Lead', value: leads.filter(lead => lead.status === 'new').length },
+        { name: 'Novo Lead', value: leads.filter(lead => lead.status === 'qualified').length },
         { name: 'Contato Iniciado', value: leads.filter(lead => lead.status === 'contacted').length },
-        { name: 'Simulação Enviada', value: leads.filter(lead => lead.status === 'qualified').length },
-        { name: 'Aguardando Documentos', value: leads.filter(lead => lead.status === 'proposal').length },
-        { name: 'Encaminhado à Administradora', value: leads.filter(lead => lead.status === 'negotiation').length },
-        { name: 'Finalizado', value: leads.filter(lead => lead.status === 'won').length },
+        { name: 'Simulação Enviada', value: leads.filter(lead => lead.status === 'proposal').length },
+        { name: 'Aguardando Documentos', value: leads.filter(lead => lead.status === 'contract').length },
+        { name: 'Encaminhado à Administradora', value: leads.filter(lead => lead.status === 'payment').length },
+        { name: 'Finalizado', value: leads.filter(lead => lead.status === 'closed').length },
       ];
     } else {
       return [
         { name: 'Contato Estabelecido', value: leads.filter(lead => lead.status === 'contacted').length },
         { name: 'Análise do Contrato', value: leads.filter(lead => lead.status === 'qualified').length },
-        { name: 'Negociação', value: leads.filter(lead => lead.status === 'negotiation').length },
-        { name: 'Aguardando Pagamento', value: leads.filter(lead => lead.status === 'proposal').length },
-        { name: 'Finalizado', value: leads.filter(lead => lead.status === 'won').length },
+        { name: 'Negociação', value: leads.filter(lead => lead.status === 'proposal').length },
+        { name: 'Aguardando Pagamento', value: leads.filter(lead => lead.status === 'payment').length },
+        { name: 'Finalizado', value: leads.filter(lead => lead.status === 'closed').length },
       ];
     }
   }, [leads, currentProfile]);
@@ -116,7 +117,7 @@ const Dashboard = () => {
               <CardTitle className="text-sm font-medium text-gray-500">Encaminhados</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{leads.filter(lead => lead.status === 'negotiation').length}</div>
+              <div className="text-2xl font-bold">{leads.filter(lead => lead.status === 'payment').length}</div>
               <p className="text-xs text-gray-500 mt-1">Às administradoras</p>
             </CardContent>
           </Card>
@@ -140,7 +141,7 @@ const Dashboard = () => {
               <CardTitle className="text-sm font-medium text-gray-500">Aguardando Pagamento</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{leads.filter(lead => lead.status === 'proposal').length}</div>
+              <div className="text-2xl font-bold">{leads.filter(lead => lead.status === 'payment').length}</div>
               <p className="text-xs text-gray-500 mt-1">Total</p>
             </CardContent>
           </Card>
@@ -375,11 +376,11 @@ const Dashboard = () => {
                         <td className="py-3 px-4">{lead.company}</td>
                         <td className="py-3 px-4">
                           <span className={`px-2 py-1 text-xs rounded-full ${
-                            lead.status === 'new' || lead.status === 'contacted'
+                            lead.status === 'qualified' || lead.status === 'contacted'
                               ? 'bg-blue-100 text-blue-800'
-                              : lead.status === 'qualified' || lead.status === 'proposal'
+                              : lead.status === 'proposal' || lead.status === 'contract'
                               ? 'bg-yellow-100 text-yellow-800'
-                              : lead.status === 'negotiation' || lead.status === 'won'
+                              : lead.status === 'payment' || lead.status === 'closed'
                               ? 'bg-green-100 text-green-800'
                               : 'bg-red-100 text-red-800'
                           }`}>

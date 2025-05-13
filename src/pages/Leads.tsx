@@ -107,11 +107,11 @@ const LeadsPage = () => {
                     <TableCell>{lead.company}</TableCell>
                     <TableCell>
                       <span className={`px-2 py-1 text-xs rounded-full ${
-                        lead.status === 'new' || lead.status === 'contacted'
+                        lead.status === 'qualified' || lead.status === 'contacted'
                           ? 'bg-blue-100 text-blue-800'
-                          : lead.status === 'qualified' || lead.status === 'proposal'
+                          : lead.status === 'proposal' || lead.status === 'contract'
                           ? 'bg-yellow-100 text-yellow-800'
-                          : lead.status === 'negotiation' || lead.status === 'won'
+                          : lead.status === 'payment' || lead.status === 'closed'
                           ? 'bg-green-100 text-green-800'
                           : 'bg-red-100 text-red-800'
                       }`}>
