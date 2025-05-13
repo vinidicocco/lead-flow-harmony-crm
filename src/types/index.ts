@@ -16,7 +16,7 @@ export interface Lead {
   position: string;
   email: string;
   phone: string;
-  status: 'new' | 'contacted' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost';
+  status: 'qualified' | 'contact_attempt' | 'contacted' | 'proposal' | 'contract' | 'payment' | 'closed';
   value: number;
   notes: string;
   assignedTo: string;

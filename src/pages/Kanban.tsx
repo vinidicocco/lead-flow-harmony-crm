@@ -5,6 +5,7 @@ import { getLeadsByProfile } from '@/data/mockData';
 import { Lead } from '@/types';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { Check, Phone, FileText, FileSignature, ArrowRight, Handshake } from 'lucide-react';
 
 const KanbanBoard = () => {
   const { currentProfile } = useProfile();
@@ -14,28 +15,16 @@ const KanbanBoard = () => {
   const [leads, setLeads] = useState<Lead[]>(allLeads);
   const [draggedLead, setDraggedLead] = useState<Lead | null>(null);
 
-  // Define the profile-specific kanban columns
-  const columns = useMemo(() => {
-    if (currentProfile === 'SALT') {
-      return [
-        { id: 'new', title: 'Novo Lead' },
-        { id: 'contacted', title: 'Contato Iniciado' },
-        { id: 'qualified', title: 'Simulação Enviada' },
-        { id: 'proposal', title: 'Aguardando Documentos' },
-        { id: 'negotiation', title: 'Encaminhado à Administradora' },
-        { id: 'won', title: 'Finalizado' }
-      ];
-    } else { // GHF
-      return [
-        { id: 'lost', title: 'Lead Cancelado' },
-        { id: 'contacted', title: 'Contato Estabelecido' },
-        { id: 'qualified', title: 'Análise do Contrato' },
-        { id: 'negotiation', title: 'Negociação' },
-        { id: 'proposal', title: 'Aguardando Pagamento' },
-        { id: 'won', title: 'Finalizado' }
-      ];
-    }
-  }, [currentProfile]);
+  // Define unified kanban columns for both profiles
+  const columns = useMemo(() => [
+    { id: 'qualified', title: 'Lead Qualificado', icon: <Check className="w-4 h-4" /> },
+    { id: 'contact_attempt', title: 'Tentativa de Contato', icon: <Phone className="w-4 h-4" /> },
+    { id: 'contacted', title: 'Contato Realizado', icon: <Phone className="w-4 h-4 text-green-500" /> },
+    { id: 'proposal', title: 'Proposta', icon: <FileText className="w-4 h-4" /> },
+    { id: 'contract', title: 'Ass. de Contrato', icon: <FileSignature className="w-4 h-4" /> },
+    { id: 'payment', title: 'Transferencia/Pagamento', icon: <ArrowRight className="w-4 h-4" /> },
+    { id: 'closed', title: 'Negocio Fechado', icon: <Handshake className="w-4 h-4" /> },
+  ], []);
 
   // Format currency
   const formatCurrency = (value: number) => {
@@ -100,7 +89,10 @@ const KanbanBoard = () => {
             onDrop={(e) => handleDrop(e, column.id)}
           >
             <div className="flex justify-between items-center mb-4">
-              <h2 className="font-bold">{column.title}</h2>
+              <div className="flex items-center gap-2">
+                {column.icon}
+                <h2 className="font-bold">{column.title}</h2>
+              </div>
               <span className="text-sm text-gray-500">{getLeadsByStatus(column.id).length}</span>
             </div>
             
@@ -116,8 +108,8 @@ const KanbanBoard = () => {
                   key={lead.id}
                   className={`kanban-card ${
                     currentProfile === 'SALT' 
-                      ? 'border-l-salt' 
-                      : 'border-l-ghf'
+                      ? 'border-l-[#9b87f5]' 
+                      : 'border-l-[#0EA5E9]'
                   }`}
                   draggable
                   onDragStart={() => handleDragStart(lead)}
