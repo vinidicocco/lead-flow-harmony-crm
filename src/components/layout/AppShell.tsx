@@ -17,7 +17,7 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
   const profileStyle = currentProfile === 'SALT' 
     ? 'bg-salt-light' 
-    : 'bg-ghf-light';
+    : 'bg-salt-light';
 
   return (
     <div className="min-h-screen flex flex-col w-full">
@@ -26,9 +26,19 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
         <div className="container mx-auto px-4 py-2 flex items-center justify-between">
           {/* Left side - Logo and Profile */}
           <div className="flex items-center gap-4">
-            <div className={`w-10 h-10 rounded-md ${profileStyle} text-white flex items-center justify-center text-lg font-bold`}>
-              {currentProfile}
-            </div>
+            {currentProfile === 'GHF' ? (
+              <div className="w-10 h-10 rounded-md flex items-center justify-center">
+                <img 
+                  src="/lovable-uploads/f07b2db5-3e35-4bba-bda2-685a8fcae7d5.png" 
+                  alt="GHF Logo" 
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            ) : (
+              <div className={`w-10 h-10 rounded-md ${profileStyle} text-white flex items-center justify-center text-lg font-bold`}>
+                {currentProfile}
+              </div>
+            )}
             <h1 className="font-bold hidden sm:block">{currentProfile} CRM</h1>
             <ProfileSwitcher />
           </div>
