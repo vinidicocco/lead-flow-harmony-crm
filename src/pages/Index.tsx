@@ -30,7 +30,7 @@ const Dashboard = () => {
   const leads = useMemo(() => getLeadsByProfile(currentProfile), [currentProfile]);
   const tasks = useMemo(() => getTasksByProfile(currentProfile), [currentProfile]);
 
-  // Format currency
+  // Formatar moeda
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -39,7 +39,21 @@ const Dashboard = () => {
     }).format(value);
   };
 
-  // Generate chart data based on profile
+  // Traduzir status para portugês
+  const translateStatus = (status: string) => {
+    const statusMap: Record<string, string> = {
+      'qualified': 'Lead Qualificado',
+      'contact_attempt': 'Tentativa de Contato',
+      'contacted': 'Contato Realizado',
+      'proposal': 'Proposta',
+      'contract': 'Ass. de Contrato',
+      'payment': 'Transferência/Pagamento',
+      'closed': 'Negócio Fechado'
+    };
+    return statusMap[status] || status;
+  };
+
+  // Gerar dados do gráfico baseado no perfil
   const leadsByStatus = useMemo(() => {
     const statusCounts = leads.reduce((acc, lead) => {
       acc[lead.status] = (acc[lead.status] || 0) + 1;
@@ -47,12 +61,12 @@ const Dashboard = () => {
     }, {} as Record<string, number>);
 
     return Object.keys(statusCounts).map(status => ({
-      name: status.charAt(0).toUpperCase() + status.slice(1),
+      name: translateStatus(status),
       count: statusCounts[status]
     }));
   }, [leads]);
 
-  // Sales funnel data
+  // Dados do funil de vendas
   const funnelData = useMemo(() => {
     if (currentProfile === 'SALT') {
       return [
@@ -74,7 +88,7 @@ const Dashboard = () => {
     }
   }, [leads, currentProfile]);
 
-  // Monthly performance data (mock data for illustration)
+  // Dados de desempenho mensal (dados fictícios para ilustração)
   const monthlyPerformance = useMemo(() => {
     return [
       { month: 'Jan', leads: 5, deals: 2 },
@@ -86,7 +100,7 @@ const Dashboard = () => {
     ];
   }, []);
 
-  // Revenue distribution data
+  // Dados de distribuição de receita
   const revenueDistribution = useMemo(() => {
     return [
       { name: 'Crédito Consignado', value: 35 },
@@ -153,7 +167,7 @@ const Dashboard = () => {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">{currentProfile} Dashboard</h1>
+        <h1 className="text-3xl font-bold">Dashboard {currentProfile}</h1>
         <p className="text-gray-500">Hoje: {new Date().toLocaleDateString('pt-BR')}</p>
       </div>
 
@@ -269,12 +283,14 @@ const Dashboard = () => {
                     stroke="#0891b2" 
                     strokeWidth={2}
                     activeDot={{ r: 8 }}
+                    name="Leads"
                   />
                   <Line 
                     type="monotone" 
                     dataKey="deals" 
                     stroke="#16a34a" 
                     strokeWidth={2}
+                    name="Negócios"
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -337,7 +353,7 @@ const Dashboard = () => {
                           ? 'bg-yellow-100 text-yellow-800'
                           : 'bg-green-100 text-green-800'
                       }`}>
-                        {task.priority}
+                        {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Média' : 'Baixa'}
                       </span>
                       <p className="text-xs text-gray-500 mt-1">Vencimento: {new Date(task.dueDate).toLocaleDateString('pt-BR')}</p>
                     </div>
@@ -384,7 +400,7 @@ const Dashboard = () => {
                               ? 'bg-green-100 text-green-800'
                               : 'bg-red-100 text-red-800'
                           }`}>
-                            {lead.status}
+                            {translateStatus(lead.status)}
                           </span>
                         </td>
                         <td className="py-3 px-4 text-right">{formatCurrency(lead.value)}</td>

@@ -11,22 +11,22 @@ const KanbanBoard = () => {
   const { currentProfile } = useProfile();
   const allLeads = useMemo(() => getLeadsByProfile(currentProfile), [currentProfile]);
   
-  // States for the kanban board
+  // Estados para o quadro kanban
   const [leads, setLeads] = useState<Lead[]>(allLeads);
   const [draggedLead, setDraggedLead] = useState<Lead | null>(null);
 
-  // Define unified kanban columns for both profiles
+  // Definir colunas unificadas do kanban para ambos os perfis
   const columns = useMemo(() => [
     { id: 'qualified', title: 'Lead Qualificado', icon: <Check className="w-4 h-4" /> },
     { id: 'contact_attempt', title: 'Tentativa de Contato', icon: <Phone className="w-4 h-4" /> },
     { id: 'contacted', title: 'Contato Realizado', icon: <Phone className="w-4 h-4 text-green-500" /> },
     { id: 'proposal', title: 'Proposta', icon: <FileText className="w-4 h-4" /> },
     { id: 'contract', title: 'Ass. de Contrato', icon: <FileSignature className="w-4 h-4" /> },
-    { id: 'payment', title: 'Transferencia/Pagamento', icon: <ArrowRight className="w-4 h-4" /> },
-    { id: 'closed', title: 'Negocio Fechado', icon: <Handshake className="w-4 h-4" /> },
+    { id: 'payment', title: 'Transferência/Pagamento', icon: <ArrowRight className="w-4 h-4" /> },
+    { id: 'closed', title: 'Negócio Fechado', icon: <Handshake className="w-4 h-4" /> },
   ], []);
 
-  // Format currency
+  // Formatar moeda
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -35,17 +35,17 @@ const KanbanBoard = () => {
     }).format(value);
   };
 
-  // Handle drag start
+  // Lidar com o início do arrasto
   const handleDragStart = (lead: Lead) => {
     setDraggedLead(lead);
   };
 
-  // Handle drag over
+  // Lidar com o arrasto sobre
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
   };
 
-  // Handle drop
+  // Lidar com a soltura
   const handleDrop = (e: React.DragEvent, status: string) => {
     e.preventDefault();
     
@@ -63,12 +63,12 @@ const KanbanBoard = () => {
     }
   };
 
-  // Filter leads by status
+  // Filtrar leads por status
   const getLeadsByStatus = (status: string) => {
     return leads.filter(lead => lead.status === status);
   };
 
-  // Calculate totals for each column
+  // Calcular totais para cada coluna
   const calculateColumnTotal = (status: string) => {
     return getLeadsByStatus(status).reduce((total, lead) => total + lead.value, 0);
   };

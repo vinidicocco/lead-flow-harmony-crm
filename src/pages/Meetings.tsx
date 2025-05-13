@@ -26,7 +26,7 @@ const MeetingsPage = () => {
   const [viewMode, setViewMode] = useState<'upcoming' | 'calendar'>('upcoming');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   
-  // Filter meetings by selected date
+  // Filtrar reuniões por data selecionada
   const filteredMeetings = useMemo(() => {
     if (!selectedDate) return meetings;
     
@@ -34,7 +34,7 @@ const MeetingsPage = () => {
     return meetings.filter(meeting => meeting.date === formattedSelectedDate);
   }, [meetings, selectedDate]);
   
-  // Group upcoming meetings by date
+  // Agrupar reuniões próximas por data
   const upcomingMeetings = useMemo(() => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -48,47 +48,47 @@ const MeetingsPage = () => {
       });
   }, [meetings]);
   
-  // Get dates with meetings for calendar highlighting
+  // Obter datas com reuniões para destacar no calendário
   const datesWithMeetings = useMemo(() => {
     return meetings.map(meeting => new Date(meeting.date));
   }, [meetings]);
   
-  // Format meeting time
+  // Formatar horário da reunião
   const formatTime = (time: string) => {
     const [hours, minutes] = time.split(':');
     const hour = parseInt(hours, 10);
     return `${hour % 12 || 12}:${minutes} ${hour >= 12 ? 'PM' : 'AM'}`;
   };
   
-  // Handle add meeting
+  // Manipular adição de reunião
   const handleAddMeeting = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success('This would add a new meeting (demo only)');
+    toast.success('Isso adicionaria uma nova reunião (apenas demonstração)');
     setIsAddDialogOpen(false);
   };
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">{currentProfile} Meetings</h1>
+        <h1 className="text-3xl font-bold">Reuniões {currentProfile}</h1>
         <Button onClick={() => setIsAddDialogOpen(true)}>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Schedule Meeting
+          Agendar Reunião
         </Button>
       </div>
       
       <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'upcoming' | 'calendar')}>
         <div className="flex items-center justify-between mb-4">
           <TabsList>
-            <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-            <TabsTrigger value="calendar">Calendar</TabsTrigger>
+            <TabsTrigger value="upcoming">Próximas</TabsTrigger>
+            <TabsTrigger value="calendar">Calendário</TabsTrigger>
           </TabsList>
         </div>
         
         <TabsContent value="upcoming">
           <Card>
             <CardHeader>
-              <CardTitle>Upcoming Meetings</CardTitle>
+              <CardTitle>Próximas Reuniões</CardTitle>
             </CardHeader>
             <CardContent>
               {upcomingMeetings.length > 0 ? (
@@ -97,7 +97,7 @@ const MeetingsPage = () => {
                     <div key={meeting.id} className="flex border-b pb-4 last:border-0 last:pb-0">
                       <div className="min-w-[80px] text-center p-2 border rounded-md">
                         <div className="text-sm font-medium">
-                          {new Date(meeting.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          {new Date(meeting.date).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })}
                         </div>
                         <div className="text-xs text-gray-500">{formatTime(meeting.time)}</div>
                       </div>
@@ -106,20 +106,20 @@ const MeetingsPage = () => {
                         <h3 className="font-medium">{meeting.title}</h3>
                         <p className="text-sm text-gray-500">Lead: {meeting.leadName}</p>
                         <p className="text-xs text-gray-500 mt-1">
-                          Duration: {meeting.duration} minutes • Status: {meeting.status}
+                          Duração: {meeting.duration} minutos • Status: {meeting.status === 'scheduled' ? 'Agendada' : meeting.status === 'completed' ? 'Concluída' : 'Cancelada'}
                         </p>
                       </div>
                       
                       <div className="flex items-center">
                         <Button variant="outline" size="sm">
-                          View
+                          Ver
                         </Button>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-center text-gray-500 py-8">No upcoming meetings scheduled.</p>
+                <p className="text-center text-gray-500 py-8">Nenhuma reunião próxima agendada.</p>
               )}
             </CardContent>
           </Card>
@@ -154,8 +154,8 @@ const MeetingsPage = () => {
               <CardHeader>
                 <CardTitle>
                   {selectedDate
-                    ? `Meetings on ${selectedDate.toLocaleDateString()}`
-                    : 'Select a date to view meetings'}
+                    ? `Reuniões em ${selectedDate.toLocaleDateString('pt-BR')}`
+                    : 'Selecione uma data para ver reuniões'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -184,10 +184,10 @@ const MeetingsPage = () => {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-center text-gray-500 py-8">No meetings scheduled for this date.</p>
+                    <p className="text-center text-gray-500 py-8">Nenhuma reunião agendada para esta data.</p>
                   )
                 ) : (
-                  <p className="text-center text-gray-500 py-8">Select a date from the calendar to view meetings.</p>
+                  <p className="text-center text-gray-500 py-8">Selecione uma data no calendário para ver reuniões.</p>
                 )}
               </CardContent>
             </Card>
@@ -195,33 +195,33 @@ const MeetingsPage = () => {
         </TabsContent>
       </Tabs>
       
-      {/* Add Meeting Dialog */}
+      {/* Diálogo para Adicionar Reunião */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Schedule New Meeting</DialogTitle>
+            <DialogTitle>Agendar Nova Reunião</DialogTitle>
           </DialogHeader>
           
           <form onSubmit={handleAddMeeting} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Title</label>
+              <label className="text-sm font-medium">Título</label>
               <input
                 type="text"
                 className="w-full px-3 py-2 border rounded-md"
-                placeholder="Meeting title"
+                placeholder="Título da reunião"
               />
             </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Date</label>
+                <label className="text-sm font-medium">Data</label>
                 <input
                   type="date"
                   className="w-full px-3 py-2 border rounded-md"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Time</label>
+                <label className="text-sm font-medium">Horário</label>
                 <input
                   type="time"
                   className="w-full px-3 py-2 border rounded-md"
@@ -231,7 +231,7 @@ const MeetingsPage = () => {
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Duration (minutes)</label>
+                <label className="text-sm font-medium">Duração (minutos)</label>
                 <input
                   type="number"
                   className="w-full px-3 py-2 border rounded-md"
@@ -244,30 +244,30 @@ const MeetingsPage = () => {
                 <label className="text-sm font-medium">Lead</label>
                 <Select>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select lead" />
+                    <SelectValue placeholder="Selecione um lead" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="lead1">John Smith</SelectItem>
-                    <SelectItem value="lead2">Sarah Johnson</SelectItem>
-                    <SelectItem value="lead3">Michael Brown</SelectItem>
+                    <SelectItem value="lead1">João Silva</SelectItem>
+                    <SelectItem value="lead2">Mariana Oliveira</SelectItem>
+                    <SelectItem value="lead3">Carlos Rodrigues</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-medium">Notes</label>
+              <label className="text-sm font-medium">Notas</label>
               <textarea
                 className="w-full px-3 py-2 border rounded-md h-24 resize-none"
-                placeholder="Meeting agenda and notes"
+                placeholder="Pauta da reunião e notas"
               ></textarea>
             </div>
             
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                Cancel
+                Cancelar
               </Button>
-              <Button type="submit">Schedule Meeting</Button>
+              <Button type="submit">Agendar Reunião</Button>
             </DialogFooter>
           </form>
         </DialogContent>
