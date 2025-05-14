@@ -29,16 +29,20 @@ const LoginForm: React.FC = () => {
       console.error('Erro de login:', error);
       
       // Mensagens de erro específicas e mais informativas
-      if (error.message && error.message.includes("inativa")) {
-        toast.error('Sua conta está inativa. Entre em contato com o administrador.');
-      } else if (error.message && error.message.includes("Invalid login credentials")) {
-        toast.error('Credenciais inválidas. Verifique seu email e senha.');
-      } else if (error.message && error.message.includes("Organização SALT não encontrada")) {
-        toast.error('Erro no sistema: Organização padrão não configurada. Contate o suporte.');
-      } else if (error.message && error.message.includes("Perfil do usuário não encontrado")) {
-        toast.error('Erro no sistema: Perfil de usuário não encontrado. Contate o suporte.');
+      if (error.message) {
+        if (error.message.includes("inativa")) {
+          toast.error('Sua conta está inativa. Entre em contato com o administrador.');
+        } else if (error.message.includes("Invalid login credentials")) {
+          toast.error('Credenciais inválidas. Verifique seu email e senha.');
+        } else if (error.message.includes("Organização SALT não encontrada")) {
+          toast.error('Erro no sistema: Organização padrão não configurada. Contate o suporte.');
+        } else if (error.message.includes("Perfil do usuário não encontrado")) {
+          toast.error('Erro no sistema: Perfil de usuário não encontrado. Contate o suporte.');
+        } else {
+          toast.error(error.message);
+        }
       } else {
-        toast.error(error.message || 'Erro ao fazer login. Verifique suas credenciais.');
+        toast.error('Erro ao fazer login. Verifique suas credenciais.');
       }
     } finally {
       setIsLoading(false);

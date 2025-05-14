@@ -85,16 +85,18 @@ export const useAuthManager = (fetchUserProfile: (userId: string) => Promise<any
       const { data: saltOrgs, error: saltOrgError } = await supabase
         .from('organizations')
         .select('*')
-        .eq('code', 'SALT');
+        .eq('code', 'SALT')
+        .maybeSingle();
         
       if (saltOrgError) {
         console.error("Erro ao verificar organização SALT:", saltOrgError);
         throw new Error('Erro ao verificar organização: ' + saltOrgError.message);
       }
       
-      if (!saltOrgs || saltOrgs.length === 0) {
-        console.error("Organização SALT não encontrada");
-        // Tentar criar a organização SALT se ela não existir
+      // Se a organização SALT não existir, criá-la
+      if (!saltOrgs) {
+        console.log("Organização SALT não encontrada. Tentando criar...");
+        
         try {
           const { data: newOrg, error: createOrgError } = await supabase
             .from('organizations')
@@ -113,16 +115,18 @@ export const useAuthManager = (fetchUserProfile: (userId: string) => Promise<any
           } else {
             throw new Error('Falha ao criar organização SALT');
           }
-        } catch (createError) {
+        } catch (createError: any) {
           console.error("Erro ao criar organização SALT:", createError);
           throw new Error('Não foi possível criar a organização SALT. Por favor, contate o administrador.');
         }
       } else if (organizationId === 'saltOrgId') { // Se estiver usando um ID temporário
-        organizationId = saltOrgs[0].id;
+        organizationId = saltOrgs.id;
+        console.log("Usando organização SALT existente com ID:", organizationId);
       }
 
       // Obter o código da organização
       let organizationCode = "SALT"; // Default
+      
       try {
         if (organizationId) {
           const { data: orgData, error: orgError } = await supabase

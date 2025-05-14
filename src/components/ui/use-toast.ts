@@ -1,12 +1,14 @@
 
-import { toast as sonnerToast } from "sonner";
+// Import directly from sonner instead of re-exporting
+import { toast } from "sonner";
 
 // Configurando o toast para português por padrão
 const toastPtBr = {
-  success: (message: string) => sonnerToast.success(message),
-  error: (message: string) => sonnerToast.error(message),
-  info: (message: string) => sonnerToast.info(message),
-  warning: (message: string) => sonnerToast.warning(message)
+  success: (message: string) => toast.success(message),
+  error: (message: string) => toast.error(message),
+  info: (message: string) => toast.info(message),
+  warning: (message: string) => toast.warning(message)
 };
 
-export { sonnerToast as toast, toastPtBr };
+export { toastPtBr };
+export { toast }; // Export toast directly from sonner
