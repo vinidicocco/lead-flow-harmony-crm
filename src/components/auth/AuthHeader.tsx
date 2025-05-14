@@ -9,6 +9,10 @@ const clientLogos: Record<string, {src: string, bg?: string}> = {
   },
   'GHF': {
     src: "/lovable-uploads/f07b2db5-3e35-4bba-bda2-685a8fcae7d5.png"
+  },
+  'Neoin': {
+    src: "/lovable-uploads/1fe16e1c-bea9-45ad-b102-cfb5ae42ef52.png",
+    bg: "bg-yellow-400"
   }
   // Adicione novos clientes aqui
 };

@@ -28,6 +28,7 @@ const ProfileSwitcher = () => {
     const colorMap: Record<string, string> = {
       'SALT': 'bg-salt hover:bg-salt-dark',
       'GHF': 'bg-salt hover:bg-salt-dark', // Usando mesma cor por enquanto
+      'Neoin': 'bg-neoin hover:bg-neoin-dark', // Adicionado cores para Neoin
     };
 
     return colorMap[profile] || 'bg-salt hover:bg-salt-dark';
@@ -50,16 +51,21 @@ const ProfileSwitcher = () => {
       </DropdownMenuTrigger>
       {isMaster && (
         <DropdownMenuContent align="start" className="w-24">
-          {availableProfiles.map((profile) => (
-            <DropdownMenuItem
-              key={profile}
-              onClick={() => setCurrentProfile(profile)}
-              className={`flex items-center ${currentProfile === profile ? 'bg-salt/20' : ''}`}
-            >
-              <div className={`w-3 h-3 rounded-full bg-salt mr-2`}></div>
-              {profile}
-            </DropdownMenuItem>
-          ))}
+          {availableProfiles.map((profile) => {
+            // Determine the color for the profile indicator
+            const colorClass = profile === 'Neoin' ? 'bg-neoin' : 'bg-salt';
+            
+            return (
+              <DropdownMenuItem
+                key={profile}
+                onClick={() => setCurrentProfile(profile)}
+                className={`flex items-center ${currentProfile === profile ? (profile === 'Neoin' ? 'bg-neoin/20' : 'bg-salt/20') : ''}`}
+              >
+                <div className={`w-3 h-3 rounded-full ${colorClass} mr-2`}></div>
+                {profile}
+              </DropdownMenuItem>
+            );
+          })}
         </DropdownMenuContent>
       )}
     </DropdownMenu>

@@ -74,6 +74,12 @@ export default {
 					light: '#06b6d4',
 					dark: '#0e7490'
 				},
+                // Neoin brand colors
+                neoin: {
+                    DEFAULT: '#FFC000', // Yellow gold from logo
+                    light: '#FFD54F',  // Lighter yellow
+                    dark: '#F9A825'    // Darker yellow
+                },
                 // Espaço para adicionar novas cores de clientes
                 // exemplo:
                 // newclient: {

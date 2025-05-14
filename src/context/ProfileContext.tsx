@@ -7,6 +7,7 @@ interface ProfileContextType {
   currentProfile: Profile;
   setCurrentProfile: (profile: Profile) => void;
   availableProfiles: Profile[];
+  getProfileForDataFunctions: (profile: Profile) => "SALT" | "GHF";
 }
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
@@ -14,7 +15,7 @@ const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   const { user, organization } = useAuth();
   const [currentProfile, setCurrentProfile] = useState<Profile>('SALT');
-  const [availableProfiles, setAvailableProfiles] = useState<Profile[]>(['SALT', 'GHF']);
+  const [availableProfiles, setAvailableProfiles] = useState<Profile[]>(['SALT', 'GHF', 'Neoin']);
 
   // When user is authenticated, use organization profile
   useEffect(() => {
@@ -53,7 +54,6 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
       currentProfile, 
       setCurrentProfile: handleProfileChange,
       availableProfiles,
-      // @ts-ignore - We expose this internally for components to use with data functions
       getProfileForDataFunctions
     }}>
       {children}
