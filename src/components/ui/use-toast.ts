@@ -9,5 +9,4 @@ const toastPtBr = {
   warning: (message: string) => toast.warning(message)
 };
 
-export { toast, toastPtBr as toast };
-
+export { toast, toastPtBr };
