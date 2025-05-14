@@ -3,7 +3,6 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useProfile } from '@/context/ProfileContext';
 import { useAuth } from '@/context/AuthContext';
-import { Profile } from '@/types';
 import { ChevronDown } from 'lucide-react';
 import {
   DropdownMenu,
@@ -13,7 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const ProfileSwitcher = () => {
-  const { currentProfile, setCurrentProfile } = useProfile();
+  const { currentProfile, setCurrentProfile, availableProfiles } = useProfile();
   const { user } = useAuth();
 
   // Verificar se o usuário é MASTER
@@ -22,8 +21,19 @@ const ProfileSwitcher = () => {
   // Se não for MASTER, o componente não permite mudança
   const isDisabled = !isMaster;
 
-  // Sempre usar SALT color como default para todos os perfis
-  const profileButtonColor = 'bg-salt hover:bg-salt-dark';
+  // Cores dinamicamente adaptadas para qualquer perfil
+  // Usar SALT color como fallback para profiles sem cor definida
+  const getProfileColor = (profile: string) => {
+    // Aqui podemos adicionar mais cores conforme necessário
+    const colorMap: Record<string, string> = {
+      'SALT': 'bg-salt hover:bg-salt-dark',
+      'GHF': 'bg-salt hover:bg-salt-dark', // Usando mesma cor por enquanto
+    };
+
+    return colorMap[profile] || 'bg-salt hover:bg-salt-dark';
+  };
+
+  const profileButtonColor = getProfileColor(currentProfile);
 
   return (
     <DropdownMenu>
@@ -40,20 +50,16 @@ const ProfileSwitcher = () => {
       </DropdownMenuTrigger>
       {isMaster && (
         <DropdownMenuContent align="start" className="w-24">
-          <DropdownMenuItem
-            onClick={() => setCurrentProfile('SALT')}
-            className={`flex items-center ${currentProfile === 'SALT' ? 'bg-salt/20' : ''}`}
-          >
-            <div className={`w-3 h-3 rounded-full bg-salt mr-2`}></div>
-            SALT
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => setCurrentProfile('GHF')}
-            className={`flex items-center ${currentProfile === 'GHF' ? 'bg-salt/20' : ''}`}
-          >
-            <div className={`w-3 h-3 rounded-full bg-salt mr-2`}></div>
-            GHF
-          </DropdownMenuItem>
+          {availableProfiles.map((profile) => (
+            <DropdownMenuItem
+              key={profile}
+              onClick={() => setCurrentProfile(profile)}
+              className={`flex items-center ${currentProfile === profile ? 'bg-salt/20' : ''}`}
+            >
+              <div className={`w-3 h-3 rounded-full bg-salt mr-2`}></div>
+              {profile}
+            </DropdownMenuItem>
+          ))}
         </DropdownMenuContent>
       )}
     </DropdownMenu>

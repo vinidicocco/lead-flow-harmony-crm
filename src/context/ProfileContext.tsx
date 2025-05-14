@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 interface ProfileContextType {
   currentProfile: Profile;
   setCurrentProfile: (profile: Profile) => void;
+  availableProfiles: Profile[];
 }
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
@@ -14,13 +15,19 @@ const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   const { user, organization } = useAuth();
   const [currentProfile, setCurrentProfile] = useState<Profile>('SALT');
+  const [availableProfiles, setAvailableProfiles] = useState<Profile[]>(['SALT', 'GHF']);
 
   // Se o usuário estiver autenticado, usa o perfil da organização
   useEffect(() => {
     if (organization) {
       const orgProfile = organization.code as Profile;
-      if (orgProfile && (orgProfile === 'SALT' || orgProfile === 'GHF')) {
+      if (orgProfile) {
         setCurrentProfile(orgProfile);
+        
+        // Atualiza a lista de perfis disponíveis se não existir
+        if (!availableProfiles.includes(orgProfile)) {
+          setAvailableProfiles(prev => [...prev, orgProfile]);
+        }
       }
     }
   }, [organization]);
@@ -37,7 +44,11 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <ProfileContext.Provider value={{ currentProfile, setCurrentProfile: handleProfileChange }}>
+    <ProfileContext.Provider value={{ 
+      currentProfile, 
+      setCurrentProfile: handleProfileChange,
+      availableProfiles
+    }}>
       {children}
     </ProfileContext.Provider>
   );

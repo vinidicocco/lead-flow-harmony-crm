@@ -71,50 +71,58 @@ export const useAuthManager = (fetchUserProfile: (userId: string) => Promise<any
     }
   };
 
-  // Função auxiliar para buscar ou criar organização SALT
-  const getOrCreateSaltOrganization = async () => {
+  // Função auxiliar para buscar ou criar organização por código
+  const getOrCreateOrganization = async (orgCode: string, orgName?: string) => {
     try {
-      // Verificar se a organização SALT existe
-      const { data: saltOrg, error: saltOrgError } = await supabase
+      // Verificar se a organização existe
+      const { data: existingOrg, error: findOrgError } = await supabase
         .from('organizations')
         .select('*')
-        .eq('code', 'SALT')
+        .eq('code', orgCode)
         .maybeSingle();
       
-      if (saltOrgError) {
-        console.error("Erro ao buscar organização SALT:", saltOrgError);
-        throw new Error('Erro ao verificar organização: ' + saltOrgError.message);
+      if (findOrgError) {
+        console.error(`Erro ao buscar organização ${orgCode}:`, findOrgError);
+        throw new Error('Erro ao verificar organização: ' + findOrgError.message);
       }
       
       // Se encontrou, retorna o ID
-      if (saltOrg) {
-        console.log("Organização SALT encontrada:", saltOrg);
-        return saltOrg.id;
+      if (existingOrg) {
+        console.log(`Organização ${orgCode} encontrada:`, existingOrg);
+        return existingOrg.id;
       }
       
       // Se não encontrou, cria
-      console.log("Criando organização SALT...");
+      console.log(`Criando organização ${orgCode}...`);
       const { data: newOrg, error: createOrgError } = await supabase
         .from('organizations')
-        .insert([{ name: 'SALT Tecnologia', code: 'SALT' }])
+        .insert([{ 
+          name: orgName || `${orgCode} Organização`, 
+          code: orgCode 
+        }])
         .select()
         .single();
       
       if (createOrgError) {
-        console.error("Erro ao criar organização SALT:", createOrgError);
+        console.error(`Erro ao criar organização ${orgCode}:`, createOrgError);
         throw new Error('Erro ao criar organização: ' + createOrgError.message);
       }
       
       if (!newOrg) {
-        throw new Error('Falha ao criar organização SALT');
+        throw new Error(`Falha ao criar organização ${orgCode}`);
       }
       
-      console.log("Nova organização SALT criada:", newOrg);
+      console.log(`Nova organização ${orgCode} criada:`, newOrg);
       return newOrg.id;
     } catch (error: any) {
-      console.error("Erro com organização SALT:", error);
+      console.error(`Erro com organização ${orgCode}:`, error);
       throw error;
     }
+  };
+
+  // Função específica para organizações SALT (mantida para compatibilidade)
+  const getOrCreateSaltOrganization = async () => {
+    return getOrCreateOrganization('SALT', 'SALT Tecnologia');
   };
 
   const register = async (
@@ -132,16 +140,27 @@ export const useAuthManager = (fetchUserProfile: (userId: string) => Promise<any
         throw new Error('Apenas usuários MASTER podem criar outros usuários MASTER');
       }
 
-      // Verificar ou criar organização SALT
+      // Verificar ou criar organização
       let finalOrgId = organizationId;
+      let organizationCode = "SALT"; // Default
       
       if (organizationId === 'saltOrgId') {
         finalOrgId = await getOrCreateSaltOrganization();
+      } else if (organizationId.startsWith('create:')) {
+        // Formato "create:CODE:NAME" para criar nova organização
+        const parts = organizationId.split(':');
+        const code = parts[1];
+        const name = parts.length > 2 ? parts[2] : `${code} Organização`;
+        
+        if (code) {
+          finalOrgId = await getOrCreateOrganization(code, name);
+          organizationCode = code;
+        } else {
+          throw new Error('Código de organização inválido');
+        }
       }
 
       // Obter o código da organização
-      let organizationCode = "SALT"; // Default
-      
       try {
         if (finalOrgId) {
           const { data: orgData, error: orgError } = await supabase
@@ -161,10 +180,10 @@ export const useAuthManager = (fetchUserProfile: (userId: string) => Promise<any
         }
       } catch (err) {
         console.error("Erro ao buscar código da organização:", err);
-        // Mantém "SALT" como código padrão
+        // Mantém código padrão
       }
 
-      console.log("Registrando usuário com organização:", organizationCode);
+      console.log(`Registrando usuário com organização: ${organizationCode} (ID: ${finalOrgId})`);
 
       // Criar usuário com os metadados necessários
       const { data, error } = await supabase.auth.signUp({
@@ -215,6 +234,7 @@ export const useAuthManager = (fetchUserProfile: (userId: string) => Promise<any
     setIsLoading,
     login,
     register,
-    logout
+    logout,
+    getOrCreateOrganization // Exportar função utilitária
   };
 };

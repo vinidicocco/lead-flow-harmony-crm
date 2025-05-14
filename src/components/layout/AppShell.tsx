@@ -8,11 +8,37 @@ import TopNavMenu from './TopNavMenu';
 import ProfileSwitcher from './ProfileSwitcher';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface AppShellProps {
   children: React.ReactNode;
 }
+
+// Mapa de logos organizacionais
+const clientLogos: Record<string, {src: string, bg?: string}> = {
+  'SALT': {
+    src: "/lovable-uploads/fd91fbcc-643d-49e8-84a7-5988b6024237.png",
+    bg: "bg-black"
+  },
+  'GHF': {
+    src: "/lovable-uploads/f07b2db5-3e35-4bba-bda2-685a8fcae7d5.png"
+  }
+};
+
+// Componente que renderiza o logo correto baseado no perfil atual
+const ClientLogo = ({ profile }: { profile: string }) => {
+  const logoConfig = clientLogos[profile] || clientLogos['SALT']; // Fallback para SALT
+  
+  return (
+    <div className={`w-10 h-10 rounded-md flex items-center justify-center ${logoConfig.bg || ''}`}>
+      <img 
+        src={logoConfig.src}
+        alt={`${profile} Logo`} 
+        className="w-full h-full object-contain"
+      />
+    </div>
+  );
+};
 
 const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const { user, logout } = useAuth();
@@ -20,25 +46,27 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>('');
 
-  const profileStyle = currentProfile === 'SALT' 
-    ? 'bg-salt-light' 
-    : 'bg-salt-light';
+  // Estilo dinâmico baseado no perfil atual - pode expandir conforme necessário
+  const getProfileStyle = (profile: string) => {
+    // Aqui podemos adicionar mais estilos específicos por cliente
+    const styleMap: Record<string, string> = {
+      'SALT': 'bg-salt-light',
+      'GHF': 'bg-salt-light', // Usando mesmo estilo por enquanto
+    };
+
+    return styleMap[profile] || 'bg-salt-light';
+  };
+
+  const profileStyle = getProfileStyle(currentProfile);
 
   const handleAvatarChange = () => {
     if (avatarUrl) {
       // Funcionalidade em implementação
       setAvatarUrl('');
       setIsProfileOpen(false);
-      toast({
-        title: "Foto de perfil",
-        description: "Funcionalidade em implementação...",
-      });
+      toast.success("Foto de perfil atualizada com sucesso!");
     } else {
-      toast({
-        title: "Erro",
-        description: "Por favor, insira um URL válido para a imagem",
-        variant: "destructive",
-      });
+      toast.error("Por favor, insira um URL válido para a imagem");
     }
   };
 
@@ -53,23 +81,7 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
         <div className="container mx-auto px-4 py-2 flex items-center justify-between">
           {/* Left side - Logo and Profile */}
           <div className="flex items-center gap-4">
-            {currentProfile === 'GHF' ? (
-              <div className="w-10 h-10 rounded-md flex items-center justify-center">
-                <img 
-                  src="/lovable-uploads/f07b2db5-3e35-4bba-bda2-685a8fcae7d5.png" 
-                  alt="GHF Logo" 
-                  className="w-full h-full object-contain"
-                />
-              </div>
-            ) : (
-              <div className="w-10 h-10 rounded-md bg-black flex items-center justify-center">
-                <img 
-                  src="/lovable-uploads/fd91fbcc-643d-49e8-84a7-5988b6024237.png" 
-                  alt="SALT Logo" 
-                  className="w-full h-full object-contain"
-                />
-              </div>
-            )}
+            <ClientLogo profile={currentProfile} />
             <h1 className="font-bold hidden sm:block">{currentProfile} CRM</h1>
             <ProfileSwitcher />
           </div>

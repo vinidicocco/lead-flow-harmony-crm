@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -62,17 +63,24 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom CRM colors - setting GHF to use the same color as SALT
+				// Cores de clientes - facilmente extensível para novos clientes
 				salt: {
 					DEFAULT: '#0891b2', // Cyan
 					light: '#06b6d4',
 					dark: '#0e7490'
 				},
 				ghf: {
-					DEFAULT: '#0891b2', // Same as SALT 
+					DEFAULT: '#0891b2', // Same as SALT for now
 					light: '#06b6d4',
 					dark: '#0e7490'
-				}
+				},
+                // Espaço para adicionar novas cores de clientes
+                // exemplo:
+                // newclient: {
+                //    DEFAULT: '#hex-value',
+                //    light: '#hex-value-light', 
+                //    dark: '#hex-value-dark'
+                // },
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
