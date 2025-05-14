@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { User } from '@/types';
+import { User, UserRole } from '@/types';
 import { toast } from "sonner";
 
 interface AuthContextType {
@@ -9,29 +9,78 @@ interface AuthContextType {
   logout: () => void;
   updateUserAvatar: (avatarUrl: string) => void;
   isLoading: boolean;
+  hasPermission: (permission: string) => boolean;
+  isSuperAdmin: () => boolean;
+  isOrgAdmin: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demo
+// Mock users for demo with enhanced roles
 const mockUsers: User[] = [
   {
     id: '1',
-    name: 'SALT User',
-    email: 'salt@example.com',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=salt',
-    profile: 'SALT',
-    isAdmin: true // This user is an admin
+    name: 'System Admin',
+    email: 'admin@system.com',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
+    profile: 'SYSTEM',
+    role: 'super_admin',
+    orgId: '0',
+    isActive: true,
+    createdAt: new Date().toISOString()
   },
   {
     id: '2',
-    name: 'GHF User',
+    name: 'SALT Admin',
+    email: 'salt@example.com',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=salt',
+    profile: 'SALT',
+    role: 'org_admin',
+    orgId: 'salt-org',
+    isActive: true,
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '3',
+    name: 'GHF Admin',
     email: 'ghf@example.com',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ghf',
     profile: 'GHF',
-    isAdmin: false // Regular user
+    role: 'org_admin',
+    orgId: 'ghf-org',
+    isActive: true,
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '4',
+    name: 'SALT User',
+    email: 'saltuser@example.com',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=saltuser',
+    profile: 'SALT',
+    role: 'org_user',
+    orgId: 'salt-org',
+    isActive: true,
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '5',
+    name: 'GHF User',
+    email: 'ghfuser@example.com',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ghfuser',
+    profile: 'GHF',
+    role: 'org_user',
+    orgId: 'ghf-org',
+    isActive: true,
+    createdAt: new Date().toISOString()
   }
 ];
+
+// Define role-based permissions
+const rolePermissions: Record<UserRole, string[]> = {
+  super_admin: ['all'],
+  org_admin: ['manage_users', 'manage_leads', 'manage_meetings', 'manage_tasks', 'view_reports', 'manage_settings'],
+  org_user: ['view_leads', 'edit_leads', 'view_meetings', 'edit_meetings', 'view_tasks', 'edit_tasks']
+};
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -87,8 +136,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     toast.info('You have been logged out');
   };
 
+  const hasPermission = (permission: string) => {
+    if (!user) return false;
+    
+    // Super admin has all permissions
+    if (user.role === 'super_admin') return true;
+    
+    // Check if user's role has the specified permission
+    const permissions = rolePermissions[user.role] || [];
+    return permissions.includes(permission) || permissions.includes('all');
+  };
+
+  const isSuperAdmin = () => {
+    return user?.role === 'super_admin';
+  };
+
+  const isOrgAdmin = () => {
+    return user?.role === 'org_admin' || user?.role === 'super_admin';
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateUserAvatar, isLoading }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      login, 
+      logout, 
+      updateUserAvatar, 
+      isLoading, 
+      hasPermission,
+      isSuperAdmin,
+      isOrgAdmin
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate, Navigate } from 'react-router-dom';
@@ -10,6 +9,11 @@ const Login = () => {
 
   // If user is already logged in, redirect to dashboard
   if (user) {
+    // If super admin, redirect to admin dashboard
+    if (user.role === 'super_admin') {
+      return <Navigate to="/admin" replace />;
+    }
+    // Otherwise redirect to main dashboard
     return <Navigate to="/" replace />;
   }
 
@@ -17,11 +21,6 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="w-full max-w-md">
         <LoginForm />
-        <div className="mt-6 text-center text-sm text-gray-500">
-          <p>Demo Accounts:</p>
-          <p>SALT Profile: salt@example.com / password</p>
-          <p>GHF Profile: ghf@example.com / password</p>
-        </div>
       </div>
     </div>
   );

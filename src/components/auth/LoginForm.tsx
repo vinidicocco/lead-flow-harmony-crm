@@ -46,7 +46,7 @@ const LoginForm: React.FC = () => {
             <Input 
               id="email" 
               type="email" 
-              placeholder="salt@example.com or ghf@example.com" 
+              placeholder="Enter your email address" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -66,10 +66,18 @@ const LoginForm: React.FC = () => {
             />
           </div>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex flex-col">
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? 'Logging in...' : 'Login'}
           </Button>
+          
+          <div className="mt-6 text-center text-sm text-gray-500">
+            <p>Demo Accounts:</p>
+            <p>Super Admin: admin@system.com / password</p>
+            <p>SALT Admin: salt@example.com / password</p>
+            <p>GHF Admin: ghf@example.com / password</p>
+            <p>Regular Users: saltuser@example.com or ghfuser@example.com / password</p>
+          </div>
         </CardFooter>
       </form>
     </Card>
