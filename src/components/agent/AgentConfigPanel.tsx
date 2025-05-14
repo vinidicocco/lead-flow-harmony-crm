@@ -95,6 +95,12 @@ export const AgentConfigPanel: React.FC<AgentConfigPanelProps> = ({ onSave, isAd
               </SelectContent>
             </Select>
           </div>
+          
+          <div className="pt-4">
+            <Button className="w-full" onClick={handleSave}>
+              Salvar Configurações
+            </Button>
+          </div>
         </CardContent>
       </Card>
       
@@ -143,22 +149,8 @@ export const AgentConfigPanel: React.FC<AgentConfigPanelProps> = ({ onSave, isAd
               </Select>
               <p className="text-xs text-muted-foreground">Instância da Evolution API a ser utilizada</p>
             </div>
-            
-            <div className="pt-4">
-              <Button className="w-full" onClick={handleSave}>
-                Salvar Configurações
-              </Button>
-            </div>
           </CardContent>
         </Card>
-      )}
-      
-      {!isAdmin && (
-        <div className="flex items-center justify-center">
-          <Button className="w-full mt-4" onClick={handleSave}>
-            Salvar Configurações
-          </Button>
-        </div>
       )}
     </div>
   );
