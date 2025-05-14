@@ -69,20 +69,20 @@ const Dashboard = () => {
   const funnelData = useMemo(() => {
     if (currentProfile === 'SALT') {
       return [
-        { name: 'Novo Lead', value: leads.filter(lead => lead.status === 'qualified').length, fill: '#0088FE' },
-        { name: 'Contato Iniciado', value: leads.filter(lead => lead.status === 'contacted').length, fill: '#00C49F' },
-        { name: 'Simulação Enviada', value: leads.filter(lead => lead.status === 'proposal').length, fill: '#FFBB28' },
-        { name: 'Aguardando Documentos', value: leads.filter(lead => lead.status === 'contract').length, fill: '#FF8042' },
-        { name: 'Encaminhado à Administradora', value: leads.filter(lead => lead.status === 'payment').length, fill: '#8884d8' },
-        { name: 'Finalizado', value: leads.filter(lead => lead.status === 'closed').length, fill: '#82ca9d' },
+        { name: 'Leads Qualificados', value: leads.filter(lead => lead.status === 'qualified').length, fill: '#0088FE' },
+        { name: 'Contato Realizado', value: leads.filter(lead => lead.status === 'contacted').length, fill: '#00C49F' },
+        { name: 'Proposta Enviada', value: leads.filter(lead => lead.status === 'proposal').length, fill: '#FFBB28' },
+        { name: 'Contratos', value: leads.filter(lead => lead.status === 'contract').length, fill: '#FF8042' },
+        { name: 'Pagamento', value: leads.filter(lead => lead.status === 'payment').length, fill: '#8884d8' },
+        { name: 'Concluído', value: leads.filter(lead => lead.status === 'closed').length, fill: '#82ca9d' },
       ];
     } else {
       return [
-        { name: 'Contato Estabelecido', value: leads.filter(lead => lead.status === 'contacted').length, fill: '#0088FE' },
-        { name: 'Análise do Contrato', value: leads.filter(lead => lead.status === 'qualified').length, fill: '#00C49F' },
+        { name: 'Contato Inicial', value: leads.filter(lead => lead.status === 'contacted').length, fill: '#0088FE' },
+        { name: 'Análise', value: leads.filter(lead => lead.status === 'qualified').length, fill: '#00C49F' },
         { name: 'Negociação', value: leads.filter(lead => lead.status === 'proposal').length, fill: '#FFBB28' },
-        { name: 'Aguardando Pagamento', value: leads.filter(lead => lead.status === 'payment').length, fill: '#FF8042' },
-        { name: 'Finalizado', value: leads.filter(lead => lead.status === 'closed').length, fill: '#8884d8' },
+        { name: 'Pagamento', value: leads.filter(lead => lead.status === 'payment').length, fill: '#FF8042' },
+        { name: 'Concluído', value: leads.filter(lead => lead.status === 'closed').length, fill: '#8884d8' },
       ];
     }
   }, [leads, currentProfile]);
@@ -242,7 +242,7 @@ const Dashboard = () => {
             <CardHeader>
               <CardTitle>Funil de Vendas</CardTitle>
             </CardHeader>
-            <CardContent className="h-80">
+            <CardContent className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <FunnelChart>
                   <Tooltip formatter={(value) => `${value} leads`} />
@@ -251,13 +251,15 @@ const Dashboard = () => {
                     data={funnelData}
                     isAnimationActive={true}
                     labelLine={false}
+                    width={400}
                   >
                     <LabelList 
                       position="right" 
-                      fill="#000" 
+                      fill="#333" 
                       stroke="none" 
                       dataKey="name" 
-                      fontSize={12}
+                      fontSize={13}
+                      fontWeight="600"
                     />
                     <LabelList
                       position="center"
