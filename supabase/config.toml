@@ -22,3 +22,6 @@ pop3_port = 54326
 [auth]
 site_url = "https://preview--lead-flow-harmony-crm.lovable.app"
 additional_redirect_urls = ["https://preview--lead-flow-harmony-crm.lovable.app/login", "https://preview--lead-flow-harmony-crm.lovable.app"]
+enable_signup = true
+jwt_exp = 3600
+disable_leaked_password_protection = false
