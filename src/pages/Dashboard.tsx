@@ -1,12 +1,11 @@
-
 import React, { useMemo } from 'react';
 import { useProfile } from '@/context/ProfileContext';
 import { 
-  getLeadsByProfile, 
-  getMeetingsByProfile,
-  getTasksByProfile,
-  getStatsByProfile
-} from '@/data/mockData';
+  getLeadsForProfile, 
+  getMeetingsForProfile,
+  getTasksForProfile,
+  getStatsForProfile
+} from '@/data/mockDataUtils';
 import { Lead } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,10 +25,10 @@ import { ArrowUpRight, Banknote, Users, Target, Calendar, CheckCircle } from 'lu
 
 const Dashboard = () => {
   const { currentProfile } = useProfile();
-  const leads = useMemo(() => getLeadsByProfile(currentProfile), [currentProfile]);
-  const meetings = useMemo(() => getMeetingsByProfile(currentProfile), [currentProfile]);
-  const tasks = useMemo(() => getTasksByProfile(currentProfile), [currentProfile]);
-  const stats = useMemo(() => getStatsByProfile(currentProfile), [currentProfile]);
+  const leads = useMemo(() => getLeadsForProfile(currentProfile), [currentProfile]);
+  const meetings = useMemo(() => getMeetingsForProfile(currentProfile), [currentProfile]);
+  const tasks = useMemo(() => getTasksForProfile(currentProfile), [currentProfile]);
+  const stats = useMemo(() => getStatsForProfile(currentProfile), [currentProfile]);
   
   // Formatar valores monetários para BRL (Real brasileiro)
   const formatCurrency = (value: number) => {

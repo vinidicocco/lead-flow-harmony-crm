@@ -1,7 +1,6 @@
-
 import React, { useMemo, useState } from 'react';
 import { useProfile } from '@/context/ProfileContext';
-import { getLeadsByProfile } from '@/data/mockData';
+import { getLeadsForProfile } from '@/data/mockDataUtils';
 import { Lead } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +12,7 @@ import { toast } from 'sonner';
 
 const LeadsPage = () => {
   const { currentProfile } = useProfile();
-  const leads = useMemo(() => getLeadsByProfile(currentProfile), [currentProfile]);
+  const leads = useMemo(() => getLeadsForProfile(currentProfile), [currentProfile]);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);

@@ -1,263 +1,294 @@
 
-import React, { useMemo, useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProfile } from '@/context/ProfileContext';
-import { getLeadsByProfile } from '@/data/mockData';
-import { Lead } from '@/types';
-import { Button } from '@/components/ui/button';
+import { getTasksForProfile } from '@/data/mockDataUtils';
+import { Task } from '@/types';
 import { toast } from 'sonner';
-import { Check, Phone, FileText, FileSignature, ArrowRight, Handshake, Info } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 
-const KanbanBoard = () => {
+const Kanban = () => {
   const { currentProfile } = useProfile();
-  const allLeads = useMemo(() => getLeadsByProfile(currentProfile), [currentProfile]);
-  
-  // Estados para o quadro kanban
-  const [leads, setLeads] = useState<Lead[]>(allLeads);
-  const [draggedLead, setDraggedLead] = useState<Lead | null>(null);
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const tasks = useMemo(() => getTasksForProfile(currentProfile), [currentProfile]);
+  const [columns, setColumns] = useState({
+    'todo': {
+      id: 'todo',
+      title: 'A Fazer',
+      tasks: tasks.filter(task => task.status === 'todo')
+    },
+    'in-progress': {
+      id: 'in-progress',
+      title: 'Em Andamento',
+      tasks: tasks.filter(task => task.status === 'in-progress')
+    },
+    'done': {
+      id: 'done',
+      title: 'Concluído',
+      tasks: tasks.filter(task => task.status === 'done')
+    }
+  });
 
-  // Definir colunas unificadas do kanban para ambos os perfis
-  const columns = useMemo(() => [
-    { id: 'qualified', title: 'Lead Qualificado', icon: <Check className="w-4 h-4" /> },
-    { id: 'contact_attempt', title: 'Tentativa de Contato', icon: <Phone className="w-4 h-4" /> },
-    { id: 'contacted', title: 'Contato Realizado', icon: <Phone className="w-4 h-4 text-green-500" /> },
-    { id: 'proposal', title: 'Proposta', icon: <FileText className="w-4 h-4" /> },
-    { id: 'contract', title: 'Ass. de Contrato', icon: <FileSignature className="w-4 h-4" /> },
-    { id: 'payment', title: 'Transferência/Pagamento', icon: <ArrowRight className="w-4 h-4" /> },
-    { id: 'closed', title: 'Negócio Fechado', icon: <Handshake className="w-4 h-4" /> },
-  ], []);
+  useEffect(() => {
+    setColumns({
+      'todo': {
+        id: 'todo',
+        title: 'A Fazer',
+        tasks: tasks.filter(task => task.status === 'todo')
+      },
+      'in-progress': {
+        id: 'in-progress',
+        title: 'Em Andamento',
+        tasks: tasks.filter(task => task.status === 'in-progress')
+      },
+      'done': {
+        id: 'done',
+        title: 'Concluído',
+        tasks: tasks.filter(task => task.status === 'done')
+      }
+    });
+  }, [tasks]);
 
-  // Formatar moeda
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-      maximumFractionDigits: 0,
-    }).format(value);
+  const [newTask, setNewTask] = useState({
+    title: '',
+    description: '',
+    status: 'todo' as const,
+    dueDate: new Date().toISOString().split('T')[0],
+    priority: 'medium' as const,
+    assignedTo: '',
+    profile: currentProfile,
+    orgId: 'your_org_id'
+  });
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [draggedTask, setDraggedTask] = useState<Task | null>(null);
+
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setNewTask({ ...newTask, [e.target.name]: e.target.value });
   };
 
-  // Lidar com o início do arrasto
-  const handleDragStart = (lead: Lead) => {
-    setDraggedLead(lead);
+  const handleSelectChange = (value: string, name: string) => {
+    setNewTask({ ...newTask, [name]: value });
   };
 
-  // Lidar com o arrasto sobre
+  const addTask = () => {
+    // Basic validation
+    if (!newTask.title || !newTask.description) {
+      toast.error('Por favor, preencha todos os campos.');
+      return;
+    }
+
+    // Simulate adding a task (in real app, this would be an API call)
+    const newTaskWithId: Task = { 
+      ...newTask, 
+      id: Date.now().toString(),
+      status: newTask.status,
+      priority: newTask.priority
+    };
+
+    // Update the columns state to include the new task
+    setColumns(prevColumns => {
+      return {
+        ...prevColumns,
+        'todo': {
+          ...prevColumns.todo,
+          tasks: [...prevColumns.todo.tasks, newTaskWithId]
+        }
+      };
+    });
+
+    toast.success('Tarefa adicionada com sucesso!');
+    closeModal();
+    setNewTask({
+      title: '',
+      description: '',
+      status: 'todo' as const,
+      dueDate: new Date().toISOString().split('T')[0],
+      priority: 'medium' as const,
+      assignedTo: '',
+      profile: currentProfile,
+      orgId: 'your_org_id'
+    });
+  };
+
+  const handleDragStart = (task: Task) => {
+    setDraggedTask(task);
+  };
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
   };
 
-  // Lidar com a soltura
-  const handleDrop = (e: React.DragEvent, status: string) => {
-    e.preventDefault();
-    
-    if (draggedLead) {
-      const updatedLeads = leads.map(lead => {
-        if (lead.id === draggedLead.id) {
-          toast.success(`Movido ${lead.name} para ${status}`);
-          return { ...lead, status: status as Lead['status'] };
-        }
-        return lead;
-      });
-      
-      setLeads(updatedLeads);
-      setDraggedLead(null);
+  const handleDrop = (columnId: string) => {
+    if (!draggedTask) return;
+
+    const sourceColumnId = draggedTask.status;
+    // Avoid unnecessary state updates if dropping in the same column
+    if (sourceColumnId === columnId) {
+      setDraggedTask(null);
+      return;
     }
+
+    // Remove task from source column
+    setColumns(prevColumns => {
+      const updatedColumns = { ...prevColumns };
+      
+      // Remove task from source column
+      updatedColumns[sourceColumnId] = {
+        ...updatedColumns[sourceColumnId],
+        tasks: updatedColumns[sourceColumnId].tasks.filter(t => t.id !== draggedTask.id)
+      };
+      
+      // Add task to target column with updated status
+      const updatedTask: Task = { ...draggedTask, status: columnId as "todo" | "in-progress" | "done" };
+      updatedColumns[columnId] = {
+        ...updatedColumns[columnId],
+        tasks: [...updatedColumns[columnId].tasks, updatedTask]
+      };
+      
+      return updatedColumns;
+    });
+
+    // Reset draggedTask
+    setDraggedTask(null);
   };
 
-  // Abrir o diálogo com detalhes do lead
-  const openLeadDetails = (lead: Lead) => {
-    setSelectedLead(lead);
-    setDialogOpen(true);
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
   };
 
-  // Filtrar leads por status
-  const getLeadsByStatus = (status: string) => {
-    return leads.filter(lead => lead.status === status);
-  };
-
-  // Calcular totais para cada coluna
-  const calculateColumnTotal = (status: string) => {
-    return getLeadsByStatus(status).reduce((total, lead) => total + lead.value, 0);
-  };
-
-  // Obter o nome do status mais legível
-  const getStatusLabel = (status: string) => {
-    const column = columns.find(col => col.id === status);
-    return column ? column.title : status;
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return 'bg-red-100 text-red-800';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'low':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">{currentProfile} CRM</h1>
-        <Button onClick={() => setLeads(allLeads)}>Resetar Quadro</Button>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Kanban</h1>
+          <p className="text-gray-500 mt-1">Gerencie suas tarefas de forma visual</p>
+        </div>
+        <Button onClick={openModal}>Adicionar Tarefa</Button>
       </div>
-      
-      <div className="kanban-board overflow-x-auto pb-6">
-        {columns.map(column => (
-          <div 
-            key={column.id}
-            className="kanban-column"
-            onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, column.id)}
-          >
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex items-center gap-2">
-                {column.icon}
-                <h2 className="font-bold">{column.title}</h2>
-              </div>
-              <span className="text-sm text-gray-500">{getLeadsByStatus(column.id).length}</span>
-            </div>
-            
-            <div className="text-xs text-gray-500 mb-2">
-              {calculateColumnTotal(column.id) > 0 && (
-                <>Total: {formatCurrency(calculateColumnTotal(column.id))}</>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              {getLeadsByStatus(column.id).map(lead => (
-                <div
-                  key={lead.id}
-                  className={`kanban-card ${
-                    currentProfile === 'SALT' 
-                      ? 'border-l-[#9b87f5]' 
-                      : 'border-l-[#0EA5E9]'
-                  }`}
-                  draggable
-                  onDragStart={() => handleDragStart(lead)}
-                >
-                  <h3 
-                    className="font-medium cursor-pointer hover:text-blue-600 hover:underline"
-                    onClick={() => openLeadDetails(lead)}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {Object.values(columns).map((column) => (
+          <Card key={column.id}>
+            <CardHeader>
+              <CardTitle>{column.title}</CardTitle>
+            </CardHeader>
+            <CardContent 
+              className="p-4 min-h-[300px]" 
+              onDragOver={handleDragOver}
+              onDrop={() => handleDrop(column.id)}
+            >
+              <div className="space-y-4">
+                {column.tasks.map((task) => (
+                  <div 
+                    key={task.id} 
+                    className="bg-white p-4 rounded-md shadow-sm border cursor-move"
+                    draggable
+                    onDragStart={() => handleDragStart(task)}
                   >
-                    {lead.name}
-                  </h3>
-                  <p className="text-xs text-gray-500">{lead.company}</p>
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="text-xs font-medium">
-                      {formatCurrency(lead.value)}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      {new Date(lead.updatedAt).toLocaleDateString('pt-BR')}
-                    </span>
+                    <h3 className="font-medium">{task.title}</h3>
+                    <p className="text-sm text-gray-500">{task.description}</p>
+                    <div className="mt-2 flex items-center justify-between">
+                      <span className={`px-2 py-1 text-xs rounded-full ${getPriorityColor(task.priority)}`}>
+                        {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Média' : 'Baixa'}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {formatDate(task.dueDate)}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      {/* Diálogo de detalhes do lead */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          {selectedLead && (
-            <>
-              <DialogHeader>
-                <DialogTitle>Detalhes do Lead - {selectedLead.name}</DialogTitle>
-                <DialogDescription>
-                  {selectedLead.company} | {selectedLead.position}
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="grid grid-cols-2 gap-4 py-4">
-                <div className="space-y-2">
-                  <div className="text-sm">
-                    <span className="font-semibold">Email:</span> {selectedLead.email}
-                  </div>
-                  <div className="text-sm">
-                    <span className="font-semibold">Telefone:</span> {selectedLead.phone}
-                  </div>
-                  <div className="text-sm">
-                    <span className="font-semibold">Valor:</span> {formatCurrency(selectedLead.value)}
-                  </div>
+      {/* Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3 text-center">
+              <h3 className="text-lg leading-6 font-medium text-gray-900">Adicionar Nova Tarefa</h3>
+              <div className="mt-2">
+                <Input
+                  type="text"
+                  name="title"
+                  placeholder="Título da Tarefa"
+                  value={newTask.title}
+                  onChange={handleInputChange}
+                  className="mb-4"
+                />
+                <Textarea
+                  name="description"
+                  placeholder="Descrição da Tarefa"
+                  value={newTask.description}
+                  onChange={handleInputChange}
+                  className="mb-4"
+                />
+                <div className="mb-4">
+                  <Label htmlFor="dueDate" className="block text-gray-700 text-sm font-bold mb-2">
+                    Data de Vencimento
+                  </Label>
+                  <Input
+                    type="date"
+                    name="dueDate"
+                    value={newTask.dueDate}
+                    onChange={handleInputChange}
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  />
                 </div>
-                <div className="space-y-2">
-                  <div className="text-sm">
-                    <span className="font-semibold">Status Atual:</span> {getStatusLabel(selectedLead.status)}
-                  </div>
-                  <div className="text-sm">
-                    <span className="font-semibold">Último Contato:</span> {selectedLead.lastContact ? new Date(selectedLead.lastContact).toLocaleDateString('pt-BR') : 'Não registrado'}
-                  </div>
-                  <div className="text-sm">
-                    <span className="font-semibold">Próximo Acompanhamento:</span> {selectedLead.nextFollowUp ? new Date(selectedLead.nextFollowUp).toLocaleDateString('pt-BR') : 'Não agendado'}
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2 mt-2">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Info className="h-4 w-4" /> 
-                  Acompanhamento de Situação
-                </h3>
-                <div className="p-4 rounded-md bg-gray-50 border">
-                  <div className="font-semibold mb-2">Histórico de Status:</div>
-                  <div className="space-y-3">
-                    {columns.map((column, index) => {
-                      const isActive = selectedLead.status === column.id;
-                      const isPast = columns.findIndex(c => c.id === selectedLead.status) > index;
-                      
-                      return (
-                        <div 
-                          key={column.id} 
-                          className={`flex items-center gap-2 p-2 rounded-md ${
-                            isActive 
-                              ? 'bg-blue-50 border border-blue-200' 
-                              : isPast 
-                                ? 'text-green-700' 
-                                : 'text-gray-500'
-                          }`}
-                        >
-                          <div className={`rounded-full p-1 ${
-                            isActive 
-                              ? 'bg-blue-100 text-blue-700' 
-                              : isPast 
-                                ? 'bg-green-100 text-green-700' 
-                                : 'bg-gray-100 text-gray-500'
-                          }`}>
-                            {column.icon}
-                          </div>
-                          <span className={`text-sm ${isActive ? 'font-medium' : ''}`}>
-                            {column.title}
-                          </span>
-                          {isActive && (
-                            <span className="ml-auto text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                              Status Atual
-                            </span>
-                          )}
-                          {isPast && (
-                            <span className="ml-auto text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                              Concluído
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+                <div className="mb-4">
+                  <Label htmlFor="priority" className="block text-gray-700 text-sm font-bold mb-2">
+                    Prioridade
+                  </Label>
+                  <Select onValueChange={(value) => handleSelectChange(value, 'priority')}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecione a prioridade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Baixa</SelectItem>
+                      <SelectItem value="medium">Média</SelectItem>
+                      <SelectItem value="high">Alta</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-
-              <div className="mt-4">
-                <h3 className="font-semibold mb-2">Notas:</h3>
-                <p className="text-sm bg-gray-50 p-3 rounded-md border">
-                  {selectedLead.notes}
-                </p>
+              <div className="items-center px-4 py-3">
+                <Button onClick={addTask} className="mr-2">
+                  Adicionar
+                </Button>
+                <Button variant="secondary" onClick={closeModal}>
+                  Cancelar
+                </Button>
               </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default KanbanBoard;
+export default Kanban;
