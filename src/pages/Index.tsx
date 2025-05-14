@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -229,7 +228,7 @@ const Dashboard = () => {
                   <Legend />
                   <Bar 
                     dataKey="count" 
-                    fill={currentProfile === 'SALT' ? '#0891b2' : '#9333ea'} 
+                    fill="#0891b2" 
                     radius={[4, 4, 0, 0]}
                   />
                 </BarChart>
