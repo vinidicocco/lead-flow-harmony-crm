@@ -124,8 +124,18 @@ function App() {
             <Route path="*" element={<Navigate to="/404" replace />} />
           </Routes>
           
-          {/* Toaster para notificações - posicionado no canto superior direito com cores ricas */}
-          <Toaster richColors position="top-right" />
+          {/* Toaster para notificações - posicionado no canto superior direito com cores ricas e em português */}
+          <Toaster 
+            richColors 
+            position="top-right" 
+            toastOptions={{
+              duration: 5000,
+              style: {
+                maxWidth: '420px'
+              },
+              className: "toastify"
+            }} 
+          />
         </ProfileProvider>
       </AuthProvider>
     </Router>

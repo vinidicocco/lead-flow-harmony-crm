@@ -40,7 +40,9 @@ const Login = () => {
     setIsSubmitting(true);
     try {
       await login(email, password);
-      // O redirecionamento será feito pelo useEffect
+      // Forçar redirecionamento após login bem-sucedido
+      const from = location.state?.from?.pathname || '/';
+      navigate(from, { replace: true });
     } catch (error: any) {
       console.error('Erro no login:', error);
       toast.error(error.message || "Não foi possível fazer login. Verifique suas credenciais.");
@@ -63,19 +65,18 @@ const Login = () => {
         .from('organizations')
         .select('id')
         .eq('code', 'SALT')
-        .limit(1)
-        .single();
+        .maybeSingle();
       
       if (error) {
         console.error("Erro ao buscar organização:", error);
         throw new Error('Erro ao buscar organização: ' + error.message);
       }
       
-      const saltOrgId = data?.id;
-      
-      if (!saltOrgId) {
-        throw new Error('Organização SALT não encontrada');
+      if (!data) {
+        throw new Error('Organização SALT não encontrada. Por favor, contate o suporte.');
       }
+      
+      const saltOrgId = data.id;
       
       await register(email, password, firstName, lastName, saltOrgId);
       

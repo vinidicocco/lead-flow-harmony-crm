@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           organizations:organization_id (*)
         `)
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error('Erro ao buscar perfil:', profileError);
@@ -98,6 +98,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Primeiro configura o listener para mudanças na autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
+        console.log("Evento de auth:", event, currentSession);
         setSession(currentSession);
         
         if (currentSession?.user) {
@@ -162,6 +163,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       // Usuário é carregado pelo listener de auth
       toast.success('Login efetuado com sucesso!');
+      
+      // Verificar se o usuário foi carregado
+      if (data.user) {
+        try {
+          await fetchUserProfile(data.user.id);
+          const from = window.location.pathname === '/login' ? '/' : window.location.pathname;
+          navigate(from, { replace: true });
+        } catch (profileError) {
+          console.error("Erro ao carregar perfil após login:", profileError);
+        }
+      }
     } catch (error: any) {
       toast.error(`Erro no login: ${error.message}`);
       throw error;
@@ -194,7 +206,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             last_name: lastName,
             organization: organizationId ? 
               // Buscar o código da organização pelo ID
-              (await supabase.from('organizations').select('code').eq('id', organizationId).single()).data?.code :
+              (await supabase.from('organizations').select('code').eq('id', organizationId).maybeSingle()).data?.code :
               null,
             role: role
           }
