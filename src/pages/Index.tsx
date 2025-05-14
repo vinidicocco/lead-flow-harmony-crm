@@ -21,7 +21,7 @@ import {
   BarChart as BarChartIcon,
   PieChart as PieChartIcon,
   LineChart as LineChartIcon,
-  TrendingDown
+  Filter
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -70,20 +70,20 @@ const Dashboard = () => {
   const funnelData = useMemo(() => {
     if (currentProfile === 'SALT') {
       return [
-        { name: 'Novo Lead', value: leads.filter(lead => lead.status === 'qualified').length },
-        { name: 'Contato Iniciado', value: leads.filter(lead => lead.status === 'contacted').length },
-        { name: 'Simulação Enviada', value: leads.filter(lead => lead.status === 'proposal').length },
-        { name: 'Aguardando Documentos', value: leads.filter(lead => lead.status === 'contract').length },
-        { name: 'Encaminhado à Administradora', value: leads.filter(lead => lead.status === 'payment').length },
-        { name: 'Finalizado', value: leads.filter(lead => lead.status === 'closed').length },
+        { name: 'Novo Lead', value: leads.filter(lead => lead.status === 'qualified').length, fill: '#0088FE' },
+        { name: 'Contato Iniciado', value: leads.filter(lead => lead.status === 'contacted').length, fill: '#00C49F' },
+        { name: 'Simulação Enviada', value: leads.filter(lead => lead.status === 'proposal').length, fill: '#FFBB28' },
+        { name: 'Aguardando Documentos', value: leads.filter(lead => lead.status === 'contract').length, fill: '#FF8042' },
+        { name: 'Encaminhado à Administradora', value: leads.filter(lead => lead.status === 'payment').length, fill: '#8884d8' },
+        { name: 'Finalizado', value: leads.filter(lead => lead.status === 'closed').length, fill: '#82ca9d' },
       ];
     } else {
       return [
-        { name: 'Contato Estabelecido', value: leads.filter(lead => lead.status === 'contacted').length },
-        { name: 'Análise do Contrato', value: leads.filter(lead => lead.status === 'qualified').length },
-        { name: 'Negociação', value: leads.filter(lead => lead.status === 'proposal').length },
-        { name: 'Aguardando Pagamento', value: leads.filter(lead => lead.status === 'payment').length },
-        { name: 'Finalizado', value: leads.filter(lead => lead.status === 'closed').length },
+        { name: 'Contato Estabelecido', value: leads.filter(lead => lead.status === 'contacted').length, fill: '#0088FE' },
+        { name: 'Análise do Contrato', value: leads.filter(lead => lead.status === 'qualified').length, fill: '#00C49F' },
+        { name: 'Negociação', value: leads.filter(lead => lead.status === 'proposal').length, fill: '#FFBB28' },
+        { name: 'Aguardando Pagamento', value: leads.filter(lead => lead.status === 'payment').length, fill: '#FF8042' },
+        { name: 'Finalizado', value: leads.filter(lead => lead.status === 'closed').length, fill: '#8884d8' },
       ];
     }
   }, [leads, currentProfile]);
@@ -202,7 +202,7 @@ const Dashboard = () => {
             Distribuição de Leads
           </TabsTrigger>
           <TabsTrigger value="funnel" className="flex items-center gap-2">
-            <TrendingDown size={16} />
+            <Filter size={16} />
             Funil de Vendas
           </TabsTrigger>
           <TabsTrigger value="performance" className="flex items-center gap-2">
@@ -245,21 +245,31 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent className="h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={funnelData}
-                  layout="vertical"
-                >
-                  <XAxis type="number" />
-                  <YAxis type="category" dataKey="name" />
-                  <Tooltip />
-                  <Bar 
-                    dataKey="value" 
-                    fill={currentProfile === 'SALT' ? '#0891b2' : '#9333ea'}
-                    radius={[0, 4, 4, 0]}
+                <FunnelChart>
+                  <Tooltip formatter={(value) => `${value} leads`} />
+                  <Funnel
+                    dataKey="value"
+                    data={funnelData}
+                    isAnimationActive={true}
+                    labelLine={false}
                   >
-                    <LabelList dataKey="value" position="right" />
-                  </Bar>
-                </BarChart>
+                    <LabelList 
+                      position="right" 
+                      fill="#000" 
+                      stroke="none" 
+                      dataKey="name" 
+                      fontSize={12}
+                    />
+                    <LabelList
+                      position="center"
+                      fill="#fff"
+                      stroke="none"
+                      dataKey="value"
+                      fontSize={14}
+                      fontWeight="bold"
+                    />
+                  </Funnel>
+                </FunnelChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
