@@ -19,6 +19,7 @@ export const mockLeads: Lead[] = [
     updatedAt: '2025-04-01T10:00:00Z',
     profile: 'SALT',
     nextFollowUp: '2025-05-15T09:00:00Z',
+    orgId: 'salt001',
   },
   {
     id: '2',
@@ -35,6 +36,7 @@ export const mockLeads: Lead[] = [
     updatedAt: '2025-04-02T11:30:00Z',
     profile: 'SALT',
     nextFollowUp: '2025-05-16T10:30:00Z',
+    orgId: 'salt001',
   },
   {
     id: '3',
@@ -51,6 +53,7 @@ export const mockLeads: Lead[] = [
     updatedAt: '2025-04-03T14:00:00Z',
     profile: 'SALT',
     nextFollowUp: '2025-05-17T11:00:00Z',
+    orgId: 'salt001',
   },
   {
     id: '4',
@@ -67,6 +70,7 @@ export const mockLeads: Lead[] = [
     updatedAt: '2025-04-08T16:30:00Z',
     profile: 'SALT',
     nextFollowUp: '2025-05-14T14:00:00Z',
+    orgId: 'salt001',
   },
   {
     id: '5',
@@ -83,6 +87,7 @@ export const mockLeads: Lead[] = [
     updatedAt: '2025-04-09T11:20:00Z',
     profile: 'SALT',
     nextFollowUp: '2025-05-13T15:30:00Z',
+    orgId: 'salt001',
   },
   {
     id: '6',
@@ -100,6 +105,7 @@ export const mockLeads: Lead[] = [
     profile: 'SALT',
     nextFollowUp: '2025-05-18T09:00:00Z',
     lastContact: '2025-05-11T09:00:00Z',
+    orgId: 'salt001',
   },
   {
     id: '7',
@@ -117,6 +123,7 @@ export const mockLeads: Lead[] = [
     profile: 'SALT',
     nextFollowUp: '2025-05-19T11:00:00Z',
     lastContact: '2025-05-10T11:00:00Z',
+    orgId: 'salt001',
   },
   {
     id: '8',
@@ -134,6 +141,7 @@ export const mockLeads: Lead[] = [
     profile: 'SALT',
     nextFollowUp: '2025-05-20T10:30:00Z',
     lastContact: '2025-05-13T10:30:00Z',
+    orgId: 'salt001',
   },
   {
     id: '9',
@@ -151,6 +159,7 @@ export const mockLeads: Lead[] = [
     profile: 'SALT',
     nextFollowUp: '2025-05-21T15:00:00Z',
     lastContact: '2025-05-14T15:00:00Z',
+    orgId: 'salt001',
   },
   {
     id: '10',
@@ -168,6 +177,7 @@ export const mockLeads: Lead[] = [
     profile: 'SALT',
     nextFollowUp: '2025-05-16T15:00:00Z',
     lastContact: '2025-05-09T15:00:00Z',
+    orgId: 'salt001',
   },
   {
     id: '11',
@@ -185,6 +195,7 @@ export const mockLeads: Lead[] = [
     profile: 'SALT',
     nextFollowUp: '2025-05-15T14:00:00Z',
     lastContact: '2025-05-08T14:00:00Z',
+    orgId: 'salt001',
   },
   {
     id: '12',
@@ -202,6 +213,7 @@ export const mockLeads: Lead[] = [
     profile: 'SALT',
     nextFollowUp: '2025-05-14T11:00:00Z',
     lastContact: '2025-05-07T11:00:00Z',
+    orgId: 'salt001',
   },
   {
     id: '13',
@@ -219,6 +231,7 @@ export const mockLeads: Lead[] = [
     profile: 'SALT',
     nextFollowUp: '2025-05-13T10:00:00Z',
     lastContact: '2025-05-06T10:00:00Z',
+    orgId: 'salt001',
   },
   {
     id: '14',
@@ -236,6 +249,7 @@ export const mockLeads: Lead[] = [
     profile: 'SALT',
     nextFollowUp: '2025-06-10T09:30:00Z',
     lastContact: '2025-05-02T09:30:00Z',
+    orgId: 'salt001',
   },
   {
     id: '15',
@@ -253,6 +267,7 @@ export const mockLeads: Lead[] = [
     profile: 'SALT',
     nextFollowUp: '2025-06-15T11:00:00Z',
     lastContact: '2025-05-01T11:00:00Z',
+    orgId: 'salt001',
   },
   // GHF Leads
   {
@@ -270,6 +285,7 @@ export const mockLeads: Lead[] = [
     updatedAt: '2025-04-03T09:15:00Z',
     profile: 'GHF',
     nextFollowUp: '2025-05-19T13:00:00Z',
+    orgId: 'ghf001',
   },
   {
     id: '17',
@@ -286,6 +302,7 @@ export const mockLeads: Lead[] = [
     updatedAt: '2025-04-04T14:30:00Z',
     profile: 'GHF',
     nextFollowUp: '2025-05-18T11:00:00Z',
+    orgId: 'ghf001',
   },
   {
     id: '18',
@@ -302,6 +319,7 @@ export const mockLeads: Lead[] = [
     updatedAt: '2025-04-05T10:45:00Z',
     profile: 'GHF',
     nextFollowUp: '2025-05-20T14:00:00Z',
+    orgId: 'ghf001',
   },
   {
     id: '19',
@@ -318,6 +336,7 @@ export const mockLeads: Lead[] = [
     updatedAt: '2025-04-09T15:20:00Z',
     profile: 'GHF',
     nextFollowUp: '2025-05-13T09:30:00Z',
+    orgId: 'ghf001',
   },
   {
     id: '20',
@@ -334,6 +353,7 @@ export const mockLeads: Lead[] = [
     updatedAt: '2025-04-10T11:45:00Z',
     profile: 'GHF',
     nextFollowUp: '2025-05-14T16:00:00Z',
+    orgId: 'ghf001',
   },
   {
     id: '21',
@@ -351,6 +371,7 @@ export const mockLeads: Lead[] = [
     profile: 'GHF',
     nextFollowUp: '2025-05-17T09:30:00Z',
     lastContact: '2025-05-10T09:30:00Z',
+    orgId: 'ghf001',
   },
   {
     id: '22',
@@ -368,6 +389,7 @@ export const mockLeads: Lead[] = [
     profile: 'GHF',
     nextFollowUp: '2025-05-16T13:30:00Z',
     lastContact: '2025-05-09T13:30:00Z',
+    orgId: 'ghf001',
   },
   {
     id: '23',
@@ -385,6 +407,7 @@ export const mockLeads: Lead[] = [
     profile: 'GHF',
     nextFollowUp: '2025-05-21T14:30:00Z',
     lastContact: '2025-05-14T14:30:00Z',
+    orgId: 'ghf001',
   },
   {
     id: '24',
@@ -402,6 +425,7 @@ export const mockLeads: Lead[] = [
     profile: 'GHF',
     nextFollowUp: '2025-05-15T11:30:00Z',
     lastContact: '2025-05-08T11:30:00Z',
+    orgId: 'ghf001',
   },
   {
     id: '25',
@@ -419,6 +443,7 @@ export const mockLeads: Lead[] = [
     profile: 'GHF',
     nextFollowUp: '2025-05-16T10:00:00Z',
     lastContact: '2025-05-09T10:00:00Z',
+    orgId: 'ghf001',
   },
   {
     id: '26',
@@ -436,6 +461,7 @@ export const mockLeads: Lead[] = [
     profile: 'GHF',
     nextFollowUp: '2025-05-15T14:00:00Z',
     lastContact: '2025-05-08T14:00:00Z',
+    orgId: 'ghf001',
   },
   {
     id: '27',
@@ -453,6 +479,7 @@ export const mockLeads: Lead[] = [
     profile: 'GHF',
     nextFollowUp: '2025-05-14T09:00:00Z',
     lastContact: '2025-05-07T09:00:00Z',
+    orgId: 'ghf001',
   },
   {
     id: '28',
@@ -470,6 +497,7 @@ export const mockLeads: Lead[] = [
     profile: 'GHF',
     nextFollowUp: '2025-05-13T11:30:00Z',
     lastContact: '2025-05-06T11:30:00Z',
+    orgId: 'ghf001',
   },
   {
     id: '29',
@@ -487,6 +515,7 @@ export const mockLeads: Lead[] = [
     profile: 'GHF',
     nextFollowUp: '2025-06-10T14:00:00Z',
     lastContact: '2025-05-03T14:00:00Z',
+    orgId: 'ghf001',
   },
   {
     id: '30',
@@ -504,9 +533,11 @@ export const mockLeads: Lead[] = [
     profile: 'GHF',
     nextFollowUp: '2025-05-30T11:30:00Z',
     lastContact: '2025-05-01T11:30:00Z',
+    orgId: 'ghf001',
   }
 ];
 
+// Updating meetings with orgId
 export const mockMeetings: Meeting[] = [
   // SALT Meetings
   {
@@ -520,6 +551,7 @@ export const mockMeetings: Meeting[] = [
     notes: 'Discutir desafios atuais e potenciais soluções de crédito.',
     status: 'scheduled',
     profile: 'SALT',
+    orgId: 'salt001',
   },
   {
     id: '2',
@@ -532,6 +564,7 @@ export const mockMeetings: Meeting[] = [
     notes: 'Demonstração das soluções de análise de crédito.',
     status: 'scheduled',
     profile: 'SALT',
+    orgId: 'salt001',
   },
   {
     id: '3',
@@ -544,6 +577,7 @@ export const mockMeetings: Meeting[] = [
     notes: 'Responder questões após proposta inicial.',
     status: 'scheduled',
     profile: 'SALT',
+    orgId: 'salt001',
   },
   {
     id: '4',
@@ -556,6 +590,7 @@ export const mockMeetings: Meeting[] = [
     notes: 'Revisar termos do contrato e discutir cronograma de implementação.',
     status: 'scheduled',
     profile: 'SALT',
+    orgId: 'salt001',
   },
   // GHF Meetings
   {
@@ -569,6 +604,7 @@ export const mockMeetings: Meeting[] = [
     notes: 'Discutir necessidades de gestão hospitalar e potenciais soluções.',
     status: 'scheduled',
     profile: 'GHF',
+    orgId: 'ghf001',
   },
   {
     id: '6',
@@ -581,6 +617,7 @@ export const mockMeetings: Meeting[] = [
     notes: 'Demonstrar capacidades da plataforma de telemedicina.',
     status: 'scheduled',
     profile: 'GHF',
+    orgId: 'ghf001',
   },
   {
     id: '7',
@@ -593,6 +630,7 @@ export const mockMeetings: Meeting[] = [
     notes: 'Sessão colaborativa para desenhar solução de gestão de programas de saúde.',
     status: 'scheduled',
     profile: 'GHF',
+    orgId: 'ghf001',
   },
   {
     id: '8',
@@ -605,9 +643,11 @@ export const mockMeetings: Meeting[] = [
     notes: 'Reunião inicial para começar processo de implementação.',
     status: 'scheduled',
     profile: 'GHF',
+    orgId: 'ghf001',
   }
 ];
 
+// Updating tasks with orgId
 export const mockTasks: Task[] = [
   // SALT Tasks
   {
@@ -620,6 +660,7 @@ export const mockTasks: Task[] = [
     assignedTo: '1',
     leadId: '1',
     profile: 'SALT',
+    orgId: 'salt001',
   },
   {
     id: '2',
@@ -631,6 +672,7 @@ export const mockTasks: Task[] = [
     assignedTo: '1',
     leadId: '2',
     profile: 'SALT',
+    orgId: 'salt001',
   },
   {
     id: '3',
@@ -642,6 +684,7 @@ export const mockTasks: Task[] = [
     assignedTo: '1',
     leadId: '3',
     profile: 'SALT',
+    orgId: 'salt001',
   },
   {
     id: '4',
@@ -652,6 +695,7 @@ export const mockTasks: Task[] = [
     priority: 'low',
     assignedTo: '1',
     profile: 'SALT',
+    orgId: 'salt001',
   },
   // GHF Tasks
   {
@@ -664,6 +708,7 @@ export const mockTasks: Task[] = [
     assignedTo: '2',
     leadId: '16',
     profile: 'GHF',
+    orgId: 'ghf001',
   },
   {
     id: '6',
@@ -675,6 +720,7 @@ export const mockTasks: Task[] = [
     assignedTo: '2',
     leadId: '21',
     profile: 'GHF',
+    orgId: 'ghf001',
   },
   {
     id: '7',
@@ -686,6 +732,7 @@ export const mockTasks: Task[] = [
     assignedTo: '2',
     leadId: '30',
     profile: 'GHF',
+    orgId: 'ghf001',
   },
   {
     id: '8',
@@ -697,6 +744,7 @@ export const mockTasks: Task[] = [
     assignedTo: '2',
     leadId: '30',
     profile: 'GHF',
+    orgId: 'ghf001',
   }
 ];
 
