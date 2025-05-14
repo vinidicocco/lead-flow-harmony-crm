@@ -19,7 +19,7 @@ import { useProfile } from '@/context/ProfileContext';
 import { Calendar } from 'lucide-react';
 
 const Leads = () => {
-  const { currentProfile } = useProfile();
+  const { currentProfile, getProfileForDataFunctions } = useProfile() as any;
   const [leads, setLeads] = useState<Lead[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -28,7 +28,7 @@ const Leads = () => {
 
   useEffect(() => {
     if (currentProfile) {
-      setLeads(getLeadsByProfile(currentProfile));
+      setLeads(getLeadsByProfile(getProfileForDataFunctions(currentProfile)));
     }
   }, [currentProfile]);
 

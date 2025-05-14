@@ -1,3 +1,4 @@
+
 export type Profile = string;
 
 export type UserRole = 'MASTER' | 'ADMIN' | 'USER';

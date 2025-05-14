@@ -25,11 +25,11 @@ import { ArrowUpRight, Banknote, Users, Target, Calendar, CheckCircle } from 'lu
 import { formatCurrency } from '@/lib/utils';
 
 const Dashboard = () => {
-  const { currentProfile } = useProfile();
-  const leads = useMemo(() => getLeadsByProfile(currentProfile), [currentProfile]);
-  const meetings = useMemo(() => getMeetingsByProfile(currentProfile), [currentProfile]);
-  const tasks = useMemo(() => getTasksByProfile(currentProfile), [currentProfile]);
-  const stats = useMemo(() => getStatsByProfile(currentProfile), [currentProfile]);
+  const { currentProfile, getProfileForDataFunctions } = useProfile() as any;
+  const leads = useMemo(() => getLeadsByProfile(getProfileForDataFunctions(currentProfile)), [currentProfile]);
+  const meetings = useMemo(() => getMeetingsByProfile(getProfileForDataFunctions(currentProfile)), [currentProfile]);
+  const tasks = useMemo(() => getTasksByProfile(getProfileForDataFunctions(currentProfile)), [currentProfile]);
+  const stats = useMemo(() => getStatsByProfile(getProfileForDataFunctions(currentProfile)), [currentProfile]);
   
   // Calcular o valor total de leads por status
   const calculateValueByStatus = () => {

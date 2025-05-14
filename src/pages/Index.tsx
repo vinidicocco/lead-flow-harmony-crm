@@ -12,17 +12,17 @@ import { formatDate, formatCurrency } from '@/lib/utils';
 import { Skeleton } from "@/components/ui/skeleton";
 
 const Index = () => {
-  const { currentProfile } = useProfile();
+  const { currentProfile, getProfileForDataFunctions } = useProfile() as any;
   const [tasks, setTasks] = useState<Task[] | null>(null);
   const [leads, setLeads] = useState<Lead[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     setIsLoading(true);
-    // Simula o carregamento de dados
+    // Simulate data loading
     setTimeout(() => {
-      const fetchedTasks = getTasksByProfile(currentProfile);
-      const fetchedLeads = getLeadsByProfile(currentProfile);
+      const fetchedTasks = getTasksByProfile(getProfileForDataFunctions(currentProfile));
+      const fetchedLeads = getLeadsByProfile(getProfileForDataFunctions(currentProfile));
       setTasks(fetchedTasks);
       setLeads(fetchedLeads);
       setIsLoading(false);

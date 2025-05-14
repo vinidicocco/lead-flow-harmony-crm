@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { Lead } from '@/types';
@@ -13,7 +12,7 @@ import { useNavigate } from 'react-router-dom';
 const Kanban = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const { currentProfile } = useProfile();
+  const { currentProfile, getProfileForDataFunctions } = useProfile() as any;
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -22,7 +21,7 @@ const Kanban = () => {
 
   const fetchData = async () => {
     if (!currentProfile) return [];
-    const leads = getLeadsByProfile(currentProfile);
+    const leads = getLeadsByProfile(getProfileForDataFunctions(currentProfile));
     setLeads(leads);
     return leads.sort((a, b) => 
       new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()

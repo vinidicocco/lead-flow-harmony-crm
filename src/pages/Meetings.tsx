@@ -8,16 +8,16 @@ import { Calendar } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 const Meetings = () => {
-  const { currentProfile } = useProfile();
+  const { currentProfile, getProfileForDataFunctions } = useProfile() as any;
   const [upcomingMeetings, setUpcomingMeetings] = useState<Meeting[]>([]);
   const [pastMeetings, setPastMeetings] = useState<Meeting[]>([]);
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
   const [open, setOpen] = useState(false);
 
   const fetchData = () => {
-    const meetings = getMeetingsByProfile(currentProfile);
+    const meetings = getMeetingsByProfile(getProfileForDataFunctions(currentProfile));
     
-    // Supomos que a data já inclui o horário no formato timestamp
+    // Assume the date already includes the time in timestamp format
     const today = new Date();
     const upcoming = meetings.filter(m => new Date(m.date) > today);
     const past = meetings.filter(m => new Date(m.date) <= today);
@@ -44,7 +44,7 @@ const Meetings = () => {
   };
   
   const formatDateTime = (dateString: string) => {
-    // Supondo que dateString já seja um timestamp ISO completo com data e hora
+    // Supposing dateString already be an ISO complete timestamp with date and time
     const date = new Date(dateString);
     
     const day = date.getDate().toString().padStart(2, '0');

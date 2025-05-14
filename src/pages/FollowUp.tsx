@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 const FollowUp = () => {
-  const { currentProfile } = useProfile();
+  const { currentProfile, getProfileForDataFunctions } = useProfile() as any;
   const [leads, setLeads] = useState<Lead[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -20,8 +20,8 @@ const FollowUp = () => {
 
   useEffect(() => {
     if (currentProfile) {
-      setLeads(getLeadsByProfile(currentProfile));
-      setTasks(getTasksByProfile(currentProfile));
+      setLeads(getLeadsByProfile(getProfileForDataFunctions(currentProfile)));
+      setTasks(getTasksByProfile(getProfileForDataFunctions(currentProfile)));
     }
   }, [currentProfile]);
   

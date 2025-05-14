@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Profile } from '@/types';
 import { useAuth } from '@/context/AuthContext';
@@ -17,14 +16,14 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   const [currentProfile, setCurrentProfile] = useState<Profile>('SALT');
   const [availableProfiles, setAvailableProfiles] = useState<Profile[]>(['SALT', 'GHF']);
 
-  // Se o usuário estiver autenticado, usa o perfil da organização
+  // When user is authenticated, use organization profile
   useEffect(() => {
     if (organization) {
       const orgProfile = organization.code as Profile;
       if (orgProfile) {
         setCurrentProfile(orgProfile);
         
-        // Atualiza a lista de perfis disponíveis se não existir
+        // Update available profiles list if it doesn't exist
         if (!availableProfiles.includes(orgProfile)) {
           setAvailableProfiles(prev => [...prev, orgProfile]);
         }
@@ -33,21 +32,29 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   }, [organization]);
 
   const handleProfileChange = (profile: Profile) => {
-    // Apenas usuários MASTER podem trocar de perfil
+    // Only MASTER users can change profiles
     if (user?.role === 'MASTER') {
       setCurrentProfile(profile);
-      toast.success(`Perfil alterado para ${profile}`);
+      toast.success(`Profile changed to ${profile}`);
     } else {
-      // Outros usuários só podem usar o perfil da sua organização
-      toast.error('Você não tem permissão para alterar o perfil');
+      // Other users can only use their organization profile
+      toast.error('You do not have permission to change profiles');
     }
+  };
+
+  // This wrapper function ensures compatibility with the mockData functions
+  // that still expect "SALT" | "GHF" literals
+  const getProfileForDataFunctions = (profile: Profile): "SALT" | "GHF" => {
+    return (profile === 'SALT' || profile === 'GHF') ? profile : 'SALT';
   };
 
   return (
     <ProfileContext.Provider value={{ 
       currentProfile, 
       setCurrentProfile: handleProfileChange,
-      availableProfiles
+      availableProfiles,
+      // @ts-ignore - We expose this internally for components to use with data functions
+      getProfileForDataFunctions
     }}>
       {children}
     </ProfileContext.Provider>
@@ -57,7 +64,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 export const useProfile = () => {
   const context = useContext(ProfileContext);
   if (!context) {
-    throw new Error('useProfile deve ser usado dentro de um ProfileProvider');
+    throw new Error('useProfile must be used within a ProfileProvider');
   }
   return context;
 };
