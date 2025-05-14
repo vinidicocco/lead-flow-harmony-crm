@@ -19,12 +19,12 @@ const TopNavMenu = () => {
   const profileStyle = currentProfile === 'SALT' ? 'bg-salt-light' : 'bg-ghf-light';
 
   const links = [
-    { to: '/', icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
-    { to: '/kanban', icon: <Kanban size={18} />, label: 'CRM' },
-    { to: '/leads', icon: <Users size={18} />, label: 'Leads' },
-    { to: '/meetings', icon: <Calendar size={18} />, label: 'Reuniões' },
-    { to: '/follow-up', icon: <MessageSquare size={18} />, label: 'Follow-up' },
-    { to: '/ai-agent', icon: <Bot size={18} />, label: 'Gestão Agente IA' },
+    { to: '/', icon: <LayoutDashboard size={16} />, label: 'Dashboard' },
+    { to: '/kanban', icon: <Kanban size={16} />, label: 'CRM' },
+    { to: '/leads', icon: <Users size={16} />, label: 'Leads' },
+    { to: '/meetings', icon: <Calendar size={16} />, label: 'Reuniões' },
+    { to: '/follow-up', icon: <MessageSquare size={16} />, label: 'Follow-up' },
+    { to: '/ai-agent', icon: <Bot size={16} />, label: 'Gestão Agente IA' },
   ];
 
   const handleWhatsAppClick = () => {
@@ -39,14 +39,14 @@ const TopNavMenu = () => {
 
   return (
     <NavigationMenu className="mx-auto">
-      <NavigationMenuList>
+      <NavigationMenuList className="gap-0.5">
         {links.map((link) => (
           <NavigationMenuItem key={link.to}>
             <NavLink
               to={link.to}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-md text-sm transition-colors",
+                  "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs transition-colors",
                   isActive
                     ? `${profileStyle} text-white font-medium`
                     : "hover:bg-accent hover:text-accent-foreground"
@@ -64,10 +64,11 @@ const TopNavMenu = () => {
           <NavigationMenuItem>
             <Button 
               variant="ghost"
-              className="flex items-center gap-2 px-4 py-2 rounded-md text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+              size="sm"
+              className="flex items-center px-2.5 py-1.5 rounded-md text-xs transition-colors hover:bg-accent hover:text-accent-foreground"
               onClick={handleWhatsAppClick}
             >
-              <MessageCircle size={18} />
+              <MessageCircle size={16} />
               <span className="sr-only">WhatsApp</span>
             </Button>
           </NavigationMenuItem>
@@ -78,14 +79,14 @@ const TopNavMenu = () => {
             to="/settings"
             className={({ isActive }) =>
               cn(
-                "flex items-center justify-center px-3 py-2 rounded-md text-sm transition-colors",
+                "flex items-center justify-center px-2.5 py-1.5 rounded-md text-xs transition-colors",
                 isActive
                   ? `${profileStyle} text-white font-medium`
                   : "hover:bg-accent hover:text-accent-foreground"
               )
             }
           >
-            <Cog size={18} />
+            <Cog size={16} />
             <span className="sr-only">Configurações</span>
           </NavLink>
         </NavigationMenuItem>
