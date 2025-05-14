@@ -31,13 +31,17 @@ export const useAuthManager = (fetchUserProfile: (userId: string) => Promise<any
 
       if (error) throw error;
       
+      console.log("Login bem-sucedido:", data);
+      
       // Definir a sessão localmente para acionar o redirecionamento
       setSession(data.session);
       
       // Verificar se o usuário foi carregado
       if (data.user) {
         try {
+          console.log("Buscando perfil do usuário:", data.user.id);
           const userData = await fetchUserProfile(data.user.id);
+          console.log("Perfil retornado:", userData);
           
           if (!userData) {
             console.error("Erro: Perfil do usuário não encontrado");
@@ -53,6 +57,7 @@ export const useAuthManager = (fetchUserProfile: (userId: string) => Promise<any
           // Forçar redirecionamento imediato
           navigate('/', { replace: true });
         } catch (profileError: any) {
+          console.error("Erro ao buscar perfil:", profileError);
           // Em caso de erro no perfil, fazer logout
           await supabase.auth.signOut();
           throw profileError;
@@ -63,6 +68,52 @@ export const useAuthManager = (fetchUserProfile: (userId: string) => Promise<any
       throw error;
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Função auxiliar para buscar ou criar organização SALT
+  const getOrCreateSaltOrganization = async () => {
+    try {
+      // Verificar se a organização SALT existe
+      const { data: saltOrg, error: saltOrgError } = await supabase
+        .from('organizations')
+        .select('*')
+        .eq('code', 'SALT')
+        .maybeSingle();
+      
+      if (saltOrgError) {
+        console.error("Erro ao buscar organização SALT:", saltOrgError);
+        throw new Error('Erro ao verificar organização: ' + saltOrgError.message);
+      }
+      
+      // Se encontrou, retorna o ID
+      if (saltOrg) {
+        console.log("Organização SALT encontrada:", saltOrg);
+        return saltOrg.id;
+      }
+      
+      // Se não encontrou, cria
+      console.log("Criando organização SALT...");
+      const { data: newOrg, error: createOrgError } = await supabase
+        .from('organizations')
+        .insert([{ name: 'SALT Tecnologia', code: 'SALT' }])
+        .select()
+        .single();
+      
+      if (createOrgError) {
+        console.error("Erro ao criar organização SALT:", createOrgError);
+        throw new Error('Erro ao criar organização: ' + createOrgError.message);
+      }
+      
+      if (!newOrg) {
+        throw new Error('Falha ao criar organização SALT');
+      }
+      
+      console.log("Nova organização SALT criada:", newOrg);
+      return newOrg.id;
+    } catch (error: any) {
+      console.error("Erro com organização SALT:", error);
+      throw error;
     }
   };
 
@@ -81,58 +132,22 @@ export const useAuthManager = (fetchUserProfile: (userId: string) => Promise<any
         throw new Error('Apenas usuários MASTER podem criar outros usuários MASTER');
       }
 
-      // Verificar se a organização SALT existe antes de prosseguir
-      const { data: saltOrgs, error: saltOrgError } = await supabase
-        .from('organizations')
-        .select('*')
-        .eq('code', 'SALT')
-        .maybeSingle();
-        
-      if (saltOrgError) {
-        console.error("Erro ao verificar organização SALT:", saltOrgError);
-        throw new Error('Erro ao verificar organização: ' + saltOrgError.message);
-      }
+      // Verificar ou criar organização SALT
+      let finalOrgId = organizationId;
       
-      // Se a organização SALT não existir, criá-la
-      if (!saltOrgs) {
-        console.log("Organização SALT não encontrada. Tentando criar...");
-        
-        try {
-          const { data: newOrg, error: createOrgError } = await supabase
-            .from('organizations')
-            .insert([
-              { name: 'SALT Tecnologia', code: 'SALT' }
-            ])
-            .select();
-            
-          if (createOrgError) {
-            throw new Error('Erro ao criar organização SALT: ' + createOrgError.message);
-          }
-          
-          if (newOrg && newOrg.length > 0) {
-            organizationId = newOrg[0].id;
-            console.log("Nova organização SALT criada com ID:", organizationId);
-          } else {
-            throw new Error('Falha ao criar organização SALT');
-          }
-        } catch (createError: any) {
-          console.error("Erro ao criar organização SALT:", createError);
-          throw new Error('Não foi possível criar a organização SALT. Por favor, contate o administrador.');
-        }
-      } else if (organizationId === 'saltOrgId') { // Se estiver usando um ID temporário
-        organizationId = saltOrgs.id;
-        console.log("Usando organização SALT existente com ID:", organizationId);
+      if (organizationId === 'saltOrgId') {
+        finalOrgId = await getOrCreateSaltOrganization();
       }
 
       // Obter o código da organização
       let organizationCode = "SALT"; // Default
       
       try {
-        if (organizationId) {
+        if (finalOrgId) {
           const { data: orgData, error: orgError } = await supabase
             .from('organizations')
             .select('code')
-            .eq('id', organizationId)
+            .eq('id', finalOrgId)
             .maybeSingle();
           
           if (orgError) {
@@ -145,9 +160,11 @@ export const useAuthManager = (fetchUserProfile: (userId: string) => Promise<any
           }
         }
       } catch (err) {
-        console.error("Erro ao buscar organização:", err);
+        console.error("Erro ao buscar código da organização:", err);
         // Mantém "SALT" como código padrão
       }
+
+      console.log("Registrando usuário com organização:", organizationCode);
 
       // Criar usuário com os metadados necessários
       const { data, error } = await supabase.auth.signUp({
@@ -159,11 +176,17 @@ export const useAuthManager = (fetchUserProfile: (userId: string) => Promise<any
             last_name: lastName,
             organization: organizationCode,
             role: role
-          }
+          },
+          emailRedirectTo: window.location.origin + '/login'
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao criar usuário:", error);
+        throw error;
+      }
+      
+      console.log("Usuário criado com sucesso:", data);
       
       toast.success('Usuário criado com sucesso! Você já pode fazer login.');
       return data;

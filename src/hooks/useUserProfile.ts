@@ -11,6 +11,8 @@ export const useUserProfile = () => {
   // Função para buscar perfil completo do usuário
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log("Buscando perfil para o usuário:", userId);
+      
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select(`
@@ -25,23 +27,28 @@ export const useUserProfile = () => {
         return null;
       }
 
-      if (profileData) {
-        setUser({
-          id: profileData.id,
-          email: profileData.email,
-          first_name: profileData.first_name,
-          last_name: profileData.last_name,
-          avatar_url: profileData.avatar_url,
-          organization_id: profileData.organization_id,
-          role: profileData.role,
-          is_active: profileData.is_active,
-          created_at: profileData.created_at,
-          updated_at: profileData.updated_at
-        });
-        
-        if (profileData.organizations) {
-          setOrganization(profileData.organizations as Organization);
-        }
+      if (!profileData) {
+        console.error("Perfil não encontrado para o usuário:", userId);
+        return null;
+      }
+
+      console.log("Perfil encontrado:", profileData);
+
+      setUser({
+        id: profileData.id,
+        email: profileData.email,
+        first_name: profileData.first_name,
+        last_name: profileData.last_name,
+        avatar_url: profileData.avatar_url,
+        organization_id: profileData.organization_id,
+        role: profileData.role,
+        is_active: profileData.is_active,
+        created_at: profileData.created_at,
+        updated_at: profileData.updated_at
+      });
+      
+      if (profileData.organizations) {
+        setOrganization(profileData.organizations as Organization);
       }
 
       return profileData;

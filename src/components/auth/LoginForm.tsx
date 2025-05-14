@@ -23,6 +23,7 @@ const LoginForm: React.FC = () => {
     
     setIsLoading(true);
     try {
+      console.log("Tentando login via LoginForm com:", email);
       await login(email, password);
       // O redirecionamento acontecerá no AuthContext após verificação do perfil
     } catch (error: any) {

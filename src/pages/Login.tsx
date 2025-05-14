@@ -38,6 +38,7 @@ const Login = () => {
 
     setIsSubmitting(true);
     try {
+      console.log("Tentando login com:", email);
       await login(email, password);
       // Forçar redirecionamento após login bem-sucedido
       navigate('/', { replace: true });
@@ -58,32 +59,10 @@ const Login = () => {
 
     setIsSubmitting(true);
     try {
-      // Buscar a organização SALT de forma segura
-      let saltOrgId;
-      try {
-        const { data, error } = await supabase
-          .from('organizations')
-          .select('id')
-          .eq('code', 'SALT')
-          .maybeSingle();
-        
-        if (error) {
-          console.error("Erro ao buscar organização:", error);
-          throw new Error('Erro ao buscar organização: ' + error.message);
-        }
-        
-        if (!data) {
-          throw new Error('Organização SALT não encontrada. Por favor, contate o suporte.');
-        }
-        
-        saltOrgId = data.id;
-      } catch (error: any) {
-        console.error("Erro ao buscar organização:", error);
-        toast.error(error.message || "Erro ao buscar organização. Tente novamente.");
-        return;
-      }
+      console.log("Tentando registrar usuário:", email);
       
-      await register(email, password, firstName, lastName, saltOrgId);
+      // Usar saltOrgId como placeholder, será resolvido no useAuthManager
+      await register(email, password, firstName, lastName, 'saltOrgId');
       
       toast.success("Conta criada com sucesso! Você já pode fazer login.");
       
@@ -98,7 +77,13 @@ const Login = () => {
       
     } catch (error: any) {
       console.error('Erro no registro:', error);
-      toast.error(error.message || "Não foi possível criar a conta. Tente novamente.");
+      if (error.message.includes('User already registered')) {
+        toast.error("Este email já está registrado. Tente fazer login.");
+      } else if (error.message.includes('SALT')) {
+        toast.error("Erro no sistema: Organização padrão não encontrada. Por favor, contate o suporte.");
+      } else {
+        toast.error(error.message || "Não foi possível criar a conta. Tente novamente.");
+      }
     } finally {
       setIsSubmitting(false);
     }
