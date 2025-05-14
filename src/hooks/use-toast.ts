@@ -1,13 +1,14 @@
 
 import { useState } from "react";
 
-type ToastType = "default" | "success" | "error" | "warning" | "info";
+// Definir os tipos corretos para o toast
+type ToastVariant = "default" | "destructive";
 
 interface Toast {
   id: string;
   title?: string;
   description?: string;
-  type?: ToastType;
+  variant?: ToastVariant;
   duration?: number;
   action?: React.ReactNode;
 }
@@ -15,7 +16,7 @@ interface Toast {
 interface ToastOptions {
   title?: string;
   description?: string;
-  type?: ToastType;
+  variant?: ToastVariant;
   duration?: number;
   action?: React.ReactNode;
 }
@@ -23,15 +24,19 @@ interface ToastOptions {
 export function useToast() {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const addToast = (options: ToastOptions) => {
+  const addToast = (options: ToastOptions | string) => {
     const id = Math.random().toString(36).substring(2, 9);
+    
+    // Converter string em objeto de opções se necessário
+    const toastOptions = typeof options === 'string' ? { description: options } : options;
+    
     const toast = {
       id,
-      title: options.title,
-      description: options.description,
-      type: options.type || "default",
-      duration: options.duration || 5000,
-      action: options.action,
+      title: toastOptions.title,
+      description: toastOptions.description,
+      variant: toastOptions.variant || "default",
+      duration: toastOptions.duration || 5000,
+      action: toastOptions.action,
     };
 
     setToasts((prevToasts) => [...prevToasts, toast]);
@@ -51,57 +56,15 @@ export function useToast() {
 
   return {
     toasts,
-    toast: {
-      success: (options: ToastOptions) => addToast({ ...options, type: "success" }),
-      error: (options: ToastOptions) => addToast({ ...options, type: "error" }),
-      warning: (options: ToastOptions) => addToast({ ...options, type: "warning" }),
-      info: (options: ToastOptions) => addToast({ ...options, type: "info" }),
-      default: (options: ToastOptions) => addToast(options),
-    },
+    toast: addToast,
     dismiss: removeToast,
   };
 }
 
-type ToastFunction = (options: string | ToastOptions) => string;
-
-interface ToastAPI {
-  success: ToastFunction;
-  error: ToastFunction;
-  warning: ToastFunction;
-  info: ToastFunction;
-  default: ToastFunction;
-}
-
 // Helper para facilitar o uso
-export const toast: ToastAPI = {
-  success: (options) => {
-    if (typeof options === "string") {
-      return "" // No-op em ambiente mock
-    }
-    return "" // No-op em ambiente mock
-  },
-  error: (options) => {
-    if (typeof options === "string") {
-      return "" // No-op em ambiente mock
-    }
-    return "" // No-op em ambiente mock
-  },
-  warning: (options) => {
-    if (typeof options === "string") {
-      return "" // No-op em ambiente mock
-    }
-    return "" // No-op em ambiente mock
-  },
-  info: (options) => {
-    if (typeof options === "string") {
-      return "" // No-op em ambiente mock
-    }
-    return "" // No-op em ambiente mock
-  },
-  default: (options) => {
-    if (typeof options === "string") {
-      return "" // No-op em ambiente mock
-    }
-    return "" // No-op em ambiente mock
-  }
+export const toast = (props: ToastOptions | string): string => {
+  // Esta é uma implementação simulada para uso fora do componente
+  // Na versão real, isso seria implementado usando contexto do React
+  console.log('Toast:', typeof props === 'string' ? props : props.description);
+  return Math.random().toString(36).substring(2, 9);
 };

@@ -7,16 +7,15 @@ import { LogOut, User, Camera } from 'lucide-react';
 import TopNavMenu from './TopNavMenu';
 import ProfileSwitcher from './ProfileSwitcher';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 
 interface AppShellProps {
   children: React.ReactNode;
 }
 
 const AppShell: React.FC<AppShellProps> = ({ children }) => {
-  const { user, logout, updateUserAvatar } = useAuth();
+  const { user, logout } = useAuth();
   const { currentProfile } = useProfile();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>('');
@@ -27,14 +26,25 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
   const handleAvatarChange = () => {
     if (avatarUrl) {
-      updateUserAvatar(avatarUrl);
+      // Função para simular a atualização do avatar
       setAvatarUrl('');
       setIsProfileOpen(false);
-      toast.success('Foto de perfil atualizada com sucesso!');
+      toast({
+        title: "Atualização de Avatar",
+        description: "Funcionalidade em desenvolvimento...",
+      });
     } else {
-      toast.error('Por favor, insira um URL válido para a imagem');
+      toast({
+        title: "Erro",
+        description: "Por favor, insira um URL válido para a imagem",
+        variant: "destructive",
+      });
     }
   };
+
+  // Extrair nome de exibição e avatar do objeto de usuário corretamente
+  const displayName = user?.email || "Usuário";
+  const avatarImageUrl = user?.user_metadata?.avatar_url;
 
   return (
     <div className="min-h-screen flex flex-col w-full">
@@ -74,8 +84,8 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
                 <PopoverTrigger asChild>
                   <Button variant="ghost" className="p-0 h-auto hover:bg-transparent relative group">
                     <Avatar className="w-8 h-8 border">
-                      {user?.avatar ? (
-                        <AvatarImage src={user.avatar} alt={user.name} />
+                      {avatarImageUrl ? (
+                        <AvatarImage src={avatarImageUrl} alt={displayName} />
                       ) : (
                         <AvatarFallback>
                           <User size={16} />
@@ -94,8 +104,8 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
                       <Avatar className="w-16 h-16">
                         {avatarUrl ? (
                           <AvatarImage src={avatarUrl} alt="Preview" />
-                        ) : user?.avatar ? (
-                          <AvatarImage src={user.avatar} alt={user.name} />
+                        ) : avatarImageUrl ? (
+                          <AvatarImage src={avatarImageUrl} alt={displayName} />
                         ) : (
                           <AvatarFallback>
                             <User size={24} />
@@ -103,7 +113,7 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
                         )}
                       </Avatar>
                       <div className="flex-1">
-                        <p className="text-sm font-medium">{user?.name}</p>
+                        <p className="text-sm font-medium">{displayName}</p>
                         <p className="text-xs text-muted-foreground">{user?.email}</p>
                       </div>
                     </div>
@@ -140,7 +150,7 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
                 </PopoverContent>
               </Popover>
               <div className="hidden lg:block ml-2">
-                <p className="font-medium text-sm">{user?.name}</p>
+                <p className="font-medium text-sm">{displayName}</p>
                 <p className="text-xs text-gray-500">{user?.email}</p>
               </div>
             </div>

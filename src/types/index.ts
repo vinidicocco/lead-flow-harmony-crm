@@ -56,6 +56,7 @@ export interface Lead {
   updated_at: string;
   next_follow_up?: string;
   last_contact?: string;
+  profile?: Profile; // Adicionado para compatibilidade com mockData
 }
 
 export interface Meeting {
@@ -71,6 +72,7 @@ export interface Meeting {
   created_by: string;
   created_at: string;
   updated_at: string;
+  profile?: Profile; // Adicionado para compatibilidade com mockData
 }
 
 export interface Task {
@@ -85,6 +87,7 @@ export interface Task {
   organization_id: string;
   created_at: string;
   updated_at: string;
+  profile?: Profile; // Adicionado para compatibilidade com mockData
 }
 
 export interface AgentConfig {
