@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Shield, Users, Database, LayoutDashboard, Settings } from 'lucide-react';
+import { Shield, Users, Database, Api, LayoutDashboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const AdminNavMenu = () => {
@@ -9,7 +9,7 @@ const AdminNavMenu = () => {
     { to: '/admin', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
     { to: '/admin/organizations', icon: <Database size={20} />, label: 'Organizations' },
     { to: '/admin/users', icon: <Users size={20} />, label: 'Users' },
-    { to: '/admin/api', icon: <Settings size={20} />, label: 'API Management' },
+    { to: '/admin/api', icon: <Api size={20} />, label: 'API Management' },
     { to: '/admin/audit-logs', icon: <Shield size={20} />, label: 'Audit Logs' },
   ];
 

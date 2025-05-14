@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { useProfile } from '@/context/ProfileContext';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
-import { Save, Bell, User, Shield, Palette, Users, Plus } from 'lucide-react';
+import { Save, Bell, User, Shield, Palette, Users } from 'lucide-react';
 
 const Settings = () => {
   const { currentProfile, currentOrganization } = useProfile();
