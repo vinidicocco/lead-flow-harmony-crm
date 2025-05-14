@@ -26,12 +26,12 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
   const handleAvatarChange = () => {
     if (avatarUrl) {
-      // Função para simular a atualização do avatar
+      // Funcionalidade em implementação
       setAvatarUrl('');
       setIsProfileOpen(false);
       toast({
-        title: "Atualização de Avatar",
-        description: "Funcionalidade em desenvolvimento...",
+        title: "Foto de perfil",
+        description: "Funcionalidade em implementação...",
       });
     } else {
       toast({
@@ -42,9 +42,9 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
     }
   };
 
-  // Extrair nome de exibição e avatar do objeto de usuário corretamente
-  const displayName = user?.email || "Usuário";
-  const avatarImageUrl = user?.user_metadata?.avatar_url;
+  // Obter avatar_url e nome do usuário
+  const avatarUrl_user = user?.avatar_url;
+  const displayName = user ? (user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user.email) : "";
 
   return (
     <div className="min-h-screen flex flex-col w-full">
@@ -84,8 +84,8 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
                 <PopoverTrigger asChild>
                   <Button variant="ghost" className="p-0 h-auto hover:bg-transparent relative group">
                     <Avatar className="w-8 h-8 border">
-                      {avatarImageUrl ? (
-                        <AvatarImage src={avatarImageUrl} alt={displayName} />
+                      {avatarUrl_user ? (
+                        <AvatarImage src={avatarUrl_user} alt={displayName} />
                       ) : (
                         <AvatarFallback>
                           <User size={16} />
@@ -104,8 +104,8 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
                       <Avatar className="w-16 h-16">
                         {avatarUrl ? (
                           <AvatarImage src={avatarUrl} alt="Preview" />
-                        ) : avatarImageUrl ? (
-                          <AvatarImage src={avatarImageUrl} alt={displayName} />
+                        ) : avatarUrl_user ? (
+                          <AvatarImage src={avatarUrl_user} alt={displayName} />
                         ) : (
                           <AvatarFallback>
                             <User size={24} />

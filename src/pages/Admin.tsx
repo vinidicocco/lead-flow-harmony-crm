@@ -64,7 +64,17 @@ const Admin = () => {
         .order('name');
       
       if (orgsError) throw orgsError;
-      setOrganizations(orgs);
+      
+      // Converter dados recebidos para o tipo Organization
+      const typedOrgs: Organization[] = orgs.map(org => ({
+        id: org.id,
+        name: org.name,
+        code: org.code as 'SALT' | 'GHF', // Cast para o tipo Profile
+        created_at: org.created_at,
+        updated_at: org.updated_at
+      }));
+      
+      setOrganizations(typedOrgs);
       
       // Buscar usuários com organização
       const { data: usersData, error: usersError } = await supabase
@@ -231,26 +241,40 @@ const Admin = () => {
       // Inserir permissões padrão
       if (newOrg?.id) {
         // ADMIN permissions
-        await supabase
-          .from('role_permissions')
-          .insert(
-            (await supabase.from('permissions').select('id').neq('code', 'system:admin')).data?.map(p => ({
-              organization_id: newOrg.id,
-              role: 'ADMIN',
-              permission_id: p.id
-            })) || []
-          );
+        const { data: adminPermissions } = await supabase
+          .from('permissions')
+          .select('id')
+          .neq('code', 'system:admin');
           
-        // USER permissions  
-        await supabase
-          .from('role_permissions')
-          .insert(
-            (await supabase.from('permissions').select('id').in('code', ['leads:read', 'meetings:read', 'ai_agent:read'])).data?.map(p => ({
-              organization_id: newOrg.id,
-              role: 'USER',
-              permission_id: p.id
-            })) || []
-          );
+        if (adminPermissions && adminPermissions.length > 0) {
+          const adminRolePermissions = adminPermissions.map(p => ({
+            organization_id: newOrg.id,
+            role: 'ADMIN' as UserRole,
+            permission_id: p.id
+          }));
+          
+          await supabase
+            .from('role_permissions')
+            .insert(adminRolePermissions);
+        }
+          
+        // USER permissions
+        const { data: userPermissions } = await supabase
+          .from('permissions')
+          .select('id')
+          .in('code', ['leads:read', 'meetings:read', 'ai_agent:read']);
+          
+        if (userPermissions && userPermissions.length > 0) {
+          const userRolePermissions = userPermissions.map(p => ({
+            organization_id: newOrg.id,
+            role: 'USER' as UserRole,
+            permission_id: p.id
+          }));
+          
+          await supabase
+            .from('role_permissions')
+            .insert(userRolePermissions);
+        }
           
         // Criar configuração do agente
         await supabase

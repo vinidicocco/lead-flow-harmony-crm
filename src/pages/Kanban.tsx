@@ -1,263 +1,329 @@
-
-import React, { useMemo, useState } from 'react';
-import { useProfile } from '@/context/ProfileContext';
-import { getLeadsByProfile } from '@/data/mockData';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { Lead } from '@/types';
+import { getLeadsByProfile } from '@/data/mockData';
+import { useProfile } from '@/context/ProfileContext';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
-import { Check, Phone, FileText, FileSignature, ArrowRight, Handshake, Info } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { Input } from '@/components/ui/input';
+import { Search, Clock, Calendar } from 'lucide-react';
+import { formatDate } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 
-const KanbanBoard = () => {
+const Kanban = () => {
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const { currentProfile } = useProfile();
-  const allLeads = useMemo(() => getLeadsByProfile(currentProfile), [currentProfile]);
-  
-  // Estados para o quadro kanban
-  const [leads, setLeads] = useState<Lead[]>(allLeads);
-  const [draggedLead, setDraggedLead] = useState<Lead | null>(null);
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const navigate = useNavigate();
 
-  // Definir colunas unificadas do kanban para ambos os perfis
-  const columns = useMemo(() => [
-    { id: 'qualified', title: 'Lead Qualificado', icon: <Check className="w-4 h-4" /> },
-    { id: 'contact_attempt', title: 'Tentativa de Contato', icon: <Phone className="w-4 h-4" /> },
-    { id: 'contacted', title: 'Contato Realizado', icon: <Phone className="w-4 h-4 text-green-500" /> },
-    { id: 'proposal', title: 'Proposta', icon: <FileText className="w-4 h-4" /> },
-    { id: 'contract', title: 'Ass. de Contrato', icon: <FileSignature className="w-4 h-4" /> },
-    { id: 'payment', title: 'Transferência/Pagamento', icon: <ArrowRight className="w-4 h-4" /> },
-    { id: 'closed', title: 'Negócio Fechado', icon: <Handshake className="w-4 h-4" /> },
-  ], []);
+  useEffect(() => {
+    fetchData();
+  }, [currentProfile]);
 
-  // Formatar moeda
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-      maximumFractionDigits: 0,
-    }).format(value);
+  const fetchData = async () => {
+    if (!currentProfile) return [];
+    const leads = getLeadsByProfile(currentProfile);
+    setLeads(leads);
+    return leads.sort((a, b) => 
+      new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+    );
   };
 
-  // Lidar com o início do arrasto
-  const handleDragStart = (lead: Lead) => {
-    setDraggedLead(lead);
-  };
+  const handleDragEnd = (result: DropResult) => {
+    const { destination, source, draggableId } = result;
 
-  // Lidar com o arrasto sobre
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
+    if (!destination) {
+      return;
+    }
 
-  // Lidar com a soltura
-  const handleDrop = (e: React.DragEvent, status: string) => {
-    e.preventDefault();
-    
-    if (draggedLead) {
-      const updatedLeads = leads.map(lead => {
-        if (lead.id === draggedLead.id) {
-          toast.success(`Movido ${lead.name} para ${status}`);
-          return { ...lead, status: status as Lead['status'] };
-        }
-        return lead;
-      });
-      
-      setLeads(updatedLeads);
-      setDraggedLead(null);
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return;
+    }
+
+    const newLeads = [...leads];
+    const leadToMove = newLeads.find(lead => lead.id === draggableId);
+
+    if (leadToMove) {
+      leadToMove.status = destination.droppableId as Lead['status'];
+
+      const sourceIndex = newLeads.findIndex(lead => lead.id === draggableId);
+      newLeads.splice(sourceIndex, 1);
+      newLeads.splice(destination.index, 0, leadToMove);
+
+      setLeads(newLeads);
     }
   };
 
-  // Abrir o diálogo com detalhes do lead
-  const openLeadDetails = (lead: Lead) => {
-    setSelectedLead(lead);
-    setDialogOpen(true);
+  const filteredLeads = useMemo(() => {
+    if (!searchTerm) {
+      return leads;
+    }
+
+    const term = searchTerm.toLowerCase();
+    return leads.filter(lead =>
+      lead.name.toLowerCase().includes(term) ||
+      lead.company.toLowerCase().includes(term) ||
+      (lead.email && lead.email.toLowerCase().includes(term)) ||
+      (lead.phone && lead.phone.toLowerCase().includes(term))
+    );
+  }, [leads, searchTerm]);
+
+  const getLeadsByStatus = (status: Lead['status']) => {
+    return filteredLeads.filter(lead => lead.status === status);
   };
 
-  // Filtrar leads por status
-  const getLeadsByStatus = (status: string) => {
-    return leads.filter(lead => lead.status === status);
+  const handleLeadClick = (lead: Lead) => {
+    navigate(`/leads/${lead.id}`);
   };
 
-  // Calcular totais para cada coluna
-  const calculateColumnTotal = (status: string) => {
-    return getLeadsByStatus(status).reduce((total, lead) => total + lead.value, 0);
-  };
-
-  // Obter o nome do status mais legível
-  const getStatusLabel = (status: string) => {
-    const column = columns.find(col => col.id === status);
-    return column ? column.title : status;
+  const renderCard = (lead: Lead) => {
+    return (
+      <div 
+        className="bg-white p-4 mb-3 rounded-lg border shadow-sm hover:shadow cursor-pointer"
+        onClick={() => handleLeadClick(lead)}
+      >
+        <h3 className="font-semibold text-gray-800">{lead.name}</h3>
+        <p className="text-gray-600 text-sm">{lead.company}</p>
+        <div className="text-xs mt-2 text-gray-500">
+          <div className="flex items-center">
+            <Clock size={12} className="mr-1" />
+            <span>Último contato: {lead.last_contact ? formatDate(lead.last_contact) : "N/A"}</span>
+          </div>
+          <div className="flex items-center mt-1">
+            <Calendar size={12} className="mr-1" />
+            <span>Próximo contato: {lead.next_follow_up ? formatDate(lead.next_follow_up) : "N/A"}</span>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">{currentProfile} CRM</h1>
-        <Button onClick={() => setLeads(allLeads)}>Resetar Quadro</Button>
+      <div className="mb-4">
+        <h1 className="text-3xl font-bold mb-4">Kanban</h1>
+        <div className="relative">
+          <Input
+            type="text"
+            placeholder="Buscar leads..."
+            className="pl-10"
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+          />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        </div>
       </div>
-      
-      <div className="kanban-board overflow-x-auto pb-6">
-        {columns.map(column => (
-          <div 
-            key={column.id}
-            className="kanban-column"
-            onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, column.id)}
-          >
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex items-center gap-2">
-                {column.icon}
-                <h2 className="font-bold">{column.title}</h2>
-              </div>
-              <span className="text-sm text-gray-500">{getLeadsByStatus(column.id).length}</span>
-            </div>
-            
-            <div className="text-xs text-gray-500 mb-2">
-              {calculateColumnTotal(column.id) > 0 && (
-                <>Total: {formatCurrency(calculateColumnTotal(column.id))}</>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              {getLeadsByStatus(column.id).map(lead => (
+
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <div className="grid grid-cols-6 gap-4">
+          {/* Qualified */}
+          <div className="col-span-1">
+            <h2 className="font-semibold mb-2">Qualificado</h2>
+            <Droppable droppableId="qualified">
+              {(provided) => (
                 <div
-                  key={lead.id}
-                  className={`kanban-card ${
-                    currentProfile === 'SALT' 
-                      ? 'border-l-[#9b87f5]' 
-                      : 'border-l-[#0EA5E9]'
-                  }`}
-                  draggable
-                  onDragStart={() => handleDragStart(lead)}
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="bg-gray-100 p-3 rounded-md min-h-[300px]"
                 >
-                  <h3 
-                    className="font-medium cursor-pointer hover:text-blue-600 hover:underline"
-                    onClick={() => openLeadDetails(lead)}
-                  >
-                    {lead.name}
-                  </h3>
-                  <p className="text-xs text-gray-500">{lead.company}</p>
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="text-xs font-medium">
-                      {formatCurrency(lead.value)}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      {new Date(lead.updatedAt).toLocaleDateString('pt-BR')}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Diálogo de detalhes do lead */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          {selectedLead && (
-            <>
-              <DialogHeader>
-                <DialogTitle>Detalhes do Lead - {selectedLead.name}</DialogTitle>
-                <DialogDescription>
-                  {selectedLead.company} | {selectedLead.position}
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="grid grid-cols-2 gap-4 py-4">
-                <div className="space-y-2">
-                  <div className="text-sm">
-                    <span className="font-semibold">Email:</span> {selectedLead.email}
-                  </div>
-                  <div className="text-sm">
-                    <span className="font-semibold">Telefone:</span> {selectedLead.phone}
-                  </div>
-                  <div className="text-sm">
-                    <span className="font-semibold">Valor:</span> {formatCurrency(selectedLead.value)}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="text-sm">
-                    <span className="font-semibold">Status Atual:</span> {getStatusLabel(selectedLead.status)}
-                  </div>
-                  <div className="text-sm">
-                    <span className="font-semibold">Último Contato:</span> {selectedLead.lastContact ? new Date(selectedLead.lastContact).toLocaleDateString('pt-BR') : 'Não registrado'}
-                  </div>
-                  <div className="text-sm">
-                    <span className="font-semibold">Próximo Acompanhamento:</span> {selectedLead.nextFollowUp ? new Date(selectedLead.nextFollowUp).toLocaleDateString('pt-BR') : 'Não agendado'}
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2 mt-2">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Info className="h-4 w-4" /> 
-                  Acompanhamento de Situação
-                </h3>
-                <div className="p-4 rounded-md bg-gray-50 border">
-                  <div className="font-semibold mb-2">Histórico de Status:</div>
-                  <div className="space-y-3">
-                    {columns.map((column, index) => {
-                      const isActive = selectedLead.status === column.id;
-                      const isPast = columns.findIndex(c => c.id === selectedLead.status) > index;
-                      
-                      return (
-                        <div 
-                          key={column.id} 
-                          className={`flex items-center gap-2 p-2 rounded-md ${
-                            isActive 
-                              ? 'bg-blue-50 border border-blue-200' 
-                              : isPast 
-                                ? 'text-green-700' 
-                                : 'text-gray-500'
-                          }`}
+                  {getLeadsByStatus('qualified').map((lead, index) => (
+                    <Draggable key={lead.id} draggableId={lead.id} index={index}>
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
                         >
-                          <div className={`rounded-full p-1 ${
-                            isActive 
-                              ? 'bg-blue-100 text-blue-700' 
-                              : isPast 
-                                ? 'bg-green-100 text-green-700' 
-                                : 'bg-gray-100 text-gray-500'
-                          }`}>
-                            {column.icon}
-                          </div>
-                          <span className={`text-sm ${isActive ? 'font-medium' : ''}`}>
-                            {column.title}
-                          </span>
-                          {isActive && (
-                            <span className="ml-auto text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                              Status Atual
-                            </span>
-                          )}
-                          {isPast && (
-                            <span className="ml-auto text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                              Concluído
-                            </span>
-                          )}
+                          {renderCard(lead)}
                         </div>
-                      );
-                    })}
-                  </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
                 </div>
-              </div>
+              )}
+            </Droppable>
+          </div>
 
-              <div className="mt-4">
-                <h3 className="font-semibold mb-2">Notas:</h3>
-                <p className="text-sm bg-gray-50 p-3 rounded-md border">
-                  {selectedLead.notes}
-                </p>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+          {/* Contact Attempt */}
+          <div className="col-span-1">
+            <h2 className="font-semibold mb-2">Tentativa de Contato</h2>
+            <Droppable droppableId="contact_attempt">
+              {(provided) => (
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="bg-gray-100 p-3 rounded-md min-h-[300px]"
+                >
+                  {getLeadsByStatus('contact_attempt').map((lead, index) => (
+                    <Draggable key={lead.id} draggableId={lead.id} index={index}>
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                        >
+                          {renderCard(lead)}
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </div>
+
+          {/* Contacted */}
+          <div className="col-span-1">
+            <h2 className="font-semibold mb-2">Contactado</h2>
+            <Droppable droppableId="contacted">
+              {(provided) => (
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="bg-gray-100 p-3 rounded-md min-h-[300px]"
+                >
+                  {getLeadsByStatus('contacted').map((lead, index) => (
+                    <Draggable key={lead.id} draggableId={lead.id} index={index}>
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                        >
+                          {renderCard(lead)}
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </div>
+
+          {/* Proposal */}
+          <div className="col-span-1">
+            <h2 className="font-semibold mb-2">Proposta</h2>
+            <Droppable droppableId="proposal">
+              {(provided) => (
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="bg-gray-100 p-3 rounded-md min-h-[300px]"
+                >
+                  {getLeadsByStatus('proposal').map((lead, index) => (
+                    <Draggable key={lead.id} draggableId={lead.id} index={index}>
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                        >
+                          {renderCard(lead)}
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </div>
+
+          {/* Contract */}
+          <div className="col-span-1">
+            <h2 className="font-semibold mb-2">Contrato</h2>
+            <Droppable droppableId="contract">
+              {(provided) => (
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="bg-gray-100 p-3 rounded-md min-h-[300px]"
+                >
+                  {getLeadsByStatus('contract').map((lead, index) => (
+                    <Draggable key={lead.id} draggableId={lead.id} index={index}>
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                        >
+                          {renderCard(lead)}
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </div>
+
+          {/* Payment */}
+          <div className="col-span-1">
+            <h2 className="font-semibold mb-2">Pagamento</h2>
+            <Droppable droppableId="payment">
+              {(provided) => (
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="bg-gray-100 p-3 rounded-md min-h-[300px]"
+                >
+                  {getLeadsByStatus('payment').map((lead, index) => (
+                    <Draggable key={lead.id} draggableId={lead.id} index={index}>
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                        >
+                          {renderCard(lead)}
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </div>
+
+          {/* Closed */}
+           <div className="col-span-1">
+            <h2 className="font-semibold mb-2">Fechado</h2>
+            <Droppable droppableId="closed">
+              {(provided) => (
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="bg-gray-100 p-3 rounded-md min-h-[300px]"
+                >
+                  {getLeadsByStatus('closed').map((lead, index) => (
+                    <Draggable key={lead.id} draggableId={lead.id} index={index}>
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                        >
+                          {renderCard(lead)}
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </div>
+        </div>
+      </DragDropContext>
     </div>
   );
 };
 
-export default KanbanBoard;
+export default Kanban;

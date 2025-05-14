@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { useProfile } from '@/context/ProfileContext';
 import { 
@@ -120,6 +119,41 @@ const Dashboard = () => {
       { name: 'Baixa', value: counts.low, color: '#10b981' }
     ];
   }, [tasks]);
+  
+  // Exemplo de correção onde estamos substituindo createdAt por created_at
+  const salesByDay = React.useMemo(() => {
+    if (!leads || !currentProfile) return [];
+
+    const today = new Date();
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    // Filtra leads do mês atual que foram fechados
+    const thisMonthClosedLeads = leads.filter(lead => 
+      lead.status === 'closed' && 
+      new Date(lead.created_at) >= startOfMonth && 
+      new Date(lead.created_at) <= today
+    );
+    
+    return thisMonthClosedLeads.map(lead => ({
+      date: formatDate(lead.created_at),
+      value: lead.value
+    }));
+  }, [leads, currentProfile]);
+  
+  // Exemplo de outra correção para created_at
+  const opportunityBySource = React.useMemo(() => {
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    
+    const recentLeads = leads.filter(
+      lead => new Date(lead.created_at) > oneMonthAgo
+    );
+    
+    return recentLeads.map(lead => ({
+      source: lead.source,
+      value: lead.value
+    }));
+  }, [leads]);
   
   // Cálculo de próximos e leads recentes (mais recentes primeiro)
   const recentLeads = useMemo(() => {

@@ -1,3 +1,4 @@
+
 import { Lead, Meeting, Task, Stats } from '@/types';
 
 // Gerar leads fictícios
@@ -541,7 +542,7 @@ export const mockMeetings: Meeting[] = [
   {
     id: '1',
     title: 'Reunião de Descoberta Inicial',
-    date: '2025-05-15T09:00:00Z',
+    date: '2025-05-15T09:00:00Z', // Data completa com horário
     duration: 30,
     lead_id: '1',
     lead_name: 'João Silva',
