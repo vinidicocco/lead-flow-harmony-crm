@@ -2,8 +2,8 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useProfile } from '@/context/ProfileContext';
+import { useAuth } from '@/context/AuthContext';
 import { Profile } from '@/types';
-import { toast } from 'sonner';
 import { ChevronDown } from 'lucide-react';
 import {
   DropdownMenu,
@@ -14,13 +14,15 @@ import {
 
 const ProfileSwitcher = () => {
   const { currentProfile, setCurrentProfile } = useProfile();
+  const { user } = useAuth();
 
-  const handleProfileChange = (profile: Profile) => {
-    setCurrentProfile(profile);
-    toast.success(`Switched to ${profile} profile`);
-  };
+  // Verificar se o usuário é MASTER
+  const isMaster = user?.role === 'MASTER';
+  
+  // Se não for MASTER, o componente não permite mudança
+  const isDisabled = !isMaster;
 
-  // Always use SALT color as default for all profiles
+  // Sempre usar SALT color como default para todos os perfis
   const profileButtonColor = 'bg-salt hover:bg-salt-dark';
 
   return (
@@ -29,28 +31,31 @@ const ProfileSwitcher = () => {
         <Button
           variant="default"
           size="sm"
-          className={`${profileButtonColor} gap-1`}
+          className={`${profileButtonColor} gap-1 ${isDisabled ? 'opacity-80' : ''}`}
+          disabled={isDisabled}
         >
           {currentProfile}
-          <ChevronDown size={16} />
+          {isMaster && <ChevronDown size={16} />}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-24">
-        <DropdownMenuItem
-          onClick={() => handleProfileChange('SALT')}
-          className={`flex items-center ${currentProfile === 'SALT' ? 'bg-salt/20' : ''}`}
-        >
-          <div className={`w-3 h-3 rounded-full bg-salt mr-2`}></div>
-          SALT
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => handleProfileChange('GHF')}
-          className={`flex items-center ${currentProfile === 'GHF' ? 'bg-salt/20' : ''}`}
-        >
-          <div className={`w-3 h-3 rounded-full bg-salt mr-2`}></div>
-          GHF
-        </DropdownMenuItem>
-      </DropdownMenuContent>
+      {isMaster && (
+        <DropdownMenuContent align="start" className="w-24">
+          <DropdownMenuItem
+            onClick={() => setCurrentProfile('SALT')}
+            className={`flex items-center ${currentProfile === 'SALT' ? 'bg-salt/20' : ''}`}
+          >
+            <div className={`w-3 h-3 rounded-full bg-salt mr-2`}></div>
+            SALT
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => setCurrentProfile('GHF')}
+            className={`flex items-center ${currentProfile === 'GHF' ? 'bg-salt/20' : ''}`}
+          >
+            <div className={`w-3 h-3 rounded-full bg-salt mr-2`}></div>
+            GHF
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      )}
     </DropdownMenu>
   );
 };

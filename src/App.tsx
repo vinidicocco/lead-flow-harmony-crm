@@ -1,82 +1,135 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/context/AuthContext";
-import { ProfileProvider } from "@/context/ProfileContext";
-import Index from "./pages/Index";
-import Login from "./pages/Login";
-import Kanban from "./pages/Kanban";
-import Leads from "./pages/Leads";
-import Meetings from "./pages/Meetings";
-import FollowUp from "./pages/FollowUp";
-import GestaoAgenteIA from "./pages/GestaoAgenteIA";
-import Settings from "./pages/Settings";
-import WhatsApp from "./pages/WhatsApp";
-import NotFound from "./pages/NotFound";
-import AppShell from "./components/layout/AppShell";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import { ProfileProvider } from './context/ProfileContext';
+import { Toaster } from 'sonner';
+import AppShell from './components/layout/AppShell';
+import Dashboard from './pages/Dashboard';
+import Kanban from './pages/Kanban';
+import Leads from './pages/Leads';
+import Meetings from './pages/Meetings';
+import FollowUp from './pages/FollowUp';
+import GestaoAgenteIA from './pages/GestaoAgenteIA';
+import WhatsApp from './pages/WhatsApp';
+import Settings from './pages/Settings';
+import NotFound from './pages/NotFound';
+import Login from './pages/Login';
+import Unauthorized from './pages/Unauthorized';
+import Admin from './pages/Admin';
+import AgentSettings from './pages/AgentSettings';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import './App.css';
 
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
+function App() {
+  return (
+    <Router>
       <AuthProvider>
         <ProfileProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/" element={
+          <Routes>
+            {/* Rota de Login */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/unauthorized" element={<Unauthorized />} />
+            
+            {/* Rotas Protegidas */}
+            <Route path="/" element={
+              <ProtectedRoute>
                 <AppShell>
-                  <Index />
+                  <Dashboard />
                 </AppShell>
-              } />
-              <Route path="/kanban" element={
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/kanban" element={
+              <ProtectedRoute>
                 <AppShell>
                   <Kanban />
                 </AppShell>
-              } />
-              <Route path="/leads" element={
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/leads" element={
+              <ProtectedRoute>
                 <AppShell>
                   <Leads />
                 </AppShell>
-              } />
-              <Route path="/meetings" element={
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/meetings" element={
+              <ProtectedRoute>
                 <AppShell>
                   <Meetings />
                 </AppShell>
-              } />
-              <Route path="/follow-up" element={
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/follow-up" element={
+              <ProtectedRoute>
                 <AppShell>
                   <FollowUp />
                 </AppShell>
-              } />
-              <Route path="/ai-agent" element={
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/ai-agent" element={
+              <ProtectedRoute>
                 <AppShell>
                   <GestaoAgenteIA />
                 </AppShell>
-              } />
-              <Route path="/whatsapp" element={
+              </ProtectedRoute>
+            } />
+
+            <Route path="/agent-settings" element={
+              <ProtectedRoute requiredPermission="ai_agent:configure">
+                <AppShell>
+                  <AgentSettings />
+                </AppShell>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/whatsapp" element={
+              <ProtectedRoute>
                 <AppShell>
                   <WhatsApp />
                 </AppShell>
-              } />
-              <Route path="/settings" element={
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/settings" element={
+              <ProtectedRoute>
                 <AppShell>
                   <Settings />
                 </AppShell>
-              } />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+              </ProtectedRoute>
+            } />
+            
+            {/* Rota de Administração (apenas MASTER) */}
+            <Route path="/admin" element={
+              <ProtectedRoute requiredRole="MASTER">
+                <AppShell>
+                  <Admin />
+                </AppShell>
+              </ProtectedRoute>
+            } />
+            
+            {/* Página 404 */}
+            <Route path="/404" element={
+              <AppShell>
+                <NotFound />
+              </AppShell>
+            } />
+            
+            {/* Redirecionar qualquer outra rota para 404 */}
+            <Route path="*" element={<Navigate to="/404" replace />} />
+          </Routes>
+          
+          {/* Toaster para notificações */}
+          <Toaster richColors position="top-right" />
         </ProfileProvider>
       </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+    </Router>
+  );
+}
 
 export default App;

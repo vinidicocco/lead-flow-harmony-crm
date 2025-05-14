@@ -1,6 +1,8 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Profile } from '@/types';
+import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
 
 interface ProfileContextType {
   currentProfile: Profile;
@@ -10,10 +12,32 @@ interface ProfileContextType {
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
 export const ProfileProvider = ({ children }: { children: ReactNode }) => {
+  const { user, organization } = useAuth();
   const [currentProfile, setCurrentProfile] = useState<Profile>('SALT');
 
+  // Se o usuário estiver autenticado, usa o perfil da organização
+  useEffect(() => {
+    if (organization) {
+      const orgProfile = organization.code as Profile;
+      if (orgProfile && (orgProfile === 'SALT' || orgProfile === 'GHF')) {
+        setCurrentProfile(orgProfile);
+      }
+    }
+  }, [organization]);
+
+  const handleProfileChange = (profile: Profile) => {
+    // Apenas usuários MASTER podem trocar de perfil
+    if (user?.role === 'MASTER') {
+      setCurrentProfile(profile);
+      toast.success(`Perfil alterado para ${profile}`);
+    } else {
+      // Outros usuários só podem usar o perfil da sua organização
+      toast.error('Você não tem permissão para alterar o perfil');
+    }
+  };
+
   return (
-    <ProfileContext.Provider value={{ currentProfile, setCurrentProfile }}>
+    <ProfileContext.Provider value={{ currentProfile, setCurrentProfile: handleProfileChange }}>
       {children}
     </ProfileContext.Provider>
   );
@@ -22,7 +46,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 export const useProfile = () => {
   const context = useContext(ProfileContext);
   if (!context) {
-    throw new Error('useProfile must be used within a ProfileProvider');
+    throw new Error('useProfile deve ser usado dentro de um ProfileProvider');
   }
   return context;
 };
