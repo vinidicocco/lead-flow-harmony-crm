@@ -1,6 +1,7 @@
+
 import React, { useMemo, useState } from 'react';
 import { useProfile } from '@/context/ProfileContext';
-import { getLeadsForProfile, getTasksForProfile } from '@/data/mockDataUtils';
+import { getLeadsByProfile, getTasksByProfile } from '@/data/mockData';
 import { Lead, Task } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,8 +12,8 @@ import { Clock, CheckCircle, ArrowRight, Phone } from 'lucide-react';
 
 const FollowUpPage = () => {
   const { currentProfile } = useProfile();
-  const leads = useMemo(() => getLeadsForProfile(currentProfile), [currentProfile]);
-  const tasks = useMemo(() => getTasksForProfile(currentProfile), [currentProfile]);
+  const leads = useMemo(() => getLeadsByProfile(currentProfile), [currentProfile]);
+  const tasks = useMemo(() => getTasksByProfile(currentProfile), [currentProfile]);
   
   const [activeTab, setActiveTab] = useState<'followups' | 'tasks'>('followups');
   

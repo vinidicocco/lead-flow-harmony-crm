@@ -1,19 +1,5 @@
 
-// Define organization profiles (no longer just limited to SALT and GHF)
-export type Profile = 'SALT' | 'GHF' | string;
-
-export interface Organization {
-  id: string;
-  name: string;
-  logo?: string;
-  primaryColor?: string;
-  secondaryColor?: string;
-  createdAt: string;
-  ownerId: string;
-}
-
-// Extended user roles
-export type UserRole = 'super_admin' | 'org_admin' | 'org_user';
+export type Profile = 'SALT' | 'GHF';
 
 export interface User {
   id: string;
@@ -21,11 +7,7 @@ export interface User {
   email: string;
   avatar?: string;
   profile: Profile;
-  role: UserRole;
-  orgId: string;
-  isActive: boolean;
-  createdAt: string;
-  lastLoginAt?: string;
+  isAdmin?: boolean;
 }
 
 export interface Lead {
@@ -42,7 +24,6 @@ export interface Lead {
   createdAt: string;
   updatedAt: string;
   profile: Profile;
-  orgId: string;
   nextFollowUp?: string;
   lastContact?: string;
 }
@@ -58,7 +39,6 @@ export interface Meeting {
   notes: string;
   status: 'scheduled' | 'completed' | 'canceled';
   profile: Profile;
-  orgId: string;
 }
 
 export interface Task {
@@ -71,7 +51,6 @@ export interface Task {
   assignedTo: string;
   leadId?: string;
   profile: Profile;
-  orgId: string;
 }
 
 export interface Stats {
@@ -81,38 +60,4 @@ export interface Stats {
   revenueThisMonth: number;
   conversionRate: number;
   averageDealSize: number;
-}
-
-export interface ApiIntegration {
-  id: string;
-  name: string;
-  type: 'oauth' | 'api_key' | 'webhook';
-  status: 'active' | 'inactive' | 'error';
-  config: Record<string, any>;
-  orgId: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ApiKey {
-  id: string;
-  name: string;
-  key: string;
-  permissions: string[];
-  orgId: string;
-  createdBy: string;
-  createdAt: string;
-  expiresAt?: string;
-  lastUsed?: string;
-}
-
-export interface AuditLog {
-  id: string;
-  userId: string;
-  action: string;
-  resource: string;
-  resourceId: string;
-  orgId: string;
-  timestamp: string;
-  metadata: Record<string, any>;
 }

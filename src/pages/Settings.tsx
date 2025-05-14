@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,20 +7,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { useProfile } from '@/context/ProfileContext';
-import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
-import { Save, Bell, User, Shield, Palette, Users, Plus } from 'lucide-react';
+import { Save, Bell, User, Shield, Palette } from 'lucide-react';
 
 const Settings = () => {
-  const { currentProfile, currentOrganization } = useProfile();
-  const { user, isOrgAdmin } = useAuth();
+  const { currentProfile } = useProfile();
   const [activeTab, setActiveTab] = useState('profile');
   const [settings, setSettings] = useState({
     profile: {
-      name: user?.name || '',
-      email: user?.email || '',
-      phone: '+55 (11) 98765-4321',
-      bio: 'CRM user with access to system features.'
+      name: currentProfile === 'SALT' ? 'Alexandre Silva' : 'Marina Santos',
+      email: currentProfile === 'SALT' ? 'alexandre@empresa.com.br' : 'marina@empresa.com.br',
+      phone: currentProfile === 'SALT' ? '+55 (11) 98765-4321' : '+55 (11) 97654-3210',
+      bio: currentProfile === 'SALT' ? 'Gerente de vendas com 8 anos de experiência no setor financeiro.' : 'Especialista em vendas no setor de saúde com 6 anos de experiência.'
     },
     notifications: {
       emailNotifications: true,
@@ -34,14 +33,6 @@ const Settings = () => {
       denseMode: false,
       highContrast: false,
       fontSize: 'medium'
-    },
-    organization: {
-      name: currentOrganization?.name || currentProfile,
-      email: `info@${currentProfile.toLowerCase()}.com`,
-      phone: '+55 (11) 3333-4444',
-      address: 'Av. Paulista, 1000, São Paulo - SP',
-      website: `https://www.${currentProfile.toLowerCase()}.com`,
-      logo: currentOrganization?.logo || ''
     }
   });
 
@@ -76,17 +67,6 @@ const Settings = () => {
     });
   };
 
-  const handleOrganizationChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setSettings({
-      ...settings,
-      organization: {
-        ...settings.organization,
-        [name]: value
-      }
-    });
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     toast.success('Configurações salvas com sucesso!');
@@ -111,12 +91,6 @@ const Settings = () => {
             <Palette className="w-4 h-4 mr-2" />
             Aparência
           </TabsTrigger>
-          {isOrgAdmin() && (
-            <TabsTrigger value="organization">
-              <Users className="w-4 h-4 mr-2" />
-              Organização
-            </TabsTrigger>
-          )}
           <TabsTrigger value="security">
             <Shield className="w-4 h-4 mr-2" />
             Segurança
@@ -149,13 +123,7 @@ const Settings = () => {
                       name="email"
                       value={settings.profile.email}
                       onChange={handleProfileChange}
-                      disabled={!isOrgAdmin()}
                     />
-                    {!isOrgAdmin() && (
-                      <p className="text-xs text-muted-foreground">
-                        Contate um administrador para alterar seu email.
-                      </p>
-                    )}
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Telefone</label>
@@ -163,15 +131,6 @@ const Settings = () => {
                       name="phone"
                       value={settings.profile.phone}
                       onChange={handleProfileChange}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Função</label>
-                    <Input 
-                      value={user?.role === 'super_admin' ? 'Super Admin' : 
-                             user?.role === 'org_admin' ? 'Administrador da Organização' : 
-                             'Usuário Regular'}
-                      disabled
                     />
                   </div>
                 </div>
@@ -386,109 +345,6 @@ const Settings = () => {
             </CardContent>
           </Card>
         </TabsContent>
-        
-        {/* Organization settings - only for admins */}
-        {isOrgAdmin() && (
-          <TabsContent value="organization">
-            <Card>
-              <CardHeader>
-                <CardTitle>Configurações da Organização</CardTitle>
-                <CardDescription>
-                  Gerencie detalhes da sua organização
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form className="space-y-6" onSubmit={handleSubmit}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Nome da Organização</label>
-                      <Input 
-                        name="name"
-                        value={settings.organization.name}
-                        onChange={handleOrganizationChange}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Email de Contato</label>
-                      <Input 
-                        type="email"
-                        name="email"
-                        value={settings.organization.email}
-                        onChange={handleOrganizationChange}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Telefone</label>
-                      <Input 
-                        name="phone"
-                        value={settings.organization.phone}
-                        onChange={handleOrganizationChange}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Website</label>
-                      <Input 
-                        name="website"
-                        value={settings.organization.website}
-                        onChange={handleOrganizationChange}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Endereço</label>
-                    <Input 
-                      name="address"
-                      value={settings.organization.address}
-                      onChange={handleOrganizationChange}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Logo (URL)</label>
-                    <Input 
-                      name="logo"
-                      value={settings.organization.logo}
-                      onChange={handleOrganizationChange}
-                      placeholder="https://example.com/logo.png"
-                    />
-                    {settings.organization.logo && (
-                      <div className="mt-3 p-4 border rounded-md flex items-center justify-center">
-                        <img 
-                          src={settings.organization.logo} 
-                          alt="Logo preview" 
-                          className="max-h-24 max-w-full object-contain"
-                        />
-                      </div>
-                    )}
-                  </div>
-                  
-                  {user?.role === 'org_admin' && (
-                    <div className="border-t pt-4 mt-6">
-                      <h3 className="font-medium mb-2">Gerenciar Usuários</h3>
-                      <p className="text-sm text-gray-500 mb-3">
-                        Administre os usuários em sua organização
-                      </p>
-                      <Button variant="outline" className="mr-2">
-                        <Users className="w-4 h-4 mr-2" />
-                        Gerenciar Usuários
-                      </Button>
-                      <Button>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Adicionar Usuário
-                      </Button>
-                    </div>
-                  )}
-                  
-                  <Button type="submit">
-                    <Save className="w-4 h-4 mr-2" />
-                    Salvar Alterações
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        )}
         
         <TabsContent value="security">
           <Card>
