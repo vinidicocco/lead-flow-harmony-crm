@@ -1,30 +1,46 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/context/AuthContext';
 import { toast } from "sonner";
+import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { useForm } from "react-hook-form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+// Define schema for login form
+const loginSchema = z.object({
+  email: z.string().email("Email inválido").min(1, "Email é obrigatório"),
+  password: z.string().min(1, "Senha é obrigatória")
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 const LoginForm: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = React.useState(false);
   const { login } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password) {
-      toast.error('Por favor, preencha ambos email e senha');
-      return;
-    }
-    
-    setIsLoading(true);
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
+  
+  const { isSubmitting } = form.formState;
+
+  const togglePasswordVisibility = () => {
+    setIsPasswordVisible(!isPasswordVisible);
+  };
+
+  const onSubmit = async (data: LoginFormValues) => {
     try {
-      console.log("Tentando login via LoginForm com:", email);
-      await login(email, password);
+      console.log("Tentando login via LoginForm com:", data.email);
+      await login(data.email, data.password);
       // O redirecionamento acontecerá no AuthContext após verificação do perfil
     } catch (error: any) {
       console.error('Erro de login:', error);
@@ -45,8 +61,6 @@ const LoginForm: React.FC = () => {
       } else {
         toast.error('Erro ao fazer login. Verifique suas credenciais.');
       }
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -58,39 +72,72 @@ const LoginForm: React.FC = () => {
           Entre com suas credenciais para acessar sua conta
         </CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input 
-              id="email" 
-              type="email" 
-              placeholder="salt@example.com ou ghf@example.com" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
+      
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="email" 
+                      placeholder="salt@example.com ou ghf@example.com" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Senha</Label>
-            </div>
-            <Input 
-              id="password" 
-              type="password" 
-              placeholder="Use 'password' para demo" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required 
+            
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Senha</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input 
+                        type={isPasswordVisible ? "text" : "password"} 
+                        placeholder="Use 'password' para demo" 
+                        {...field} 
+                      />
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={togglePasswordVisibility}
+                        className="absolute right-0 top-0 h-10 w-10"
+                      >
+                        {isPasswordVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </Button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-        </CardContent>
-        <CardFooter>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Fazendo login...' : 'Login'}
-          </Button>
-        </CardFooter>
-      </form>
+          </CardContent>
+          
+          <CardFooter>
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 size={16} className="mr-2 animate-spin" />
+                  Fazendo login...
+                </>
+              ) : (
+                'Login'
+              )}
+            </Button>
+          </CardFooter>
+        </form>
+      </Form>
     </Card>
   );
 };
