@@ -1,4 +1,3 @@
-
 export type Profile = 'SALT' | 'GHF';
 
 export type UserRole = 'MASTER' | 'ADMIN' | 'USER';
@@ -56,7 +55,7 @@ export interface Lead {
   updated_at: string;
   next_follow_up?: string;
   last_contact?: string;
-  profile?: Profile; // Adicionado para compatibilidade com mockData
+  profile?: Profile; // Added for compatibility with mockData
 }
 
 export interface Meeting {
@@ -72,13 +71,13 @@ export interface Meeting {
   created_by: string;
   created_at: string;
   updated_at: string;
-  profile?: Profile; // Adicionado para compatibilidade com mockData
+  profile?: Profile; // Added for compatibility with mockData
 }
 
 export interface Task {
   id: string;
   title: string;
-  description?: string;
+  description?: string; // Ensuring this exists
   status: 'todo' | 'in-progress' | 'done';
   due_date?: string;
   priority: 'low' | 'medium' | 'high';
@@ -87,7 +86,7 @@ export interface Task {
   organization_id: string;
   created_at: string;
   updated_at: string;
-  profile?: Profile; // Adicionado para compatibilidade com mockData
+  profile?: Profile; // Added for compatibility with mockData
 }
 
 export interface AgentConfig {

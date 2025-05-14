@@ -22,6 +22,7 @@ import {
   Cell
 } from 'recharts';
 import { ArrowUpRight, Banknote, Users, Target, Calendar, CheckCircle } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 const Dashboard = () => {
   const { currentProfile } = useProfile();
@@ -29,15 +30,6 @@ const Dashboard = () => {
   const meetings = useMemo(() => getMeetingsByProfile(currentProfile), [currentProfile]);
   const tasks = useMemo(() => getTasksByProfile(currentProfile), [currentProfile]);
   const stats = useMemo(() => getStatsByProfile(currentProfile), [currentProfile]);
-  
-  // Formatar valores monetários para BRL (Real brasileiro)
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
   
   // Calcular o valor total de leads por status
   const calculateValueByStatus = () => {
@@ -120,7 +112,7 @@ const Dashboard = () => {
     ];
   }, [tasks]);
   
-  // Exemplo de correção onde estamos substituindo createdAt por created_at
+  // Fixed: removed incorrect property references to 'source' on Lead
   const salesByDay = React.useMemo(() => {
     if (!leads || !currentProfile) return [];
 
@@ -140,7 +132,6 @@ const Dashboard = () => {
     }));
   }, [leads, currentProfile]);
   
-  // Exemplo de outra correção para created_at
   const opportunityBySource = React.useMemo(() => {
     const oneMonthAgo = new Date();
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
@@ -149,8 +140,9 @@ const Dashboard = () => {
       lead => new Date(lead.created_at) > oneMonthAgo
     );
     
+    // Since 'source' doesn't exist on Lead, we'll use status as an example
     return recentLeads.map(lead => ({
-      source: lead.source,
+      source: lead.status, // Using status instead of source
       value: lead.value
     }));
   }, [leads]);
@@ -158,7 +150,7 @@ const Dashboard = () => {
   // Cálculo de próximos e leads recentes (mais recentes primeiro)
   const recentLeads = useMemo(() => {
     return [...leads]
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(0, 5);
   }, [leads]);
   
@@ -373,7 +365,7 @@ const Dashboard = () => {
                     <p className="text-sm text-gray-500">{lead.company}</p>
                     <div className="flex gap-2 mt-1">
                       <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full">
-                        {formatDate(lead.createdAt)}
+                        {formatDate(lead.created_at)}
                       </span>
                       <span className={`text-xs px-2 py-0.5 rounded-full ${
                         lead.status === 'closed' 

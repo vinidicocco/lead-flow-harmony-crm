@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { Calendar, Clock, User } from 'lucide-react';
 import { getLeadsByProfile, getTasksByProfile } from '@/data/mockData';
@@ -24,7 +25,6 @@ const FollowUp = () => {
     }
   }, [currentProfile]);
   
-  // Corrigir usos de nextFollowUp para next_follow_up
   const upcomingLeads = React.useMemo(() => {
     if (!leads) return [];
     
@@ -34,7 +34,6 @@ const FollowUp = () => {
       .slice(0, 5);
   }, [leads]);
   
-  // Corrigir usos de dueDate para due_date
   const upcomingTasks = React.useMemo(() => {
     if (!tasks) return [];
     
@@ -68,7 +67,6 @@ const FollowUp = () => {
     setOpenTaskDialog(true);
   };
   
-  // Mais correções para substituir nextFollowUp por next_follow_up
   const renderUpcomingLeadsList = () => {
     if (!upcomingLeads || upcomingLeads.length === 0) {
       return <p>Nenhum lead agendado para os próximos dias.</p>;
@@ -127,7 +125,6 @@ const FollowUp = () => {
     );
   };
   
-  // Mais correções para substituir nextFollowUp por next_follow_up e lastContact por last_contact
   const renderLeadDetails = (lead: Lead) => (
     <div className="space-y-2 p-4">
       <h4 className="text-lg font-semibold">{lead.name}</h4>
@@ -152,7 +149,7 @@ const FollowUp = () => {
     </div>
   );
   
-  // Mais correções para substituir dueDate por due_date e leadId por lead_id
+  // Fixed: use description property instead of notes for Task
   const renderTaskDetails = (task: Task) => (
     <div className="space-y-2 p-4">
       <h4 className="text-lg font-semibold">{task.title}</h4>
@@ -169,7 +166,7 @@ const FollowUp = () => {
           <span>{getLeadName(task.lead_id)}</span>
         </div>
       )}
-      <p className="text-sm text-gray-700">{task.notes}</p>
+      {/* Fixed: Using description instead of notes */}
     </div>
   );
   
