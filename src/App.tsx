@@ -14,6 +14,7 @@ import Meetings from "./pages/Meetings";
 import FollowUp from "./pages/FollowUp";
 import GestaoAgenteIA from "./pages/GestaoAgenteIA";
 import Settings from "./pages/Settings";
+import WhatsApp from "./pages/WhatsApp";
 import NotFound from "./pages/NotFound";
 import AppShell from "./components/layout/AppShell";
 
@@ -57,6 +58,11 @@ const App = () => (
               <Route path="/ai-agent" element={
                 <AppShell>
                   <GestaoAgenteIA />
+                </AppShell>
+              } />
+              <Route path="/whatsapp" element={
+                <AppShell>
+                  <WhatsApp />
                 </AppShell>
               } />
               <Route path="/settings" element={
