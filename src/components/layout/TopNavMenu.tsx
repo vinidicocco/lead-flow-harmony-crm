@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Kanban, Users, Calendar, MessageSquare, Bot, Cog, WhatsApp } from 'lucide-react';
+import { LayoutDashboard, Kanban, Users, Calendar, MessageSquare, Bot, Cog, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   NavigationMenu,
@@ -59,7 +59,7 @@ const TopNavMenu = () => {
             </NavLink>
           </NavigationMenuItem>
         ))}
-        {/* WhatsApp Button */}
+        {/* WhatsApp Button - Using MessageCircle as an alternative */}
         {links.some(link => link.to === '/ai-agent') && (
           <NavigationMenuItem>
             <Button 
@@ -67,7 +67,7 @@ const TopNavMenu = () => {
               className="flex items-center gap-2 px-4 py-2 rounded-md text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
               onClick={handleWhatsAppClick}
             >
-              <WhatsApp size={18} />
+              <MessageCircle size={18} />
               <span className="sr-only">WhatsApp</span>
             </Button>
           </NavigationMenuItem>
