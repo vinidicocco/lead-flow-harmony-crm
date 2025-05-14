@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useProfile } from '@/context/ProfileContext';
-import { getStatsByProfile, getLeadsByProfile, getTasksByProfile } from '@/data/mockData';
+import { getStatsForProfile, getLeadsForProfile, getTasksForProfile } from '@/data/mockDataUtils';
 import { 
   Bar, BarChart, 
   Pie, PieChart, 
@@ -17,9 +17,9 @@ import {
 
 const Dashboard = () => {
   const { currentProfile } = useProfile();
-  const stats = useMemo(() => getStatsByProfile(currentProfile), [currentProfile]);
-  const leads = useMemo(() => getLeadsByProfile(currentProfile), [currentProfile]);
-  const tasks = useMemo(() => getTasksByProfile(currentProfile), [currentProfile]);
+  const stats = useMemo(() => getStatsForProfile(currentProfile), [currentProfile]);
+  const leads = useMemo(() => getLeadsForProfile(currentProfile), [currentProfile]);
+  const tasks = useMemo(() => getTasksForProfile(currentProfile), [currentProfile]);
 
   // Formatar moeda
   const formatCurrency = (value: number) => {

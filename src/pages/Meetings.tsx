@@ -1,7 +1,6 @@
-
 import React, { useMemo, useState } from 'react';
 import { useProfile } from '@/context/ProfileContext';
-import { getMeetingsByProfile } from '@/data/mockData';
+import { getMeetingsForProfile } from '@/data/mockDataUtils';
 import { Meeting } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -20,7 +19,7 @@ import { toast } from 'sonner';
 
 const MeetingsPage = () => {
   const { currentProfile } = useProfile();
-  const meetings = useMemo(() => getMeetingsByProfile(currentProfile), [currentProfile]);
+  const meetings = useMemo(() => getMeetingsForProfile(currentProfile), [currentProfile]);
   
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [viewMode, setViewMode] = useState<'upcoming' | 'calendar'>('upcoming');
