@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { UserRole } from '@/types';
@@ -9,6 +9,17 @@ export const useAuthManager = (fetchUserProfile: (userId: string) => Promise<any
   const [session, setSession] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+
+  // Efeito para redirecionar após login bem-sucedido
+  useEffect(() => {
+    if (session?.user) {
+      const from = window.location.pathname === '/login' ? '/' : window.location.pathname;
+      if (window.location.pathname === '/login') {
+        // Forçar redirecionamento após login bem-sucedido
+        navigate('/', { replace: true });
+      }
+    }
+  }, [session, navigate]);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
@@ -20,20 +31,29 @@ export const useAuthManager = (fetchUserProfile: (userId: string) => Promise<any
 
       if (error) throw error;
       
-      // Usuário é carregado pelo listener de auth
+      // Definir a sessão localmente para acionar o redirecionamento
+      setSession(data.session);
+      
       toast.success('Login efetuado com sucesso!');
       
       // Verificar se o usuário foi carregado
       if (data.user) {
         try {
-          await fetchUserProfile(data.user.id);
-          const from = window.location.pathname === '/login' ? '/' : window.location.pathname;
-          navigate(from, { replace: true });
+          const userData = await fetchUserProfile(data.user.id);
+          if (!userData) {
+            console.error("Erro: Perfil do usuário não encontrado");
+          } else {
+            // Forçar redirecionamento imediato
+            navigate('/', { replace: true });
+          }
         } catch (profileError) {
           console.error("Erro ao carregar perfil após login:", profileError);
+          // Continuar mesmo se houver erro no perfil
+          navigate('/', { replace: true });
         }
       }
     } catch (error: any) {
+      console.error("Erro de login:", error);
       toast.error(`Erro no login: ${error.message}`);
       throw error;
     } finally {
@@ -56,6 +76,33 @@ export const useAuthManager = (fetchUserProfile: (userId: string) => Promise<any
         throw new Error('Apenas usuários MASTER podem criar outros usuários MASTER');
       }
 
+      // Obter o código da organização primeiro
+      let organizationCode = null;
+      try {
+        const { data: orgData, error: orgError } = await supabase
+          .from('organizations')
+          .select('code')
+          .eq('id', organizationId)
+          .maybeSingle();
+        
+        if (orgError) {
+          console.error("Erro ao buscar organização:", orgError);
+          throw new Error('Erro ao buscar organização: ' + orgError.message);
+        }
+        
+        if (orgData) {
+          organizationCode = orgData.code;
+        } else {
+          // Usar 'SALT' como fallback
+          organizationCode = 'SALT';
+        }
+      } catch (err) {
+        console.error("Erro ao buscar organização:", err);
+        // Usar 'SALT' como fallback em caso de erro
+        organizationCode = 'SALT';
+      }
+
+      // Criar usuário com os metadados necessários
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -63,10 +110,7 @@ export const useAuthManager = (fetchUserProfile: (userId: string) => Promise<any
           data: {
             first_name: firstName,
             last_name: lastName,
-            organization: organizationId ? 
-              // Buscar o código da organização pelo ID
-              (await supabase.from('organizations').select('code').eq('id', organizationId).maybeSingle()).data?.code :
-              null,
+            organization: organizationCode,
             role: role
           }
         }
@@ -74,8 +118,9 @@ export const useAuthManager = (fetchUserProfile: (userId: string) => Promise<any
 
       if (error) throw error;
       
-      toast.success('Usuário criado com sucesso!');
+      toast.success('Usuário criado com sucesso! Você já pode fazer login.');
     } catch (error: any) {
+      console.error("Erro ao criar usuário:", error);
       toast.error(`Erro ao criar usuário: ${error.message}`);
       throw error;
     } finally {

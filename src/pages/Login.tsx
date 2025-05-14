@@ -25,10 +25,9 @@ const Login = () => {
   useEffect(() => {
     if (user && !isLoading) {
       console.log("Usuário logado, redirecionando...", user);
-      const from = location.state?.from?.pathname || '/';
-      navigate(from, { replace: true });
+      navigate('/', { replace: true });
     }
-  }, [user, isLoading, navigate, location]);
+  }, [user, isLoading, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,8 +40,7 @@ const Login = () => {
     try {
       await login(email, password);
       // Forçar redirecionamento após login bem-sucedido
-      const from = location.state?.from?.pathname || '/';
-      navigate(from, { replace: true });
+      navigate('/', { replace: true });
     } catch (error: any) {
       console.error('Erro no login:', error);
       toast.error(error.message || "Não foi possível fazer login. Verifique suas credenciais.");
@@ -60,23 +58,30 @@ const Login = () => {
 
     setIsSubmitting(true);
     try {
-      // Correção na consulta para buscar a organização SALT
-      const { data, error } = await supabase
-        .from('organizations')
-        .select('id')
-        .eq('code', 'SALT')
-        .maybeSingle();
-      
-      if (error) {
+      // Buscar a organização SALT de forma segura
+      let saltOrgId;
+      try {
+        const { data, error } = await supabase
+          .from('organizations')
+          .select('id')
+          .eq('code', 'SALT')
+          .maybeSingle();
+        
+        if (error) {
+          console.error("Erro ao buscar organização:", error);
+          throw new Error('Erro ao buscar organização: ' + error.message);
+        }
+        
+        if (!data) {
+          throw new Error('Organização SALT não encontrada. Por favor, contate o suporte.');
+        }
+        
+        saltOrgId = data.id;
+      } catch (error: any) {
         console.error("Erro ao buscar organização:", error);
-        throw new Error('Erro ao buscar organização: ' + error.message);
+        toast.error(error.message || "Erro ao buscar organização. Tente novamente.");
+        return;
       }
-      
-      if (!data) {
-        throw new Error('Organização SALT não encontrada. Por favor, contate o suporte.');
-      }
-      
-      const saltOrgId = data.id;
       
       await register(email, password, firstName, lastName, saltOrgId);
       

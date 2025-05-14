@@ -24,7 +24,8 @@ const LoginForm: React.FC = () => {
     setIsLoading(true);
     try {
       await login(email, password);
-      // O redirecionamento será feito pelo AuthContext
+      toast.success('Login efetuado com sucesso!');
+      // O redirecionamento acontecerá no AuthContext
     } catch (error: any) {
       console.error('Erro de login:', error);
       toast.error(error.message || 'Erro ao fazer login. Verifique suas credenciais.');
