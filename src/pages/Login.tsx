@@ -16,6 +16,7 @@ const Login = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState('login');
   const { login, register, user, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -87,7 +88,7 @@ const Login = () => {
       setLastName('');
       
       // Muda para a aba de login
-      document.querySelector('[data-state="inactive"][data-value="login"]')?.click();
+      setActiveTab('login');
       
     } catch (error: any) {
       console.error('Erro no registro:', error);
@@ -129,7 +130,7 @@ const Login = () => {
           <h1 className="text-3xl font-bold">CRM Integrado</h1>
         </div>
         
-        <Tabs defaultValue="login" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">Login</TabsTrigger>
             <TabsTrigger value="register">Cadastro</TabsTrigger>
