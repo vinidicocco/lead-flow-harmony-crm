@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -28,35 +30,77 @@ const Login = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return;
+    if (!email || !password) {
+      toast({
+        title: "Erro",
+        description: "Por favor, preencha todos os campos.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsSubmitting(true);
     try {
       await login(email, password);
       // O redirecionamento será feito pelo useEffect
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro no login:', error);
+      toast({
+        title: "Erro de login",
+        description: error.message || "Não foi possível fazer login. Verifique suas credenciais.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Nota: O registro normal está desabilitado para uso público
-  // Apenas para fins de demonstração - na verdade, usuários só são criados por administradores
+  // Corrigido para não fazer referência a variáveis não definidas
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password || !firstName || !lastName) return;
+    if (!email || !password || !firstName || !lastName) {
+      toast({
+        title: "Erro",
+        description: "Por favor, preencha todos os campos.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsSubmitting(true);
     try {
       // Registro com organização SALT por padrão
-      // Para um sistema real, isso seria feito por um admin através de outra interface
-      const saltOrgId = (await supabase.from('organizations').select('id').eq('code', 'SALT').single()).data?.id;
+      const { data, error } = await supabase
+        .from('organizations')
+        .select('id')
+        .eq('code', 'SALT')
+        .single();
       
-      await register(email, password, firstName, lastName, saltOrgId as string);
+      if (error) {
+        throw new Error('Erro ao buscar organização: ' + error.message);
+      }
+      
+      const saltOrgId = data?.id;
+      
+      if (!saltOrgId) {
+        throw new Error('Organização SALT não encontrada');
+      }
+      
+      await register(email, password, firstName, lastName, saltOrgId);
+      
+      toast({
+        title: "Sucesso",
+        description: "Conta criada com sucesso!",
+      });
+      
       // Login automático será tratado pelo Auth State Change
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro no registro:', error);
+      toast({
+        title: "Erro no registro",
+        description: error.message || "Não foi possível criar a conta. Tente novamente.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
