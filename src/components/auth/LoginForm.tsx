@@ -24,11 +24,18 @@ const LoginForm: React.FC = () => {
     setIsLoading(true);
     try {
       await login(email, password);
-      toast.success('Login efetuado com sucesso!');
-      // O redirecionamento acontecerá no AuthContext
+      // O redirecionamento acontecerá no AuthContext após verificação do perfil
     } catch (error: any) {
       console.error('Erro de login:', error);
-      toast.error(error.message || 'Erro ao fazer login. Verifique suas credenciais.');
+      
+      // Mensagens de erro específicas
+      if (error.message.includes("inativa")) {
+        toast.error('Sua conta está inativa. Entre em contato com o administrador.');
+      } else if (error.message.includes("Invalid login credentials")) {
+        toast.error('Credenciais inválidas. Verifique seu email e senha.');
+      } else {
+        toast.error(error.message || 'Erro ao fazer login. Verifique suas credenciais.');
+      }
     } finally {
       setIsLoading(false);
     }

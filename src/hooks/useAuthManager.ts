@@ -13,7 +13,7 @@ export const useAuthManager = (fetchUserProfile: (userId: string) => Promise<any
   // Efeito para redirecionar após login bem-sucedido
   useEffect(() => {
     if (session?.user) {
-      const from = window.location.pathname === '/login' ? '/' : window.location.pathname;
+      console.log("Sessão detectada, redirecionando...", session);
       if (window.location.pathname === '/login') {
         // Forçar redirecionamento após login bem-sucedido
         navigate('/', { replace: true });
@@ -34,27 +34,32 @@ export const useAuthManager = (fetchUserProfile: (userId: string) => Promise<any
       // Definir a sessão localmente para acionar o redirecionamento
       setSession(data.session);
       
-      toast.success('Login efetuado com sucesso!');
-      
       // Verificar se o usuário foi carregado
       if (data.user) {
         try {
           const userData = await fetchUserProfile(data.user.id);
+          
           if (!userData) {
             console.error("Erro: Perfil do usuário não encontrado");
-          } else {
-            // Forçar redirecionamento imediato
-            navigate('/', { replace: true });
+            throw new Error("Perfil do usuário não encontrado");
+          } 
+          
+          if (!userData?.is_active) {
+            throw new Error("Sua conta está inativa. Entre em contato com o administrador.");
           }
-        } catch (profileError) {
-          console.error("Erro ao carregar perfil após login:", profileError);
-          // Continuar mesmo se houver erro no perfil
+          
+          toast.success('Login efetuado com sucesso!');
+          
+          // Forçar redirecionamento imediato
           navigate('/', { replace: true });
+        } catch (profileError: any) {
+          // Em caso de erro no perfil, fazer logout
+          await supabase.auth.signOut();
+          throw profileError;
         }
       }
     } catch (error: any) {
       console.error("Erro de login:", error);
-      toast.error(`Erro no login: ${error.message}`);
       throw error;
     } finally {
       setIsLoading(false);
@@ -119,9 +124,9 @@ export const useAuthManager = (fetchUserProfile: (userId: string) => Promise<any
       if (error) throw error;
       
       toast.success('Usuário criado com sucesso! Você já pode fazer login.');
+      return data;
     } catch (error: any) {
       console.error("Erro ao criar usuário:", error);
-      toast.error(`Erro ao criar usuário: ${error.message}`);
       throw error;
     } finally {
       setIsLoading(false);
