@@ -17,15 +17,17 @@ const LoginForm: React.FC = () => {
     e.preventDefault();
     
     if (!email || !password) {
-      toast.error('Please enter both email and password');
+      toast.error('Por favor, preencha ambos email e senha');
       return;
     }
     
     setIsLoading(true);
     try {
       await login(email, password);
-    } catch (error) {
+      // O redirecionamento será feito pelo AuthContext
+    } catch (error: any) {
       console.error('Login error:', error);
+      toast.error(error.message || 'Erro ao fazer login. Verifique suas credenciais.');
     } finally {
       setIsLoading(false);
     }
@@ -36,7 +38,7 @@ const LoginForm: React.FC = () => {
       <CardHeader className="space-y-1 text-center">
         <CardTitle className="text-2xl font-bold">CRM Login</CardTitle>
         <CardDescription>
-          Enter your credentials to access your account
+          Entre com suas credenciais para acessar sua conta
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
@@ -46,7 +48,7 @@ const LoginForm: React.FC = () => {
             <Input 
               id="email" 
               type="email" 
-              placeholder="salt@example.com or ghf@example.com" 
+              placeholder="salt@example.com ou ghf@example.com" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -54,12 +56,12 @@ const LoginForm: React.FC = () => {
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Senha</Label>
             </div>
             <Input 
               id="password" 
               type="password" 
-              placeholder="Use 'password' for demo" 
+              placeholder="Use 'password' para demo" 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required 
@@ -68,7 +70,7 @@ const LoginForm: React.FC = () => {
         </CardContent>
         <CardFooter>
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Logging in...' : 'Login'}
+            {isLoading ? 'Fazendo login...' : 'Login'}
           </Button>
         </CardFooter>
       </form>

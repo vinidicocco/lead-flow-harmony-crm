@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 const Login = () => {
@@ -23,6 +23,7 @@ const Login = () => {
   // Redirecionamento se já estiver logado
   useEffect(() => {
     if (user && !isLoading) {
+      console.log("Usuário logado, redirecionando...", user);
       const from = location.state?.from?.pathname || '/';
       navigate(from, { replace: true });
     }
@@ -31,11 +32,7 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      toast({
-        title: "Erro",
-        description: "Por favor, preencha todos os campos.",
-        variant: "destructive",
-      });
+      toast.error("Por favor, preencha todos os campos.");
       return;
     }
 
@@ -45,38 +42,31 @@ const Login = () => {
       // O redirecionamento será feito pelo useEffect
     } catch (error: any) {
       console.error('Erro no login:', error);
-      toast({
-        title: "Erro de login",
-        description: error.message || "Não foi possível fazer login. Verifique suas credenciais.",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Não foi possível fazer login. Verifique suas credenciais.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Corrigido para não fazer referência a variáveis não definidas
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password || !firstName || !lastName) {
-      toast({
-        title: "Erro",
-        description: "Por favor, preencha todos os campos.",
-        variant: "destructive",
-      });
+      toast.error("Por favor, preencha todos os campos.");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      // Registro com organização SALT por padrão
+      // Correção na consulta para buscar a organização SALT
       const { data, error } = await supabase
         .from('organizations')
         .select('id')
         .eq('code', 'SALT')
+        .limit(1)
         .single();
       
       if (error) {
+        console.error("Erro ao buscar organização:", error);
         throw new Error('Erro ao buscar organização: ' + error.message);
       }
       
@@ -88,19 +78,20 @@ const Login = () => {
       
       await register(email, password, firstName, lastName, saltOrgId);
       
-      toast({
-        title: "Sucesso",
-        description: "Conta criada com sucesso!",
-      });
+      toast.success("Conta criada com sucesso! Você já pode fazer login.");
       
-      // Login automático será tratado pelo Auth State Change
+      // Limpar campos após sucesso
+      setEmail('');
+      setPassword('');
+      setFirstName('');
+      setLastName('');
+      
+      // Muda para a aba de login
+      document.querySelector('[data-state="inactive"][data-value="login"]')?.click();
+      
     } catch (error: any) {
       console.error('Erro no registro:', error);
-      toast({
-        title: "Erro no registro",
-        description: error.message || "Não foi possível criar a conta. Tente novamente.",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Não foi possível criar a conta. Tente novamente.");
     } finally {
       setIsSubmitting(false);
     }

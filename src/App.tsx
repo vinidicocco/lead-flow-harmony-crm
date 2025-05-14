@@ -124,7 +124,7 @@ function App() {
             <Route path="*" element={<Navigate to="/404" replace />} />
           </Routes>
           
-          {/* Toaster para notificações */}
+          {/* Toaster para notificações - posicionado no canto superior direito com cores ricas */}
           <Toaster richColors position="top-right" />
         </ProfileProvider>
       </AuthProvider>
