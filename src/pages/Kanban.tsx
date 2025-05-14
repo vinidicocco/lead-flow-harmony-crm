@@ -1,5 +1,5 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,15 +56,16 @@ const Kanban = () => {
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
-    status: 'todo',
+    status: 'todo' as const,
     dueDate: new Date().toISOString().split('T')[0],
-    priority: 'medium',
+    priority: 'medium' as const,
     assignedTo: '',
     profile: currentProfile,
     orgId: 'your_org_id'
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [draggedTask, setDraggedTask] = useState<Task | null>(null);
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -85,7 +86,12 @@ const Kanban = () => {
     }
 
     // Simulate adding a task (in real app, this would be an API call)
-    const newTaskWithId = { ...newTask, id: Date.now().toString() };
+    const newTaskWithId: Task = { 
+      ...newTask, 
+      id: Date.now().toString(),
+      status: newTask.status,
+      priority: newTask.priority
+    };
 
     // Update the columns state to include the new task
     setColumns(prevColumns => {
@@ -103,97 +109,55 @@ const Kanban = () => {
     setNewTask({
       title: '',
       description: '',
-      status: 'todo',
+      status: 'todo' as const,
       dueDate: new Date().toISOString().split('T')[0],
-      priority: 'medium',
+      priority: 'medium' as const,
       assignedTo: '',
       profile: currentProfile,
       orgId: 'your_org_id'
-    }); // Reset form
+    });
   };
 
-  const onDragEnd = (result: DropResult) => {
-    const { destination, source, draggableId } = result;
+  const handleDragStart = (task: Task) => {
+    setDraggedTask(task);
+  };
 
-    if (!destination) {
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (columnId: string) => {
+    if (!draggedTask) return;
+
+    const sourceColumnId = draggedTask.status;
+    // Avoid unnecessary state updates if dropping in the same column
+    if (sourceColumnId === columnId) {
+      setDraggedTask(null);
       return;
     }
 
-    if (
-      destination.droppableId === source.droppableId &&
-      destination.index === source.index
-    ) {
-      return;
-    }
-
-    const start = columns[source.droppableId];
-    const finish = columns[destination.droppableId];
-
-    if (start === finish) {
-      const newTaskIds = Array.from(start.tasks);
-      const [removed] = newTaskIds.splice(source.index, 1);
-      newTaskIds.splice(destination.index, 0, removed);
-
-      const newColumn = {
-        ...start,
-        tasks: newTaskIds,
-      };
-
-      setColumns({
-        ...columns,
-        [newColumn.id]: newColumn,
-      });
-      return;
-    }
-
-    // Moving from one list to another
-    const startTaskIds = Array.from(start.tasks);
-    const [removed] = startTaskIds.splice(source.index, 1);
-
-    const finishTaskIds = Array.from(finish.tasks);
-    finishTaskIds.splice(destination.index, 0, removed);
-
-    const newStart = {
-      ...start,
-      tasks: startTaskIds,
-    };
-
-    const newFinish = {
-      ...finish,
-      tasks: finishTaskIds,
-    };
-
-    // Update the status of the moved task
-    const taskId = draggableId;
-    const newStatus = destination.droppableId;
-
-    // Optimistically update the task's status in the state
+    // Remove task from source column
     setColumns(prevColumns => {
       const updatedColumns = { ...prevColumns };
-
-      // Remove the task from the source column
-      updatedColumns[source.droppableId] = {
-        ...updatedColumns[source.droppableId],
-        tasks: updatedColumns[source.droppableId].tasks.filter(task => task.id !== taskId)
+      
+      // Remove task from source column
+      updatedColumns[sourceColumnId] = {
+        ...updatedColumns[sourceColumnId],
+        tasks: updatedColumns[sourceColumnId].tasks.filter(t => t.id !== draggedTask.id)
       };
-
-      // Add the task to the destination column with the updated status
-      updatedColumns[destination.droppableId] = {
-        ...updatedColumns[destination.droppableId],
-        tasks: [...updatedColumns[destination.droppableId].tasks, {
-          ...tasks.find(task => task.id === taskId)!, // Find the task in the original tasks array
-          status: newStatus
-        }]
+      
+      // Add task to target column with updated status
+      const updatedTask: Task = { ...draggedTask, status: columnId as "todo" | "in-progress" | "done" };
+      updatedColumns[columnId] = {
+        ...updatedColumns[columnId],
+        tasks: [...updatedColumns[columnId].tasks, updatedTask]
       };
-
+      
       return updatedColumns;
     });
 
-    setColumns({
-      ...columns,
-      [newStart.id]: newStart,
-      [newFinish.id]: newFinish,
-    });
+    // Reset draggedTask
+    setDraggedTask(null);
   };
 
   const formatDate = (dateString: string) => {
@@ -224,57 +188,46 @@ const Kanban = () => {
         <Button onClick={openModal}>Adicionar Tarefa</Button>
       </div>
 
-      <DragDropContext onDragEnd={onDragEnd}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {Object.values(columns).map((column) => (
-            <Card key={column.id}>
-              <CardHeader>
-                <CardTitle>{column.title}</CardTitle>
-              </CardHeader>
-              <CardContent className="p-4">
-                <Droppable droppableId={column.id}>
-                  {(provided) => (
-                    <div
-                      {...provided.droppableProps}
-                      ref={provided.innerRef}
-                      className="space-y-4"
-                    >
-                      {column.tasks.map((task, index) => (
-                        <Draggable key={task.id} draggableId={task.id} index={index}>
-                          {(provided) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              className="bg-white p-4 rounded-md shadow-sm border"
-                            >
-                              <h3 className="font-medium">{task.title}</h3>
-                              <p className="text-sm text-gray-500">{task.description}</p>
-                              <div className="mt-2 flex items-center justify-between">
-                                <span className={`px-2 py-1 text-xs rounded-full ${getPriorityColor(task.priority)}`}>
-                                  {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Média' : 'Baixa'}
-                                </span>
-                                <span className="text-xs text-gray-500">
-                                  {formatDate(task.dueDate)}
-                                </span>
-                              </div>
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {Object.values(columns).map((column) => (
+          <Card key={column.id}>
+            <CardHeader>
+              <CardTitle>{column.title}</CardTitle>
+            </CardHeader>
+            <CardContent 
+              className="p-4 min-h-[300px]" 
+              onDragOver={handleDragOver}
+              onDrop={() => handleDrop(column.id)}
+            >
+              <div className="space-y-4">
+                {column.tasks.map((task) => (
+                  <div 
+                    key={task.id} 
+                    className="bg-white p-4 rounded-md shadow-sm border cursor-move"
+                    draggable
+                    onDragStart={() => handleDragStart(task)}
+                  >
+                    <h3 className="font-medium">{task.title}</h3>
+                    <p className="text-sm text-gray-500">{task.description}</p>
+                    <div className="mt-2 flex items-center justify-between">
+                      <span className={`px-2 py-1 text-xs rounded-full ${getPriorityColor(task.priority)}`}>
+                        {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Média' : 'Baixa'}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {formatDate(task.dueDate)}
+                      </span>
                     </div>
-                  )}
-                </Droppable>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </DragDropContext>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3 text-center">
               <h3 className="text-lg leading-6 font-medium text-gray-900">Adicionar Nova Tarefa</h3>
