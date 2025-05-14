@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProfile } from '@/context/ProfileContext';
 import { getStatsByProfile, getLeadsByProfile, getTasksByProfile } from '@/data/mockData';
 import { 
@@ -15,13 +14,6 @@ import {
   FunnelChart, Funnel,
   LabelList
 } from 'recharts';
-import { ChartContainer } from "@/components/ui/chart";
-import { 
-  BarChart as BarChartIcon,
-  PieChart as PieChartIcon,
-  LineChart as LineChartIcon,
-  Filter
-} from 'lucide-react';
 
 const Dashboard = () => {
   const { currentProfile } = useProfile();
@@ -194,150 +186,126 @@ const Dashboard = () => {
         {getCustomKPIs()}
       </div>
       
-      <Tabs defaultValue="distribution" className="mb-8">
-        <TabsList>
-          <TabsTrigger value="distribution" className="flex items-center gap-2">
-            <BarChartIcon size={16} />
-            Distribuição de Leads
-          </TabsTrigger>
-          <TabsTrigger value="funnel" className="flex items-center gap-2">
-            <Filter size={16} />
-            Funil de Vendas
-          </TabsTrigger>
-          <TabsTrigger value="performance" className="flex items-center gap-2">
-            <LineChartIcon size={16} />
-            Desempenho Mensal
-          </TabsTrigger>
-          <TabsTrigger value="revenue" className="flex items-center gap-2">
-            <PieChartIcon size={16} />
-            Distribuição de Receita
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="distribution" className="pt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Distribuição de Leads por Status</CardTitle>
-            </CardHeader>
-            <CardContent className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={leadsByStatus}>
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar 
-                    dataKey="count" 
-                    fill="#0891b2" 
-                    radius={[4, 4, 0, 0]}
+      {/* Replace Tabs with 2x2 grid layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* First row */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Distribuição de Leads por Status</CardTitle>
+          </CardHeader>
+          <CardContent className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={leadsByStatus}>
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar 
+                  dataKey="count" 
+                  fill="#0891b2" 
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Funil de Vendas</CardTitle>
+          </CardHeader>
+          <CardContent className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <FunnelChart>
+                <Tooltip formatter={(value) => `${value} leads`} />
+                <Funnel
+                  dataKey="value"
+                  data={funnelData}
+                  isAnimationActive={true}
+                  labelLine={false}
+                  width={350}
+                >
+                  <LabelList 
+                    position="right" 
+                    fill="#333" 
+                    stroke="none" 
+                    dataKey="name" 
+                    fontSize={13}
+                    fontWeight="600"
                   />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="funnel" className="pt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Funil de Vendas</CardTitle>
-            </CardHeader>
-            <CardContent className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <FunnelChart>
-                  <Tooltip formatter={(value) => `${value} leads`} />
-                  <Funnel
+                  <LabelList
+                    position="center"
+                    fill="#fff"
+                    stroke="none"
                     dataKey="value"
-                    data={funnelData}
-                    isAnimationActive={true}
-                    labelLine={false}
-                    width={400}
-                  >
-                    <LabelList 
-                      position="right" 
-                      fill="#333" 
-                      stroke="none" 
-                      dataKey="name" 
-                      fontSize={13}
-                      fontWeight="600"
-                    />
-                    <LabelList
-                      position="center"
-                      fill="#fff"
-                      stroke="none"
-                      dataKey="value"
-                      fontSize={14}
-                      fontWeight="bold"
-                    />
-                  </Funnel>
-                </FunnelChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="performance" className="pt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Desempenho Mensal</CardTitle>
-            </CardHeader>
-            <CardContent className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={monthlyPerformance}>
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="leads" 
-                    stroke="#0891b2" 
-                    strokeWidth={2}
-                    activeDot={{ r: 8 }}
-                    name="Leads"
+                    fontSize={14}
+                    fontWeight="bold"
                   />
-                  <Line 
-                    type="monotone" 
-                    dataKey="deals" 
-                    stroke="#16a34a" 
-                    strokeWidth={2}
-                    name="Negócios"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="revenue" className="pt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Distribuição de Receita</CardTitle>
-            </CardHeader>
-            <CardContent className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={revenueDistribution}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={120}
-                    fill="#8884d8"
-                    dataKey="value"
-                    label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  >
-                    {revenueDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value) => `${value}%`} />
-                </PieChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                </Funnel>
+              </FunnelChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Second row */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Desempenho Mensal</CardTitle>
+          </CardHeader>
+          <CardContent className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={monthlyPerformance}>
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="leads" 
+                  stroke="#0891b2" 
+                  strokeWidth={2}
+                  activeDot={{ r: 8 }}
+                  name="Leads"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="deals" 
+                  stroke="#16a34a" 
+                  strokeWidth={2}
+                  name="Negócios"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Distribuição de Receita</CardTitle>
+          </CardHeader>
+          <CardContent className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={revenueDistribution}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="value"
+                  label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
+                >
+                  {revenueDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => `${value}%`} />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <Card>
