@@ -136,6 +136,14 @@ const Kanban = () => {
       </div>
     );
   };
+  
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+    
+    if (over && active.id !== over.id) {
+      toast.success(`Movido o lead ${active.id} para ${translateStatus(over.id)}`);
+    }
+  };
 
   return (
     <div className="p-6">
@@ -170,11 +178,13 @@ const Kanban = () => {
             </div>
           </div>
           
-          <div className="flex gap-4 overflow-x-auto">
-            {statusOptions.map(status => (
-              <KanbanColumn key={status.value} status={status.value} />
-            ))}
-          </div>
+          <DndContext onDragEnd={handleDragEnd}>
+            <div className="flex gap-4 overflow-x-auto pb-4">
+              {statusOptions.map(status => (
+                <KanbanColumn key={status.value} status={status.value} />
+              ))}
+            </div>
+          </DndContext>
         </CardContent>
       </Card>
       
