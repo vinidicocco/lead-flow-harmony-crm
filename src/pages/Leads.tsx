@@ -1,7 +1,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { useProfile } from '@/context/ProfileContext';
-import { getLeadsByProfile } from '@/data/mockDataWrapper';
+import { getLeadsByProfile } from '@/data/mockData';
 import { Lead } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

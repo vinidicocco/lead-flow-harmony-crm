@@ -2,7 +2,6 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { User, Tenant } from '@/types';
 import { toast } from "sonner";
-import { getDataByTenant } from '@/data/mockDataWrapper';
 
 interface AuthContextType {
   user: User | null;
@@ -11,7 +10,6 @@ interface AuthContextType {
   updateUserAvatar: (avatarUrl: string) => void;
   isLoading: boolean;
   currentTenant: Tenant;
-  tenantData: ReturnType<typeof getDataByTenant>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -51,8 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentTenant, setCurrentTenant] = useState<Tenant>('SALT_GHF');
-  const tenantData = getDataByTenant(currentTenant);
-  
+
   useEffect(() => {
     // Check for stored user
     const storedUser = localStorage.getItem('crm-user');
@@ -107,15 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      login, 
-      logout, 
-      updateUserAvatar, 
-      isLoading, 
-      currentTenant,
-      tenantData
-    }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUserAvatar, isLoading, currentTenant }}>
       {children}
     </AuthContext.Provider>
   );

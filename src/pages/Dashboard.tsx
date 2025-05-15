@@ -6,7 +6,7 @@ import {
   getMeetingsByProfile,
   getTasksByProfile,
   getStatsByProfile
-} from '@/data/mockDataWrapper';
+} from '@/data/mockData';
 import { Lead } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
