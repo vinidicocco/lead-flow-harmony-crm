@@ -36,26 +36,26 @@ const Settings = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {currentProfile && (
+                {user && (
                   <div className="grid gap-4">
                     <div>
                       <span className="font-medium">Nome:</span>
-                      <p className="mt-1">{currentProfile.first_name} {currentProfile.last_name}</p>
+                      <p className="mt-1">{user.first_name} {user.last_name}</p>
                     </div>
                     
                     <div>
                       <span className="font-medium">Email:</span>
-                      <p className="mt-1">{currentProfile.email}</p>
+                      <p className="mt-1">{user.email}</p>
                     </div>
                     
                     <div>
                       <span className="font-medium">Organização:</span>
-                      <p className="mt-1">{currentProfile.organization?.name}</p>
+                      <p className="mt-1">{user.organization_id ? (typeof currentProfile === 'object' ? currentProfile.organization?.name : '') : ''}</p>
                     </div>
                     
                     <div>
                       <span className="font-medium">Perfil:</span>
-                      <p className="mt-1">{currentProfile.role}</p>
+                      <p className="mt-1">{user.role}</p>
                     </div>
                   </div>
                 )}
