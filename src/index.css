@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -39,12 +40,6 @@
     
     /* GHF color theme */
     --ghf: 270 67% 47%;
-    
-    /* Neoin color theme */
-    --neoin: 45 100% 50%;
-    
-    /* Espaço para novas cores de marca */
-    /* Adicione novas variáveis para outros clientes aqui */
   }
  
   .dark {

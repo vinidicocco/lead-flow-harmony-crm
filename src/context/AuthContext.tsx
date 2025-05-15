@@ -1,74 +1,94 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { AuthContextType } from '@/types/auth';
-import { User, UserRole } from '@/types';
-import { usePermissions } from '@/hooks/usePermissions';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { User } from '@/types';
+import { toast } from "sonner";
+
+interface AuthContextType {
+  user: User | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+  updateUserAvatar: (avatarUrl: string) => void;
+  isLoading: boolean;
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  // Criamos um usuário fictício para o sistema funcionar sem login
-  const [user, setUser] = useState<User>({
-    id: 'mock-user-id',
-    email: 'neoin@example.com',
-    first_name: 'Usuário',
-    last_name: 'Neoin',
-    avatar_url: null,
-    organization_id: 'neoin-org-id',
-    role: 'MASTER' as UserRole, // Cast to UserRole type
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  });
-  
-  const [organization, setOrganization] = useState({
-    id: 'neoin-org-id',
-    name: 'NEOIN Organização',
-    code: 'Neoin',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  });
-  
-  const [isLoading, setIsLoading] = useState(false);
-  const [session, setSession] = useState(null);
-  
-  const { hasPermission } = usePermissions(user);
+// Mock users for demo
+const mockUsers: User[] = [
+  {
+    id: '1',
+    name: 'SALT User',
+    email: 'salt@example.com',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=salt',
+    profile: 'SALT',
+    isAdmin: true // This user is an admin
+  },
+  {
+    id: '2',
+    name: 'GHF User',
+    email: 'ghf@example.com',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ghf',
+    profile: 'GHF',
+    isAdmin: false // Regular user
+  }
+];
 
-  // Funções mock para manter a compatibilidade da interface
-  const login = async (): Promise<void> => { 
-    return Promise.resolve();
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Check for stored user
+    const storedUser = localStorage.getItem('crm-user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error('Failed to parse stored user', error);
+        localStorage.removeItem('crm-user');
+      }
+    }
+    setIsLoading(false);
+  }, []);
+
+  const login = async (email: string, password: string) => {
+    setIsLoading(true);
+    try {
+      // Demo login logic
+      const foundUser = mockUsers.find(u => u.email === email);
+      
+      if (foundUser && password === 'password') { // Simple demo password
+        setUser(foundUser);
+        localStorage.setItem('crm-user', JSON.stringify(foundUser));
+        toast.success(`Welcome back, ${foundUser.name}!`);
+        return;
+      }
+      
+      throw new Error('Invalid credentials');
+    } catch (error) {
+      toast.error('Login failed. Please check your credentials.');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
   };
-  
-  const register = async (): Promise<void> => {
-    return Promise.resolve();
+
+  const updateUserAvatar = (avatarUrl: string) => {
+    if (user) {
+      const updatedUser = { ...user, avatar: avatarUrl };
+      setUser(updatedUser);
+      localStorage.setItem('crm-user', JSON.stringify(updatedUser));
+    }
   };
-  
-  const logout = async (): Promise<void> => {
-    // Não faz nada, apenas mantém compatibilidade
-    return Promise.resolve();
-  };
-  
-  const updateUserProfile = async (): Promise<void> => {
-    return Promise.resolve();
-  };
-  
-  const refreshUser = async (): Promise<void> => {
-    return Promise.resolve();
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('crm-user');
+    toast.info('You have been logged out');
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      organization,
-      isLoading, 
-      session,
-      login, 
-      register,
-      logout, 
-      updateUserProfile,
-      refreshUser,
-      hasPermission
-    }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUserAvatar, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
@@ -77,7 +97,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };

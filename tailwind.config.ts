@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -63,30 +62,17 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Cores de clientes - facilmente extensível para novos clientes
+				// Custom CRM colors - setting GHF to use the same color as SALT
 				salt: {
 					DEFAULT: '#0891b2', // Cyan
 					light: '#06b6d4',
 					dark: '#0e7490'
 				},
 				ghf: {
-					DEFAULT: '#0891b2', // Same as SALT for now
+					DEFAULT: '#0891b2', // Same as SALT 
 					light: '#06b6d4',
 					dark: '#0e7490'
-				},
-                // Neoin brand colors
-                neoin: {
-                    DEFAULT: '#FFC000', // Yellow gold from logo
-                    light: '#FFD54F',  // Lighter yellow
-                    dark: '#F9A825'    // Darker yellow
-                },
-                // Espaço para adicionar novas cores de clientes
-                // exemplo:
-                // newclient: {
-                //    DEFAULT: '#hex-value',
-                //    light: '#hex-value-light', 
-                //    dark: '#hex-value-dark'
-                // },
+				}
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

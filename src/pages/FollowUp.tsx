@@ -1,230 +1,288 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { Calendar, Clock, User } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { useProfile } from '@/context/ProfileContext';
 import { getLeadsByProfile, getTasksByProfile } from '@/data/mockData';
 import { Lead, Task } from '@/types';
-import { useProfile } from '@/context/ProfileContext';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
+import { Clock, CheckCircle, ArrowRight, Phone } from 'lucide-react';
 
-const FollowUp = () => {
-  const { currentProfile, getProfileForDataFunctions } = useProfile() as any;
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [openLeadDialog, setOpenLeadDialog] = useState(false);
-  const [openTaskDialog, setOpenTaskDialog] = useState(false);
-  const today = new Date();
-
-  useEffect(() => {
-    if (currentProfile) {
-      setLeads(getLeadsByProfile(getProfileForDataFunctions(currentProfile)));
-      setTasks(getTasksByProfile(getProfileForDataFunctions(currentProfile)));
-    }
-  }, [currentProfile]);
+const FollowUpPage = () => {
+  const { currentProfile } = useProfile();
+  const leads = useMemo(() => getLeadsByProfile(currentProfile), [currentProfile]);
+  const tasks = useMemo(() => getTasksByProfile(currentProfile), [currentProfile]);
   
-  const upcomingLeads = React.useMemo(() => {
-    if (!leads) return [];
-    
-    return leads
-      .filter(lead => lead.next_follow_up && new Date(lead.next_follow_up) >= today)
-      .sort((a, b) => new Date(a.next_follow_up!).getTime() - new Date(b.next_follow_up!).getTime())
-      .slice(0, 5);
+  const [activeTab, setActiveTab] = useState<'followups' | 'tasks'>('followups');
+  
+  // Filtrar leads que têm data de próximo follow-up
+  const leadsWithFollowUp = useMemo(() => {
+    return leads.filter(lead => lead.nextFollowUp);
   }, [leads]);
   
-  const upcomingTasks = React.useMemo(() => {
-    if (!tasks) return [];
+  // Ordenar leads por data de próximo follow-up (mais próximos primeiro)
+  const sortedLeadsByFollowUp = useMemo(() => {
+    return [...leadsWithFollowUp].sort((a, b) => {
+      return new Date(a.nextFollowUp!).getTime() - new Date(b.nextFollowUp!).getTime();
+    });
+  }, [leadsWithFollowUp]);
+  
+  // Verificar se um follow-up está próximo (nos próximos 3 dias)
+  const isFollowUpSoon = (date: string) => {
+    const followUpDate = new Date(date);
+    const now = new Date();
+    const threeDaysFromNow = new Date();
+    threeDaysFromNow.setDate(now.getDate() + 3);
     
-    return tasks
-      .filter(task => task.due_date && new Date(task.due_date) >= today)
-      .sort((a, b) => new Date(a.due_date!).getTime() - new Date(b.due_date!).getTime())
-      .slice(0, 5);
+    return followUpDate <= threeDaysFromNow && followUpDate >= now;
+  };
+  
+  // Verificar se um follow-up está atrasado
+  const isFollowUpOverdue = (date: string) => {
+    const followUpDate = new Date(date);
+    const now = new Date();
+    
+    return followUpDate < now;
+  };
+  
+  // Ordenar tarefas por prioridade e prazo
+  const sortedTasks = useMemo(() => {
+    return [...tasks].sort((a, b) => {
+      // Primeiro por status (não concluída -> concluída)
+      if (a.status !== 'done' && b.status === 'done') return -1;
+      if (a.status === 'done' && b.status !== 'done') return 1;
+      
+      // Depois por prioridade
+      const priorityOrder = { high: 0, medium: 1, low: 2 };
+      const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+      if (priorityDiff !== 0) return priorityDiff;
+      
+      // Por último, por prazo
+      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+    });
   }, [tasks]);
   
-  const formatDate = (dateStr: string): string => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
+  // Marcar uma tarefa como concluída
+  const markTaskAsDone = (taskId: string) => {
+    toast.success('Tarefa marcada como concluída');
+    // Aqui seria implementada a lógica para atualizar o status da tarefa no backend
   };
   
-  const getLeadName = (leadId: string): string => {
-    const lead = leads.find(l => l.id === leadId);
-    return lead ? lead.name : "Lead não encontrado";
+  // Registrar um contato com um lead
+  const logContact = (leadId: string) => {
+    toast.success('Contato registrado com sucesso');
+    // Aqui seria implementada a lógica para registrar o contato no backend
   };
   
-  const handleLeadClick = (lead: Lead) => {
-    setSelectedLead(lead);
-    setOpenLeadDialog(true);
+  // Formatar data para o formato brasileiro
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
   };
   
-  const handleTaskClick = (task: Task) => {
-    setSelectedTask(task);
-    setOpenTaskDialog(true);
+  // Formatar data e hora para o formato brasileiro
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return `${date.toLocaleDateString('pt-BR')} às ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
   };
-  
-  const renderUpcomingLeadsList = () => {
-    if (!upcomingLeads || upcomingLeads.length === 0) {
-      return <p>Nenhum lead agendado para os próximos dias.</p>;
-    }
-    
-    return (
-      <ul>
-        {upcomingLeads.map(lead => (
-          <li 
-            key={lead.id} 
-            className="mb-2 p-3 bg-gray-50 rounded-md shadow-sm hover:bg-gray-100 cursor-pointer"
-            onClick={() => handleLeadClick(lead)}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <User size={16} className="mr-2 text-gray-500" />
-                <span className="font-medium">{lead.name}</span>
-              </div>
-              <span className="text-xs text-gray-500">
-                {lead.next_follow_up
-                  ? formatDate(lead.next_follow_up)
-                  : "Sem data definida"}
-              </span>
-            </div>
-          </li>
-        ))}
-      </ul>
-    );
-  };
-  
-  const renderUpcomingTasksList = () => {
-    if (!upcomingTasks || upcomingTasks.length === 0) {
-      return <p>Nenhuma tarefa pendente para os próximos dias.</p>;
-    }
-    
-    return (
-      <ul>
-        {upcomingTasks.map(task => (
-          <li 
-            key={task.id}
-            className="mb-2 p-3 bg-gray-50 rounded-md shadow-sm hover:bg-gray-100 cursor-pointer"
-            onClick={() => handleTaskClick(task)}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <Calendar size={16} className="mr-2 text-gray-500" />
-                <span className="font-medium">{task.title}</span>
-              </div>
-              <span className="text-xs text-gray-500">
-                {task.due_date ? formatDate(task.due_date) : "Sem prazo"}
-              </span>
-            </div>
-          </li>
-        ))}
-      </ul>
-    );
-  };
-  
-  const renderLeadDetails = (lead: Lead) => (
-    <div className="space-y-2 p-4">
-      <h4 className="text-lg font-semibold">{lead.name}</h4>
-      <p className="text-gray-600">{lead.company}</p>
-      <div className="flex justify-between text-sm">
-        <span className="text-gray-600">Próximo contato:</span>
-        <span>
-          {lead.next_follow_up
-            ? formatDate(lead.next_follow_up)
-            : "Não agendado"}
-        </span>
-      </div>
-      <div className="flex justify-between text-sm">
-        <span className="text-gray-600">Último contato:</span>
-        <span>
-          {lead.last_contact
-            ? formatDate(lead.last_contact)
-            : "Nenhum contato registrado"}
-        </span>
-      </div>
-      <p className="text-sm text-gray-700">{lead.notes}</p>
-    </div>
-  );
-  
-  // Fixed: use description property instead of notes for Task
-  const renderTaskDetails = (task: Task) => (
-    <div className="space-y-2 p-4">
-      <h4 className="text-lg font-semibold">{task.title}</h4>
-      <p className="text-gray-600">{task.description}</p>
-      <div className="flex justify-between text-sm">
-        <span className="text-gray-600">Data Limite:</span>
-        <span>
-          {task.due_date ? formatDate(task.due_date) : "Sem prazo"}
-        </span>
-      </div>
-      {task.lead_id && (
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-600">Lead associado:</span>
-          <span>{getLeadName(task.lead_id)}</span>
-        </div>
-      )}
-      {/* Fixed: Using description instead of notes */}
-    </div>
-  );
-  
+
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-4">Acompanhamento</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Leads */}
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Próximos Leads</CardTitle>
-              <CardDescription>Leads agendados para os próximos dias.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {renderUpcomingLeadsList()}
-            </CardContent>
-          </Card>
-        </div>
-        
-        {/* Tasks */}
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Próximas Tarefas</CardTitle>
-              <CardDescription>Tarefas com prazo para os próximos dias.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {renderUpcomingTasksList()}
-            </CardContent>
-          </Card>
-        </div>
+    <div className="p-6">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold">Acompanhamentos {currentProfile}</h1>
+        <p className="text-gray-500 mt-1">
+          Gerencie seus follow-ups e tarefas pendentes
+        </p>
       </div>
       
-      {/* Lead Details Dialog */}
-      <Dialog open={openLeadDialog} onOpenChange={setOpenLeadDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Detalhes do Lead</DialogTitle>
-            <DialogDescription>Informações completas sobre o lead selecionado.</DialogDescription>
-          </DialogHeader>
-          {selectedLead && renderLeadDetails(selectedLead)}
-        </DialogContent>
-      </Dialog>
-      
-      {/* Task Details Dialog */}
-      <Dialog open={openTaskDialog} onOpenChange={setOpenTaskDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Detalhes da Tarefa</DialogTitle>
-            <DialogDescription>Informações completas sobre a tarefa selecionada.</DialogDescription>
-          </DialogHeader>
-          {selectedTask && renderTaskDetails(selectedTask)}
-        </DialogContent>
-      </Dialog>
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'followups' | 'tasks')}>
+        <TabsList className="mb-6">
+          <TabsTrigger value="followups">Follow-Ups Agendados</TabsTrigger>
+          <TabsTrigger value="tasks">Tarefas</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="followups">
+          <div className="grid grid-cols-1 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Próximos Acompanhamentos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {sortedLeadsByFollowUp.length > 0 ? (
+                  <div className="space-y-4">
+                    {sortedLeadsByFollowUp.map((lead) => (
+                      <div 
+                        key={lead.id} 
+                        className={`p-4 border rounded-lg ${
+                          isFollowUpOverdue(lead.nextFollowUp!) 
+                            ? 'border-red-300 bg-red-50' 
+                            : isFollowUpSoon(lead.nextFollowUp!)
+                            ? 'border-yellow-300 bg-yellow-50'
+                            : 'border-gray-200'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className="font-medium">{lead.name}</h3>
+                            <p className="text-sm text-gray-500">{lead.company}</p>
+                            <div className="mt-2 flex items-center">
+                              <Clock className="w-4 h-4 mr-1 text-gray-400" />
+                              <span className={`text-sm ${
+                                isFollowUpOverdue(lead.nextFollowUp!) 
+                                  ? 'text-red-600 font-medium' 
+                                  : isFollowUpSoon(lead.nextFollowUp!)
+                                  ? 'text-yellow-600 font-medium'
+                                  : 'text-gray-500'
+                              }`}>
+                                {isFollowUpOverdue(lead.nextFollowUp!)
+                                  ? `Atrasado: ${formatDateTime(lead.nextFollowUp!)}`
+                                  : `Agendado para: ${formatDateTime(lead.nextFollowUp!)}`
+                                }
+                              </span>
+                            </div>
+                            
+                            {lead.lastContact && (
+                              <div className="mt-1 flex items-center">
+                                <CheckCircle className="w-4 h-4 mr-1 text-gray-400" />
+                                <span className="text-sm text-gray-500">
+                                  Último contato: {formatDate(lead.lastContact)}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="flex gap-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => logContact(lead.id)}
+                            >
+                              <Phone className="w-4 h-4 mr-1" />
+                              Registrar Contato
+                            </Button>
+                            <Button 
+                              size="sm"
+                              onClick={() => {
+                                toast.success(`Agendado follow-up para ${lead.name}`);
+                              }}
+                            >
+                              <ArrowRight className="w-4 h-4 mr-1" />
+                              Agendar Próximo
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        <div className="mt-3">
+                          <Textarea 
+                            placeholder="Adicionar notas do contato..." 
+                            className="text-sm"
+                            rows={2}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-gray-500 py-8">
+                    Nenhum follow-up agendado. Adicione follow-ups a partir da página de leads.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="tasks">
+          <div className="grid grid-cols-1 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Tarefas Pendentes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {sortedTasks.length > 0 ? (
+                  <div className="space-y-4">
+                    {sortedTasks.map((task) => (
+                      <div 
+                        key={task.id} 
+                        className={`p-4 border rounded-lg ${
+                          task.status === 'done'
+                            ? 'border-green-200 bg-green-50'
+                            : new Date(task.dueDate) < new Date()
+                            ? 'border-red-300 bg-red-50'
+                            : task.priority === 'high'
+                            ? 'border-yellow-300 bg-yellow-50'
+                            : 'border-gray-200'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className={`font-medium ${task.status === 'done' ? 'line-through text-gray-500' : ''}`}>
+                              {task.title}
+                            </h3>
+                            <p className={`text-sm ${task.status === 'done' ? 'text-gray-400' : 'text-gray-500'}`}>
+                              {task.description}
+                            </p>
+                            
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              <span className={`text-xs px-2 py-1 rounded-full ${
+                                task.priority === 'high' 
+                                  ? 'bg-red-100 text-red-800' 
+                                  : task.priority === 'medium'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-green-100 text-green-800'
+                              }`}>
+                                {task.priority === 'high' 
+                                  ? 'Alta Prioridade' 
+                                  : task.priority === 'medium'
+                                  ? 'Média Prioridade'
+                                  : 'Baixa Prioridade'
+                                }
+                              </span>
+                              
+                              <span className={`text-xs px-2 py-1 rounded-full ${
+                                new Date(task.dueDate) < new Date() && task.status !== 'done'
+                                  ? 'bg-red-100 text-red-800'
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}>
+                                Prazo: {formatDate(task.dueDate)}
+                              </span>
+                              
+                              {task.leadId && (
+                                <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">
+                                  {leads.find(lead => lead.id === task.leadId)?.name || 'Lead'}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {task.status !== 'done' && (
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => markTaskAsDone(task.id)}
+                            >
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              Concluir
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-gray-500 py-8">
+                    Nenhuma tarefa pendente.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
 
-export default FollowUp;
+export default FollowUpPage;

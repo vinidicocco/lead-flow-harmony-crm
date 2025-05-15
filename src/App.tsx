@@ -1,118 +1,76 @@
 
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import { ProfileProvider } from './context/ProfileContext';
-import { Toaster } from 'sonner';
-import AppShell from './components/layout/AppShell';
-import Dashboard from './pages/Dashboard';
-import Kanban from './pages/Kanban';
-import Leads from './pages/Leads';
-import Meetings from './pages/Meetings';
-import FollowUp from './pages/FollowUp';
-import GestaoAgenteIA from './pages/GestaoAgenteIA';
-import WhatsApp from './pages/WhatsApp';
-import Settings from './pages/Settings';
-import NotFound from './pages/NotFound';
-import Admin from './pages/Admin';
-import AgentSettings from './pages/AgentSettings';
-import './App.css';
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/context/AuthContext";
+import { ProfileProvider } from "@/context/ProfileContext";
+import Index from "./pages/Index";
+import Login from "./pages/Login";
+import Kanban from "./pages/Kanban";
+import Leads from "./pages/Leads";
+import Meetings from "./pages/Meetings";
+import FollowUp from "./pages/FollowUp";
+import GestaoAgenteIA from "./pages/GestaoAgenteIA";
+import Settings from "./pages/Settings";
+import NotFound from "./pages/NotFound";
+import AppShell from "./components/layout/AppShell";
 
-function App() {
-  return (
-    <Router>
+const queryClient = new QueryClient();
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
       <AuthProvider>
         <ProfileProvider>
-          <Routes>
-            {/* Rotas principais - sem necessidade de autenticação por enquanto */}
-            <Route path="/" element={
-              <AppShell>
-                <Dashboard />
-              </AppShell>
-            } />
-            
-            <Route path="/kanban" element={
-              <AppShell>
-                <Kanban />
-              </AppShell>
-            } />
-            
-            <Route path="/leads" element={
-              <AppShell>
-                <Leads />
-              </AppShell>
-            } />
-            
-            <Route path="/meetings" element={
-              <AppShell>
-                <Meetings />
-              </AppShell>
-            } />
-            
-            <Route path="/follow-up" element={
-              <AppShell>
-                <FollowUp />
-              </AppShell>
-            } />
-            
-            <Route path="/ai-agent" element={
-              <AppShell>
-                <GestaoAgenteIA />
-              </AppShell>
-            } />
-
-            <Route path="/agent-settings" element={
-              <AppShell>
-                <AgentSettings />
-              </AppShell>
-            } />
-            
-            <Route path="/whatsapp" element={
-              <AppShell>
-                <WhatsApp />
-              </AppShell>
-            } />
-            
-            <Route path="/settings" element={
-              <AppShell>
-                <Settings />
-              </AppShell>
-            } />
-            
-            {/* Rota de Administração */}
-            <Route path="/admin" element={
-              <AppShell>
-                <Admin />
-              </AppShell>
-            } />
-            
-            {/* Página 404 */}
-            <Route path="/404" element={
-              <AppShell>
-                <NotFound />
-              </AppShell>
-            } />
-            
-            {/* Redirecionar qualquer outra rota para 404 */}
-            <Route path="*" element={<Navigate to="/404" replace />} />
-          </Routes>
-          
-          {/* Toaster para notificações */}
-          <Toaster 
-            richColors 
-            position="top-right" 
-            toastOptions={{
-              duration: 5000,
-              style: {
-                maxWidth: '420px'
-              },
-              className: "toastify"
-            }} 
-          />
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={
+                <AppShell>
+                  <Index />
+                </AppShell>
+              } />
+              <Route path="/kanban" element={
+                <AppShell>
+                  <Kanban />
+                </AppShell>
+              } />
+              <Route path="/leads" element={
+                <AppShell>
+                  <Leads />
+                </AppShell>
+              } />
+              <Route path="/meetings" element={
+                <AppShell>
+                  <Meetings />
+                </AppShell>
+              } />
+              <Route path="/follow-up" element={
+                <AppShell>
+                  <FollowUp />
+                </AppShell>
+              } />
+              <Route path="/ai-agent" element={
+                <AppShell>
+                  <GestaoAgenteIA />
+                </AppShell>
+              } />
+              <Route path="/settings" element={
+                <AppShell>
+                  <Settings />
+                </AppShell>
+              } />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
         </ProfileProvider>
       </AuthProvider>
-    </Router>
-  );
-}
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
 export default App;

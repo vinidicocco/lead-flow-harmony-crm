@@ -46,7 +46,7 @@ export const AgentChat: React.FC<AgentChatProps> = ({ onDocumentUpload }) => {
     setInput('');
     setIsLoading(true);
     
-    // Simula resposta do assistente
+    // Simula resposta do assistente (em uma aplicação real, isso seria uma chamada de API)
     setTimeout(() => {
       let response = '';
       
@@ -80,15 +80,12 @@ export const AgentChat: React.FC<AgentChatProps> = ({ onDocumentUpload }) => {
     if (onDocumentUpload) {
       onDocumentUpload();
     }
-    
-    // Usar o toast como uma função diretamente
     toast({
       title: "Upload de documento",
-      description: "Funcionalidade de upload de documentos para o agente."
+      description: "Funcionalidade de upload de documentos para o agente.",
     });
   };
 
-  // Restante do componente
   return (
     <div className="bg-white border rounded-lg overflow-hidden">
       <div className="p-4 h-[400px] overflow-y-auto flex flex-col space-y-4">

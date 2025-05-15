@@ -1,298 +1,399 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { CalendarDays, Clock, ListChecks, TrendingUp } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { getTasksByProfile, getLeadsByProfile } from '@/data/mockData';
-import { Task, Lead } from '@/types';
+import React, { useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useProfile } from '@/context/ProfileContext';
-import { formatDate, formatCurrency } from '@/lib/utils';
-import { Skeleton } from "@/components/ui/skeleton";
+import { getStatsByProfile, getLeadsByProfile, getTasksByProfile } from '@/data/mockData';
+import { 
+  Bar, BarChart, 
+  Pie, PieChart, 
+  Cell, 
+  ResponsiveContainer, 
+  XAxis, YAxis, 
+  Tooltip, 
+  Legend,
+  LineChart, Line,
+  FunnelChart, Funnel,
+  LabelList
+} from 'recharts';
 
-const Index = () => {
-  const { currentProfile, getProfileForDataFunctions } = useProfile() as any;
-  const [tasks, setTasks] = useState<Task[] | null>(null);
-  const [leads, setLeads] = useState<Lead[] | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+const Dashboard = () => {
+  const { currentProfile } = useProfile();
+  const stats = useMemo(() => getStatsByProfile(currentProfile), [currentProfile]);
+  const leads = useMemo(() => getLeadsByProfile(currentProfile), [currentProfile]);
+  const tasks = useMemo(() => getTasksByProfile(currentProfile), [currentProfile]);
 
-  useEffect(() => {
-    setIsLoading(true);
-    // Simulate data loading
-    setTimeout(() => {
-      const fetchedTasks = getTasksByProfile(getProfileForDataFunctions(currentProfile));
-      const fetchedLeads = getLeadsByProfile(getProfileForDataFunctions(currentProfile));
-      setTasks(fetchedTasks);
-      setLeads(fetchedLeads);
-      setIsLoading(false);
-    }, 500);
-  }, [currentProfile]);
-
-  const completedTasks = useMemo(() => {
-    if (!tasks) return 0;
-    return tasks.filter(task => task.status === 'done').length;
-  }, [tasks]);
-
-  const taskProgress = useMemo(() => {
-    if (!tasks) return 0;
-    return (completedTasks / tasks.length) * 100;
-  }, [tasks, completedTasks]);
-
-  const filteredTasks = useMemo(() => {
-    if (!tasks) return [];
-    return tasks.slice(0, 5);
-  }, [tasks]);
-
-  const filteredLeads = useMemo(() => {
-    if (!leads) return [];
-    return leads.slice(0, 5);
-  }, [leads]);
-
-  const renderTasksList = () => {
-    if (isLoading) {
-      return (
-        <div className="space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="flex items-center space-x-4">
-              <Skeleton className="h-12 w-12 rounded-full" />
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-[250px]" />
-                <Skeleton className="h-4 w-[200px]" />
-              </div>
-            </div>
-          ))}
-        </div>
-      );
-    }
-
-    if (!tasks || tasks.length === 0) {
-      return <p>Nenhuma tarefa encontrada.</p>;
-    }
-
-    // Ordene tasks por data de vencimento (mais próximas primeiro)
-    const sortedTasks = filteredTasks.sort((a, b) => {
-      if (!a.due_date) return 1;
-      if (!b.due_date) return -1;
-      return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
-    });
-
-    return (
-      <ScrollArea className="h-[300px] w-full">
-        <div className="space-y-4">
-          {sortedTasks.map((task) => (
-            <Card key={task.id}>
-              <CardHeader>
-                <CardTitle className="text-sm font-medium">{task.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500">
-                      {task.description || "Sem descrição"}
-                    </p>
-                    <div className="flex items-center mt-2">
-                      <Clock className="mr-1 h-4 w-4" />
-                      <span className="text-xs text-gray-500">
-                        {formatDueDate(task)}
-                      </span>
-                    </div>
-                  </div>
-                  <Badge variant="outline">{task.priority}</Badge>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </ScrollArea>
-    );
-
-    const formatDueDate = (task: Task) => {
-      if (!task.due_date) return "Sem prazo";
-
-      const dueDate = new Date(task.due_date);
-      const now = new Date();
-
-      const diffInDays = Math.ceil(
-        (dueDate.getTime() - now.getTime()) / (1000 * 3600 * 24)
-      );
-
-      if (diffInDays === 0) {
-        return "Hoje";
-      } else if (diffInDays === 1) {
-        return "Amanhã";
-      } else {
-        return `Em ${diffInDays} dias`;
-      }
-    };
+  // Formatar moeda
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      maximumFractionDigits: 0,
+    }).format(value);
   };
 
-  const renderRecentLeads = () => {
-    if (isLoading) {
+  // Traduzir status para portugês
+  const translateStatus = (status: string) => {
+    const statusMap: Record<string, string> = {
+      'qualified': 'Lead Qualificado',
+      'contact_attempt': 'Tentativa de Contato',
+      'contacted': 'Contato Realizado',
+      'proposal': 'Proposta',
+      'contract': 'Ass. de Contrato',
+      'payment': 'Transferência/Pagamento',
+      'closed': 'Negócio Fechado'
+    };
+    return statusMap[status] || status;
+  };
+
+  // Gerar dados do gráfico baseado no perfil
+  const leadsByStatus = useMemo(() => {
+    const statusCounts = leads.reduce((acc, lead) => {
+      acc[lead.status] = (acc[lead.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.keys(statusCounts).map(status => ({
+      name: translateStatus(status),
+      count: statusCounts[status]
+    }));
+  }, [leads]);
+
+  // Dados do funil de vendas
+  const funnelData = useMemo(() => {
+    if (currentProfile === 'SALT') {
+      return [
+        { name: 'Leads Qualificados', value: leads.filter(lead => lead.status === 'qualified').length, fill: '#0088FE' },
+        { name: 'Contato Realizado', value: leads.filter(lead => lead.status === 'contacted').length, fill: '#00C49F' },
+        { name: 'Proposta Enviada', value: leads.filter(lead => lead.status === 'proposal').length, fill: '#FFBB28' },
+        { name: 'Contratos', value: leads.filter(lead => lead.status === 'contract').length, fill: '#FF8042' },
+        { name: 'Pagamento', value: leads.filter(lead => lead.status === 'payment').length, fill: '#8884d8' },
+        { name: 'Concluído', value: leads.filter(lead => lead.status === 'closed').length, fill: '#82ca9d' },
+      ];
+    } else {
+      return [
+        { name: 'Contato Inicial', value: leads.filter(lead => lead.status === 'contacted').length, fill: '#0088FE' },
+        { name: 'Análise', value: leads.filter(lead => lead.status === 'qualified').length, fill: '#00C49F' },
+        { name: 'Negociação', value: leads.filter(lead => lead.status === 'proposal').length, fill: '#FFBB28' },
+        { name: 'Pagamento', value: leads.filter(lead => lead.status === 'payment').length, fill: '#FF8042' },
+        { name: 'Concluído', value: leads.filter(lead => lead.status === 'closed').length, fill: '#8884d8' },
+      ];
+    }
+  }, [leads, currentProfile]);
+
+  // Dados de desempenho mensal (dados fictícios para ilustração)
+  const monthlyPerformance = useMemo(() => {
+    return [
+      { month: 'Jan', leads: 5, deals: 2 },
+      { month: 'Fev', leads: 7, deals: 3 },
+      { month: 'Mar', leads: 10, deals: 4 },
+      { month: 'Abr', leads: 8, deals: 3 },
+      { month: 'Mai', leads: 12, deals: 5 },
+      { month: 'Jun', leads: 15, deals: 6 },
+    ];
+  }, []);
+
+  // Dados de distribuição de receita
+  const revenueDistribution = useMemo(() => {
+    return [
+      { name: 'Crédito Consignado', value: 35 },
+      { name: 'Empréstimo Pessoal', value: 25 },
+      { name: 'Financiamento', value: 20 },
+      { name: 'Outros', value: 20 },
+    ];
+  }, []);
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+
+  const getCustomKPIs = () => {
+    if (currentProfile === 'SALT') {
       return (
-        <div className="space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="flex items-center space-x-4">
-              <Skeleton className="h-12 w-12 rounded-full" />
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-[250px]" />
-                <Skeleton className="h-4 w-[200px]" />
-              </div>
-            </div>
-          ))}
-        </div>
+        <>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-500">Total de Simulações</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{leads.filter(lead => lead.status === 'qualified').length}</div>
+              <p className="text-xs text-gray-500 mt-1">Este mês</p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-500">Encaminhados</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{leads.filter(lead => lead.status === 'payment').length}</div>
+              <p className="text-xs text-gray-500 mt-1">Às administradoras</p>
+            </CardContent>
+          </Card>
+        </>
+      );
+    } else { // GHF
+      return (
+        <>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-500">Contratos em Análise</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{leads.filter(lead => lead.status === 'qualified').length}</div>
+              <p className="text-xs text-gray-500 mt-1">Este mês</p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-500">Aguardando Pagamento</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{leads.filter(lead => lead.status === 'payment').length}</div>
+              <p className="text-xs text-gray-500 mt-1">Total</p>
+            </CardContent>
+          </Card>
+        </>
       );
     }
-
-    if (!leads || leads.length === 0) {
-      return <p>Nenhum lead encontrado.</p>;
-    }
-
-    // Ordenar leads por data de criação (mais recentes primeiro)
-    const sortedLeads = filteredLeads.sort((a, b) =>
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
-
-    return (
-      <ScrollArea className="h-[300px] w-full">
-        <div className="space-y-4">
-          {sortedLeads.map((lead) => (
-            <Card key={lead.id}>
-              <CardHeader>
-                <CardTitle className="text-sm font-medium">{lead.name}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500">{lead.company}</p>
-                    <div className="flex items-center mt-2">
-                      <CalendarDays className="mr-1 h-4 w-4" />
-                      <span className="text-xs text-gray-500">
-                        Criado em {formatDate(lead.created_at)}
-                      </span>
-                    </div>
-                  </div>
-                  <Badge variant="secondary">{lead.status}</Badge>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </ScrollArea>
-    );
   };
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">
-            Receita Mensal
-          </CardTitle>
-          <TrendingUp className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {isLoading ? (
-              <Skeleton className="h-5 w-20" />
-            ) : (
-              formatCurrency(45000)
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            +20.1% do mês passado
-          </p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Novos Leads</CardTitle>
-          <CalendarDays className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {isLoading ? (
-              <Skeleton className="h-5 w-10" />
-            ) : (
-              "+12"
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            +19% da semana passada
-          </p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">
-            Taxa de Conversão
-          </CardTitle>
-          <ListChecks className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {isLoading ? (
-              <Skeleton className="h-5 w-10" />
-            ) : (
-              "32%"
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            +11% do mês passado
-          </p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">
-            Progresso das Tasks
-          </CardTitle>
-          <ListChecks className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {isLoading ? (
-              <Skeleton className="h-5 w-10" />
-            ) : (
-              `${completedTasks}/${tasks?.length || 0}`
-            )}
-          </div>
-          <Progress value={taskProgress} className="h-2 mt-2" />
-          <p className="text-xs text-muted-foreground">
-            {isLoading ? (
-              <Skeleton className="h-3 w-20" />
-            ) : (
-              `${taskProgress?.toFixed(0)}% completo`
-            )}
-          </p>
-        </CardContent>
-      </Card>
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Dashboard {currentProfile}</h1>
+        <p className="text-gray-500">Hoje: {new Date().toLocaleDateString('pt-BR')}</p>
+      </div>
 
-      <div className="col-span-1 md:col-span-2 lg:col-span-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-500">Receita Total (Mês)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(stats.revenueThisMonth)}</div>
+            <p className="text-xs text-gray-500 mt-1">De {stats.wonDealsThisMonth} negócios</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-500">Taxa de Conversão</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.conversionRate}%</div>
+            <p className="text-xs text-gray-500 mt-1">Lead para negócio</p>
+          </CardContent>
+        </Card>
+        
+        {getCustomKPIs()}
+      </div>
+      
+      {/* Replace Tabs with 2x2 grid layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* First row */}
         <Card>
           <CardHeader>
-            <CardTitle>Leads Recentes</CardTitle>
-            <CardDescription>
-              Seus leads mais recentes. Mantenha-se atualizado.
-            </CardDescription>
+            <CardTitle>Distribuição de Leads por Status</CardTitle>
           </CardHeader>
-          <CardContent>{renderRecentLeads()}</CardContent>
+          <CardContent className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={leadsByStatus}>
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar 
+                  dataKey="count" 
+                  fill="#0891b2" 
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Funil de Vendas</CardTitle>
+          </CardHeader>
+          <CardContent className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <FunnelChart>
+                <Tooltip formatter={(value) => `${value} leads`} />
+                <Funnel
+                  dataKey="value"
+                  data={funnelData}
+                  isAnimationActive={true}
+                  labelLine={false}
+                  width={350}
+                >
+                  <LabelList 
+                    position="right" 
+                    fill="#333" 
+                    stroke="none" 
+                    dataKey="name" 
+                    fontSize={13}
+                    fontWeight="600"
+                  />
+                  <LabelList
+                    position="center"
+                    fill="#fff"
+                    stroke="none"
+                    dataKey="value"
+                    fontSize={14}
+                    fontWeight="bold"
+                  />
+                </Funnel>
+              </FunnelChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Second row */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Desempenho Mensal</CardTitle>
+          </CardHeader>
+          <CardContent className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={monthlyPerformance}>
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="leads" 
+                  stroke="#0891b2" 
+                  strokeWidth={2}
+                  activeDot={{ r: 8 }}
+                  name="Leads"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="deals" 
+                  stroke="#16a34a" 
+                  strokeWidth={2}
+                  name="Negócios"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Distribuição de Receita</CardTitle>
+          </CardHeader>
+          <CardContent className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={revenueDistribution}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="value"
+                  label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
+                >
+                  {revenueDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => `${value}%`} />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
         </Card>
       </div>
 
-      <div className="col-span-1 md:col-span-2 lg:col-span-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <Card>
           <CardHeader>
-            <CardTitle>Próximas Tasks</CardTitle>
-            <CardDescription>
-              Acompanhe suas tasks. Visualize, priorize e organize.
-            </CardDescription>
+            <CardTitle>Tarefas Pendentes</CardTitle>
           </CardHeader>
-          <CardContent>{renderTasksList()}</CardContent>
+          <CardContent>
+            <div className="space-y-4">
+              {tasks
+                .filter(task => task.status !== 'done')
+                .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+                .slice(0, 5)
+                .map(task => (
+                  <div key={task.id} className="flex items-center justify-between border-b pb-3">
+                    <div>
+                      <h3 className="font-medium">{task.title}</h3>
+                      <p className="text-sm text-gray-500">{task.description.slice(0, 50)}{task.description.length > 50 ? '...' : ''}</p>
+                    </div>
+                    <div>
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        task.priority === 'high' 
+                          ? 'bg-red-100 text-red-800' 
+                          : task.priority === 'medium'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-green-100 text-green-800'
+                      }`}>
+                        {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Média' : 'Baixa'}
+                      </span>
+                      <p className="text-xs text-gray-500 mt-1">Vencimento: {new Date(task.dueDate).toLocaleDateString('pt-BR')}</p>
+                    </div>
+                  </div>
+                ))
+              }
+              {tasks.filter(task => task.status !== 'done').length === 0 && (
+                <p className="text-gray-500 text-center py-6">Sem tarefas pendentes</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Leads Recentes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-3 px-4 font-medium">Nome</th>
+                    <th className="text-left py-3 px-4 font-medium">Empresa</th>
+                    <th className="text-left py-3 px-4 font-medium">Status</th>
+                    <th className="text-right py-3 px-4 font-medium">Valor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {leads
+                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                    .slice(0, 5)
+                    .map(lead => (
+                      <tr key={lead.id} className="border-b">
+                        <td className="py-3 px-4">{lead.name}</td>
+                        <td className="py-3 px-4">{lead.company}</td>
+                        <td className="py-3 px-4">
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            lead.status === 'qualified' || lead.status === 'contacted'
+                              ? 'bg-blue-100 text-blue-800'
+                              : lead.status === 'proposal' || lead.status === 'contract'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : lead.status === 'payment' || lead.status === 'closed'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {translateStatus(lead.status)}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-right">{formatCurrency(lead.value)}</td>
+                      </tr>
+                    ))
+                  }
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
         </Card>
       </div>
     </div>
   );
 };
 
-export default Index;
+export default Dashboard;

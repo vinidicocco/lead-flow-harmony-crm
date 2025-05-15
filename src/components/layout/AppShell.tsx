@@ -3,10 +3,11 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useProfile } from '@/context/ProfileContext';
 import { useAuth } from '@/context/AuthContext';
-import { LogOut, User, Camera, HardHat } from 'lucide-react';
+import { LogOut, User, Camera } from 'lucide-react';
 import TopNavMenu from './TopNavMenu';
 import ProfileSwitcher from './ProfileSwitcher';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
 
@@ -14,70 +15,26 @@ interface AppShellProps {
   children: React.ReactNode;
 }
 
-// Mapa de logos organizacionais
-const clientLogos: Record<string, {src: string, bg?: string}> = {
-  'SALT': {
-    src: "/lovable-uploads/fd91fbcc-643d-49e8-84a7-5988b6024237.png",
-    bg: "bg-black"
-  },
-  'GHF': {
-    src: "/lovable-uploads/f07b2db5-3e35-4bba-bda2-685a8fcae7d5.png"
-  },
-  'Neoin': {
-    src: "/lovable-uploads/1fe16e1c-bea9-45ad-b102-cfb5ae42ef52.png",
-    bg: "bg-yellow-400"
-  }
-};
-
-// Componente que renderiza o logo correto baseado no perfil atual
-const ClientLogo = ({ profile }: { profile: string }) => {
-  const logoConfig = clientLogos[profile] || clientLogos['SALT']; // Fallback para SALT
-  
-  return (
-    <div className={`w-10 h-10 rounded-md flex items-center justify-center ${logoConfig.bg || ''}`}>
-      <img 
-        src={logoConfig.src}
-        alt={`${profile} Logo`} 
-        className="w-full h-full object-contain"
-      />
-    </div>
-  );
-};
-
 const AppShell: React.FC<AppShellProps> = ({ children }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUserAvatar } = useAuth();
   const { currentProfile } = useProfile();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>('');
 
-  // Estilo dinâmico baseado no perfil atual - pode expandir conforme necessário
-  const getProfileStyle = (profile: string) => {
-    // Aqui podemos adicionar mais estilos específicos por cliente
-    const styleMap: Record<string, string> = {
-      'SALT': 'bg-salt-light',
-      'GHF': 'bg-salt-light', // Usando mesmo estilo por enquanto
-      'Neoin': 'bg-neoin-light',
-    };
-
-    return styleMap[profile] || 'bg-salt-light';
-  };
-
-  const profileStyle = getProfileStyle(currentProfile);
+  const profileStyle = currentProfile === 'SALT' 
+    ? 'bg-salt-light' 
+    : 'bg-salt-light';
 
   const handleAvatarChange = () => {
     if (avatarUrl) {
-      // Funcionalidade em implementação
+      updateUserAvatar(avatarUrl);
       setAvatarUrl('');
       setIsProfileOpen(false);
-      toast.success("Foto de perfil atualizada com sucesso!");
+      toast.success('Foto de perfil atualizada com sucesso!');
     } else {
-      toast.error("Por favor, insira um URL válido para a imagem");
+      toast.error('Por favor, insira um URL válido para a imagem');
     }
   };
-
-  // Obter avatar_url e nome do usuário
-  const avatarUrl_user = user?.avatar_url;
-  const displayName = user ? (user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user.email) : "";
 
   return (
     <div className="min-h-screen flex flex-col w-full">
@@ -86,7 +43,23 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
         <div className="container mx-auto px-4 py-2 flex items-center justify-between">
           {/* Left side - Logo and Profile */}
           <div className="flex items-center gap-4">
-            <ClientLogo profile={currentProfile} />
+            {currentProfile === 'GHF' ? (
+              <div className="w-10 h-10 rounded-md flex items-center justify-center">
+                <img 
+                  src="/lovable-uploads/f07b2db5-3e35-4bba-bda2-685a8fcae7d5.png" 
+                  alt="GHF Logo" 
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            ) : (
+              <div className="w-10 h-10 rounded-md bg-black flex items-center justify-center">
+                <img 
+                  src="/lovable-uploads/fd91fbcc-643d-49e8-84a7-5988b6024237.png" 
+                  alt="SALT Logo" 
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            )}
             <h1 className="font-bold hidden sm:block">{currentProfile} CRM</h1>
             <ProfileSwitcher />
           </div>
@@ -101,8 +74,8 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
                 <PopoverTrigger asChild>
                   <Button variant="ghost" className="p-0 h-auto hover:bg-transparent relative group">
                     <Avatar className="w-8 h-8 border">
-                      {avatarUrl_user ? (
-                        <AvatarImage src={avatarUrl_user} alt={displayName} />
+                      {user?.avatar ? (
+                        <AvatarImage src={user.avatar} alt={user.name} />
                       ) : (
                         <AvatarFallback>
                           <User size={16} />
@@ -121,8 +94,8 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
                       <Avatar className="w-16 h-16">
                         {avatarUrl ? (
                           <AvatarImage src={avatarUrl} alt="Preview" />
-                        ) : avatarUrl_user ? (
-                          <AvatarImage src={avatarUrl_user} alt={displayName} />
+                        ) : user?.avatar ? (
+                          <AvatarImage src={user.avatar} alt={user.name} />
                         ) : (
                           <AvatarFallback>
                             <User size={24} />
@@ -130,7 +103,7 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
                         )}
                       </Avatar>
                       <div className="flex-1">
-                        <p className="text-sm font-medium">{displayName}</p>
+                        <p className="text-sm font-medium">{user?.name}</p>
                         <p className="text-xs text-muted-foreground">{user?.email}</p>
                       </div>
                     </div>
@@ -167,7 +140,7 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
                 </PopoverContent>
               </Popover>
               <div className="hidden lg:block ml-2">
-                <p className="font-medium text-sm">{displayName}</p>
+                <p className="font-medium text-sm">{user?.name}</p>
                 <p className="text-xs text-gray-500">{user?.email}</p>
               </div>
             </div>
