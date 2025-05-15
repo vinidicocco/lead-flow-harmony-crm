@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useProfile } from '@/context/ProfileContext';
@@ -49,7 +48,7 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
       return (
         <div className="w-10 h-10 rounded-md flex items-center justify-center">
           <img 
-            src="/lovable-uploads/d6af1cbe-2fa0-45e8-86de-83a05ffc0d1d.png" 
+            src="/lovable-uploads/4a3313d8-ccf0-4a4e-99e6-555ff916f513.png" 
             alt="NEOIN Logo" 
             className="w-full h-full object-contain"
           />

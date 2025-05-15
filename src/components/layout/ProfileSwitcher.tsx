@@ -36,7 +36,7 @@ const ProfileSwitcher = () => {
   // Use tenant-appropriate color
   const getProfileButtonColor = () => {
     if (currentTenant === 'NEOIN') {
-      return useBlueTheme ? 'bg-neoin-blue hover:bg-neoin-blue-dark' : 'bg-neoin hover:bg-neoin-dark';
+      return useBlueTheme ? 'bg-neoin-blue text-white hover:bg-neoin-blue/90' : 'bg-neoin hover:bg-neoin/90';
     }
     return 'bg-salt hover:bg-salt-dark'; // Default for SALT_GHF tenant
   };
@@ -77,10 +77,11 @@ const ProfileSwitcher = () => {
           variant="outline" 
           size="sm" 
           onClick={toggleThemeColor}
-          className="text-xs px-2"
+          className="text-xs px-2 flex gap-1 items-center"
           title="Toggle theme color"
         >
           <div className={`w-3 h-3 rounded-full ${useBlueTheme ? 'bg-neoin-blue' : 'bg-neoin'}`}></div>
+          <span>{useBlueTheme ? 'Azul' : 'Amarelo'}</span>
         </Button>
       )}
     </div>
