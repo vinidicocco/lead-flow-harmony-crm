@@ -41,7 +41,7 @@ export const useUserProfile = () => {
         last_name: profileData.last_name,
         avatar_url: profileData.avatar_url,
         organization_id: profileData.organization_id,
-        role: profileData.role,
+        role: profileData.role as UserRole, // Type casting here to ensure compatibility
         is_active: profileData.is_active,
         created_at: profileData.created_at,
         updated_at: profileData.updated_at

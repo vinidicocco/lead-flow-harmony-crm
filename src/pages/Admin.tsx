@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { User, Organization, UserRole } from '@/types';
 import { toast } from 'sonner';
 import { Loader2, Check, X, RefreshCw, Edit, Shield, Building, Users } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useProfile } from '@/context/ProfileContext';
@@ -58,7 +58,7 @@ const Admin = () => {
       const typedOrgs: Organization[] = orgs.map(org => ({
         id: org.id,
         name: org.name,
-        code: org.code as 'SALT' | 'GHF', // Cast para o tipo Profile
+        code: org.code as any, // Cast to the Profile type
         created_at: org.created_at,
         updated_at: org.updated_at
       }));
@@ -75,7 +75,14 @@ const Admin = () => {
         .order('created_at', { ascending: false });
       
       if (usersError) throw usersError;
-      setUsers(usersData);
+      
+      // Cast each user to ensure role is of type UserRole
+      const typedUsers: User[] = usersData.map(user => ({
+        ...user,
+        role: user.role as UserRole
+      }));
+      
+      setUsers(typedUsers);
     } catch (error: any) {
       toast.error(`Erro ao carregar dados: ${error.message}`);
     } finally {
@@ -425,7 +432,7 @@ const Admin = () => {
             <CardHeader>
               <CardTitle>Gerenciamento de Usuários</CardTitle>
               <CardDescription>
-                Gerencie todos os usuários do sistema, independente da organização.
+                Gerencie todos os usuários do sistema, independente da organiza��ão.
               </CardDescription>
             </CardHeader>
             <CardContent>

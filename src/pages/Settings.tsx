@@ -36,27 +36,29 @@ const Settings = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-4">
-                  <div>
-                    <span className="font-medium">Nome:</span>
-                    <p className="mt-1">{currentProfile?.first_name} {currentProfile?.last_name}</p>
+                {currentProfile && (
+                  <div className="grid gap-4">
+                    <div>
+                      <span className="font-medium">Nome:</span>
+                      <p className="mt-1">{currentProfile.first_name} {currentProfile.last_name}</p>
+                    </div>
+                    
+                    <div>
+                      <span className="font-medium">Email:</span>
+                      <p className="mt-1">{currentProfile.email}</p>
+                    </div>
+                    
+                    <div>
+                      <span className="font-medium">Organização:</span>
+                      <p className="mt-1">{currentProfile.organization?.name}</p>
+                    </div>
+                    
+                    <div>
+                      <span className="font-medium">Perfil:</span>
+                      <p className="mt-1">{currentProfile.role}</p>
+                    </div>
                   </div>
-                  
-                  <div>
-                    <span className="font-medium">Email:</span>
-                    <p className="mt-1">{currentProfile?.email}</p>
-                  </div>
-                  
-                  <div>
-                    <span className="font-medium">Organização:</span>
-                    <p className="mt-1">{currentProfile?.organization?.name}</p>
-                  </div>
-                  
-                  <div>
-                    <span className="font-medium">Perfil:</span>
-                    <p className="mt-1">{currentProfile?.role}</p>
-                  </div>
-                </div>
+                )}
               </CardContent>
             </Card>
             
