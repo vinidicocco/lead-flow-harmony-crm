@@ -155,7 +155,6 @@ export const AgentKnowledgeBase: React.FC<AgentKnowledgeBaseProps> = ({ onDocume
               />
               <label htmlFor="document-upload">
                 <Button 
-                  as="span" 
                   disabled={isUploading}
                   className="cursor-pointer"
                 >
