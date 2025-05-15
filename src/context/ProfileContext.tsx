@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Profile, Tenant } from '@/types';
 import { useAuth } from './AuthContext';
+import { isProfileInTenant } from '@/data/mockDataWrapper';
 
 interface ProfileContextType {
   currentProfile: Profile;
@@ -12,30 +13,26 @@ interface ProfileContextType {
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
 export const ProfileProvider = ({ children }: { children: ReactNode }) => {
-  const { user, currentTenant } = useAuth();
-  const [currentProfile, setCurrentProfile] = useState<Profile>('SALT');
-  const [availableProfiles, setAvailableProfiles] = useState<Profile[]>(['SALT', 'GHF']);
+  const { user, currentTenant, tenantData } = useAuth();
+  const [currentProfile, setCurrentProfile] = useState<Profile>(tenantData.defaultProfile);
+  const [availableProfiles, setAvailableProfiles] = useState<Profile[]>(tenantData.availableProfiles);
 
   useEffect(() => {
     // Set available profiles and default profile based on tenant
-    if (currentTenant === 'SALT_GHF') {
-      setAvailableProfiles(['SALT', 'GHF']);
-      // If current profile is not in available profiles, set it to the first available one
-      if (!['SALT', 'GHF'].includes(currentProfile)) {
-        setCurrentProfile('SALT');
-      }
-    } else if (currentTenant === 'NEOIN') {
-      setAvailableProfiles(['NEOIN']);
-      setCurrentProfile('NEOIN');
+    setAvailableProfiles(tenantData.availableProfiles);
+    
+    // If current profile is not in available profiles, set it to the default one
+    if (!tenantData.availableProfiles.includes(currentProfile)) {
+      setCurrentProfile(tenantData.defaultProfile);
     }
-  }, [currentTenant, currentProfile]);
+  }, [currentTenant, tenantData, currentProfile]);
 
   // Use user's profile if available
   useEffect(() => {
-    if (user && availableProfiles.includes(user.profile)) {
+    if (user && isProfileInTenant(user.profile, currentTenant)) {
       setCurrentProfile(user.profile);
     }
-  }, [user, availableProfiles]);
+  }, [user, currentTenant]);
 
   return (
     <ProfileContext.Provider value={{ currentProfile, setCurrentProfile, availableProfiles }}>

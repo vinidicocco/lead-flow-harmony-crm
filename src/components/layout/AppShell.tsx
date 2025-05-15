@@ -15,60 +15,36 @@ interface AppShellProps {
 }
 
 const AppShell: React.FC<AppShellProps> = ({ children }) => {
-  const { user, logout, updateUserAvatar, currentTenant } = useAuth();
+  const { user, logout, updateUserAvatar, currentTenant, tenantData } = useAuth();
   const { currentProfile } = useProfile();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>('');
 
-  const profileStyle = currentProfile === 'NEOIN' 
-    ? 'bg-neoin-light' 
-    : currentProfile === 'GHF' 
-      ? 'bg-salt-light' // Mesmo estilo para GHF
-      : 'bg-salt-light'; // SALT
+  const getTenantStyle = () => {
+    return `bg-${currentTenant.toLowerCase()}-light`;
+  };
 
   const handleAvatarChange = () => {
     if (avatarUrl) {
       updateUserAvatar(avatarUrl);
       setAvatarUrl('');
       setIsProfileOpen(false);
-      toast.success('Foto de perfil atualizada com sucesso!');
+      toast.success('Avatar atualizado com sucesso!');
     } else {
       toast.error('Por favor, insira um URL válido para a imagem');
     }
   };
 
   const renderLogo = () => {
-    if (currentTenant === 'NEOIN') {
-      return (
-        <div className="w-10 h-10 rounded-md flex items-center justify-center">
-          <img 
-            src="/lovable-uploads/d6af1cbe-2fa0-45e8-86de-83a05ffc0d1d.png" 
-            alt="NEOIN Logo" 
-            className="w-full h-full object-contain"
-          />
-        </div>
-      );
-    } else if (currentProfile === 'GHF') {
-      return (
-        <div className="w-10 h-10 rounded-md flex items-center justify-center">
-          <img 
-            src="/lovable-uploads/f07b2db5-3e35-4bba-bda2-685a8fcae7d5.png" 
-            alt="GHF Logo" 
-            className="w-full h-full object-contain"
-          />
-        </div>
-      );
-    } else {
-      return (
-        <div className="w-10 h-10 rounded-md bg-black flex items-center justify-center">
-          <img 
-            src="/lovable-uploads/fd91fbcc-643d-49e8-84a7-5988b6024237.png" 
-            alt="SALT Logo" 
-            className="w-full h-full object-contain"
-          />
-        </div>
-      );
-    }
+    return (
+      <div className="w-10 h-10 rounded-md flex items-center justify-center bg-white/10">
+        <img 
+          src={tenantData.logoUrl || '/lovable-uploads/fd91fbcc-643d-49e8-84a7-5988b6024237.png'} 
+          alt={`${currentTenant} Logo`} 
+          className="w-full h-full object-contain"
+        />
+      </div>
+    );
   };
 
   return (
@@ -79,7 +55,9 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
           {/* Left side - Logo and Profile */}
           <div className="flex items-center gap-4">
             {renderLogo()}
-            <h1 className="font-bold hidden sm:block">{currentProfile} CRM</h1>
+            <h1 className="font-bold hidden sm:block">
+              {currentTenant === 'SALT_GHF' ? `${currentProfile} CRM` : `${currentTenant} CRM`}
+            </h1>
             <ProfileSwitcher />
           </div>
 
@@ -124,6 +102,9 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
                       <div className="flex-1">
                         <p className="text-sm font-medium">{user?.name}</p>
                         <p className="text-xs text-muted-foreground">{user?.email}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Tenant: {currentTenant}
+                        </p>
                       </div>
                     </div>
                     <div className="space-y-2">
