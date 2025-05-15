@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { User } from '@/types';
+import { User, Tenant } from '@/types';
 import { toast } from "sonner";
 
 interface AuthContextType {
@@ -9,6 +9,7 @@ interface AuthContextType {
   logout: () => void;
   updateUserAvatar: (avatarUrl: string) => void;
   isLoading: boolean;
+  currentTenant: Tenant;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,6 +22,7 @@ const mockUsers: User[] = [
     email: 'salt@example.com',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=salt',
     profile: 'SALT',
+    tenant: 'SALT_GHF',
     isAdmin: true // This user is an admin
   },
   {
@@ -29,20 +31,33 @@ const mockUsers: User[] = [
     email: 'ghf@example.com',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ghf',
     profile: 'GHF',
+    tenant: 'SALT_GHF',
     isAdmin: false // Regular user
+  },
+  {
+    id: '3',
+    name: 'NEOIN User',
+    email: 'neoin@example.com',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=neoin',
+    profile: 'NEOIN',
+    tenant: 'NEOIN',
+    isAdmin: true // Admin for NEOIN
   }
 ];
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentTenant, setCurrentTenant] = useState<Tenant>('SALT_GHF');
 
   useEffect(() => {
     // Check for stored user
     const storedUser = localStorage.getItem('crm-user');
     if (storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        setCurrentTenant(parsedUser.tenant);
       } catch (error) {
         console.error('Failed to parse stored user', error);
         localStorage.removeItem('crm-user');
@@ -59,6 +74,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (foundUser && password === 'password') { // Simple demo password
         setUser(foundUser);
+        setCurrentTenant(foundUser.tenant);
         localStorage.setItem('crm-user', JSON.stringify(foundUser));
         toast.success(`Welcome back, ${foundUser.name}!`);
         return;
@@ -88,7 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateUserAvatar, isLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUserAvatar, isLoading, currentTenant }}>
       {children}
     </AuthContext.Provider>
   );

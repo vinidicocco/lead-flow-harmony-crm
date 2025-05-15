@@ -21,6 +21,7 @@ const Login = () => {
           <p>Demo Accounts:</p>
           <p>SALT Profile: salt@example.com / password</p>
           <p>GHF Profile: ghf@example.com / password</p>
+          <p>NEOIN Profile: neoin@example.com / password</p>
         </div>
       </div>
     </div>

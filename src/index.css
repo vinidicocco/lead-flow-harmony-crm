@@ -40,6 +40,9 @@
     
     /* GHF color theme */
     --ghf: 270 67% 47%;
+    
+    /* NEOIN color theme */
+    --neoin: 40 97% 58%;
   }
  
   .dark {

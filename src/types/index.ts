@@ -1,5 +1,7 @@
 
-export type Profile = 'SALT' | 'GHF';
+export type Profile = 'SALT' | 'GHF' | 'NEOIN';
+
+export type Tenant = 'SALT_GHF' | 'NEOIN';
 
 export interface User {
   id: string;
@@ -7,6 +9,7 @@ export interface User {
   email: string;
   avatar?: string;
   profile: Profile;
+  tenant: Tenant;
   isAdmin?: boolean;
 }
 

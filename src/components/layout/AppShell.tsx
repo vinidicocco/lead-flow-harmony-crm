@@ -7,7 +7,6 @@ import { LogOut, User, Camera } from 'lucide-react';
 import TopNavMenu from './TopNavMenu';
 import ProfileSwitcher from './ProfileSwitcher';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
 
@@ -16,14 +15,16 @@ interface AppShellProps {
 }
 
 const AppShell: React.FC<AppShellProps> = ({ children }) => {
-  const { user, logout, updateUserAvatar } = useAuth();
+  const { user, logout, updateUserAvatar, currentTenant } = useAuth();
   const { currentProfile } = useProfile();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>('');
 
-  const profileStyle = currentProfile === 'SALT' 
-    ? 'bg-salt-light' 
-    : 'bg-salt-light';
+  const profileStyle = currentProfile === 'NEOIN' 
+    ? 'bg-neoin-light' 
+    : currentProfile === 'GHF' 
+      ? 'bg-salt-light' // Mesmo estilo para GHF
+      : 'bg-salt-light'; // SALT
 
   const handleAvatarChange = () => {
     if (avatarUrl) {
@@ -36,6 +37,40 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
     }
   };
 
+  const renderLogo = () => {
+    if (currentTenant === 'NEOIN') {
+      return (
+        <div className="w-10 h-10 rounded-md flex items-center justify-center">
+          <img 
+            src="/lovable-uploads/d6af1cbe-2fa0-45e8-86de-83a05ffc0d1d.png" 
+            alt="NEOIN Logo" 
+            className="w-full h-full object-contain"
+          />
+        </div>
+      );
+    } else if (currentProfile === 'GHF') {
+      return (
+        <div className="w-10 h-10 rounded-md flex items-center justify-center">
+          <img 
+            src="/lovable-uploads/f07b2db5-3e35-4bba-bda2-685a8fcae7d5.png" 
+            alt="GHF Logo" 
+            className="w-full h-full object-contain"
+          />
+        </div>
+      );
+    } else {
+      return (
+        <div className="w-10 h-10 rounded-md bg-black flex items-center justify-center">
+          <img 
+            src="/lovable-uploads/fd91fbcc-643d-49e8-84a7-5988b6024237.png" 
+            alt="SALT Logo" 
+            className="w-full h-full object-contain"
+          />
+        </div>
+      );
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col w-full">
       {/* Top Navigation Bar */}
@@ -43,23 +78,7 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
         <div className="container mx-auto px-4 py-2 flex items-center justify-between">
           {/* Left side - Logo and Profile */}
           <div className="flex items-center gap-4">
-            {currentProfile === 'GHF' ? (
-              <div className="w-10 h-10 rounded-md flex items-center justify-center">
-                <img 
-                  src="/lovable-uploads/f07b2db5-3e35-4bba-bda2-685a8fcae7d5.png" 
-                  alt="GHF Logo" 
-                  className="w-full h-full object-contain"
-                />
-              </div>
-            ) : (
-              <div className="w-10 h-10 rounded-md bg-black flex items-center justify-center">
-                <img 
-                  src="/lovable-uploads/fd91fbcc-643d-49e8-84a7-5988b6024237.png" 
-                  alt="SALT Logo" 
-                  className="w-full h-full object-contain"
-                />
-              </div>
-            )}
+            {renderLogo()}
             <h1 className="font-bold hidden sm:block">{currentProfile} CRM</h1>
             <ProfileSwitcher />
           </div>

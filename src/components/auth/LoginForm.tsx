@@ -46,7 +46,7 @@ const LoginForm: React.FC = () => {
             <Input 
               id="email" 
               type="email" 
-              placeholder="salt@example.com or ghf@example.com" 
+              placeholder="salt@example.com, ghf@example.com, neoin@example.com" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required

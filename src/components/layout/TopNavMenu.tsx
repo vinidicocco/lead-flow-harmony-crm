@@ -10,6 +10,7 @@ import {
   NavigationMenuLink,
 } from "@/components/ui/navigation-menu"
 import { useProfile } from '@/context/ProfileContext';
+import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -22,9 +23,22 @@ import {
 
 const TopNavMenu = () => {
   const { currentProfile } = useProfile();
+  const { currentTenant } = useAuth();
   const { toast } = useToast();
-  const profileStyle = currentProfile === 'SALT' ? 'bg-salt-light' : 'bg-ghf-light';
   const [whatsAppOpen, setWhatsAppOpen] = useState(false);
+
+  // Define profile style based on tenant and current profile
+  const getProfileStyle = () => {
+    if (currentTenant === 'NEOIN') {
+      return 'bg-neoin-light';
+    } else if (currentProfile === 'GHF') {
+      return 'bg-salt-light'; // Same style for GHF in the SALT_GHF tenant
+    } else {
+      return 'bg-salt-light'; // SALT in the SALT_GHF tenant
+    }
+  };
+
+  const profileStyle = getProfileStyle();
 
   const links = [
     { to: '/', icon: <LayoutDashboard size={16} />, label: 'Dashboard' },
