@@ -9,15 +9,10 @@ import {
   NavigationMenuItem,
 } from "@/components/ui/navigation-menu"
 import { useProfile } from '@/context/ProfileContext';
-import { useAuth } from '@/context/AuthContext';
 
 const TopNavMenu = () => {
   const { currentProfile } = useProfile();
-  const { user } = useAuth();
-  const profileStyle = currentProfile === 'SALT' ? 'bg-salt-light' : 'bg-ghf-light';
-  
-  const isMaster = user?.role === 'MASTER';
-  const isAdminOrMaster = user?.role === 'MASTER' || user?.role === 'ADMIN';
+  const profileStyle = currentProfile === 'Neoin' ? 'bg-neoin-light' : currentProfile === 'SALT' ? 'bg-salt-light' : 'bg-ghf-light';
 
   const links = [
     { to: '/', icon: <LayoutDashboard size={16} />, label: 'Dashboard' },
@@ -27,17 +22,9 @@ const TopNavMenu = () => {
     { to: '/follow-up', icon: <MessageSquare size={16} />, label: 'Follow-up' },
     { to: '/ai-agent', icon: <Bot size={16} />, label: 'Agente IA' },
     { to: '/whatsapp', icon: <MessageCircle size={16} />, label: 'WhatsApp' },
+    { to: '/agent-settings', icon: <Settings size={16} />, label: 'Config. IA' },
+    { to: '/admin', icon: <Shield size={16} />, label: 'Admin' },
   ];
-
-  // Link para agente IA (se tiver permissão)
-  if (isAdminOrMaster) {
-    links.push({ to: '/agent-settings', icon: <Settings size={16} />, label: 'Config. IA' });
-  }
-
-  // Link para administração (apenas MASTER)
-  if (isMaster) {
-    links.push({ to: '/admin', icon: <Shield size={16} />, label: 'Admin' });
-  }
 
   return (
     <NavigationMenu className="mx-auto">

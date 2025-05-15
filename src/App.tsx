@@ -14,11 +14,8 @@ import GestaoAgenteIA from './pages/GestaoAgenteIA';
 import WhatsApp from './pages/WhatsApp';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
-import Login from './pages/Login';
-import Unauthorized from './pages/Unauthorized';
 import Admin from './pages/Admin';
 import AgentSettings from './pages/AgentSettings';
-import ProtectedRoute from './components/auth/ProtectedRoute';
 import './App.css';
 
 function App() {
@@ -27,90 +24,66 @@ function App() {
       <AuthProvider>
         <ProfileProvider>
           <Routes>
-            {/* Rota de Login */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/unauthorized" element={<Unauthorized />} />
-            
-            {/* Rotas Protegidas */}
+            {/* Rotas principais - sem necessidade de autenticação por enquanto */}
             <Route path="/" element={
-              <ProtectedRoute>
-                <AppShell>
-                  <Dashboard />
-                </AppShell>
-              </ProtectedRoute>
+              <AppShell>
+                <Dashboard />
+              </AppShell>
             } />
             
             <Route path="/kanban" element={
-              <ProtectedRoute>
-                <AppShell>
-                  <Kanban />
-                </AppShell>
-              </ProtectedRoute>
+              <AppShell>
+                <Kanban />
+              </AppShell>
             } />
             
             <Route path="/leads" element={
-              <ProtectedRoute>
-                <AppShell>
-                  <Leads />
-                </AppShell>
-              </ProtectedRoute>
+              <AppShell>
+                <Leads />
+              </AppShell>
             } />
             
             <Route path="/meetings" element={
-              <ProtectedRoute>
-                <AppShell>
-                  <Meetings />
-                </AppShell>
-              </ProtectedRoute>
+              <AppShell>
+                <Meetings />
+              </AppShell>
             } />
             
             <Route path="/follow-up" element={
-              <ProtectedRoute>
-                <AppShell>
-                  <FollowUp />
-                </AppShell>
-              </ProtectedRoute>
+              <AppShell>
+                <FollowUp />
+              </AppShell>
             } />
             
             <Route path="/ai-agent" element={
-              <ProtectedRoute>
-                <AppShell>
-                  <GestaoAgenteIA />
-                </AppShell>
-              </ProtectedRoute>
+              <AppShell>
+                <GestaoAgenteIA />
+              </AppShell>
             } />
 
             <Route path="/agent-settings" element={
-              <ProtectedRoute requiredPermission="ai_agent:configure">
-                <AppShell>
-                  <AgentSettings />
-                </AppShell>
-              </ProtectedRoute>
+              <AppShell>
+                <AgentSettings />
+              </AppShell>
             } />
             
             <Route path="/whatsapp" element={
-              <ProtectedRoute>
-                <AppShell>
-                  <WhatsApp />
-                </AppShell>
-              </ProtectedRoute>
+              <AppShell>
+                <WhatsApp />
+              </AppShell>
             } />
             
             <Route path="/settings" element={
-              <ProtectedRoute>
-                <AppShell>
-                  <Settings />
-                </AppShell>
-              </ProtectedRoute>
+              <AppShell>
+                <Settings />
+              </AppShell>
             } />
             
-            {/* Rota de Administração (apenas MASTER) */}
+            {/* Rota de Administração */}
             <Route path="/admin" element={
-              <ProtectedRoute requiredRole="MASTER">
-                <AppShell>
-                  <Admin />
-                </AppShell>
-              </ProtectedRoute>
+              <AppShell>
+                <Admin />
+              </AppShell>
             } />
             
             {/* Página 404 */}
@@ -124,7 +97,7 @@ function App() {
             <Route path="*" element={<Navigate to="/404" replace />} />
           </Routes>
           
-          {/* Toaster para notificações - posicionado no canto superior direito com cores ricas e em português */}
+          {/* Toaster para notificações */}
           <Toaster 
             richColors 
             position="top-right" 
