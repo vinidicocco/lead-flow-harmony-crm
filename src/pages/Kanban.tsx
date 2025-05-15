@@ -1,263 +1,272 @@
-
 import React, { useMemo, useState } from 'react';
 import { useProfile } from '@/context/ProfileContext';
-import { getLeadsByProfile } from '@/data/mockData';
+import { getLeadsByProfile } from '@/data/mockDataWrapper';
 import { Lead } from '@/types';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Check, Phone, FileText, FileSignature, ArrowRight, Handshake, Info } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { PlusCircle, Search, Filter } from 'lucide-react';
+import { useDroppable, useDraggable } from '@dnd-kit/core';
 
-const KanbanBoard = () => {
+const Kanban = () => {
   const { currentProfile } = useProfile();
-  const allLeads = useMemo(() => getLeadsByProfile(currentProfile), [currentProfile]);
+  const leads = useMemo(() => getLeadsByProfile(currentProfile), [currentProfile]);
   
-  // Estados para o quadro kanban
-  const [leads, setLeads] = useState<Lead[]>(allLeads);
-  const [draggedLead, setDraggedLead] = useState<Lead | null>(null);
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-
-  // Definir colunas unificadas do kanban para ambos os perfis
-  const columns = useMemo(() => [
-    { id: 'qualified', title: 'Lead Qualificado', icon: <Check className="w-4 h-4" /> },
-    { id: 'contact_attempt', title: 'Tentativa de Contato', icon: <Phone className="w-4 h-4" /> },
-    { id: 'contacted', title: 'Contato Realizado', icon: <Phone className="w-4 h-4 text-green-500" /> },
-    { id: 'proposal', title: 'Proposta', icon: <FileText className="w-4 h-4" /> },
-    { id: 'contract', title: 'Ass. de Contrato', icon: <FileSignature className="w-4 h-4" /> },
-    { id: 'payment', title: 'Transferência/Pagamento', icon: <ArrowRight className="w-4 h-4" /> },
-    { id: 'closed', title: 'Negócio Fechado', icon: <Handshake className="w-4 h-4" /> },
-  ], []);
-
-  // Formatar moeda
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
-
-  // Lidar com o início do arrasto
-  const handleDragStart = (lead: Lead) => {
-    setDraggedLead(lead);
-  };
-
-  // Lidar com o arrasto sobre
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
-  // Lidar com a soltura
-  const handleDrop = (e: React.DragEvent, status: string) => {
-    e.preventDefault();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
+  
+  // Filtrar leads pela consulta de pesquisa
+  const filteredLeads = useMemo(() => {
+    let filtered = leads;
     
-    if (draggedLead) {
-      const updatedLeads = leads.map(lead => {
-        if (lead.id === draggedLead.id) {
-          toast.success(`Movido ${lead.name} para ${status}`);
-          return { ...lead, status: status as Lead['status'] };
-        }
-        return lead;
-      });
-      
-      setLeads(updatedLeads);
-      setDraggedLead(null);
+    if (searchQuery) {
+      filtered = filtered.filter(lead => 
+        lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        lead.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        lead.email.toLowerCase().includes(searchQuery.toLowerCase())
+      );
     }
+    
+    if (filterStatus) {
+      filtered = filtered.filter(lead => lead.status === filterStatus);
+    }
+    
+    return filtered;
+  }, [leads, searchQuery, filterStatus]);
+  
+  // Agrupar leads por status para colunas Kanban
+  const groupedLeads = useMemo(() => {
+    const grouped: { [key: string]: Lead[] } = {};
+    
+    filteredLeads.forEach(lead => {
+      if (!grouped[lead.status]) {
+        grouped[lead.status] = [];
+      }
+      grouped[lead.status].push(lead);
+    });
+    
+    return grouped;
+  }, [filteredLeads]);
+  
+  // Tradução dos status
+  const translateStatus = (status: string) => {
+    const statusMap: Record<string, string> = {
+      'qualified': 'Lead Qualificado',
+      'contact_attempt': 'Tentativa de Contato',
+      'contacted': 'Contato Realizado',
+      'proposal': 'Proposta',
+      'contract': 'Ass. de Contrato',
+      'payment': 'Transferência/Pagamento',
+      'closed': 'Negócio Fechado'
+    };
+    return statusMap[status] || status;
   };
-
-  // Abrir o diálogo com detalhes do lead
-  const openLeadDetails = (lead: Lead) => {
-    setSelectedLead(lead);
-    setDialogOpen(true);
+  
+  // Lista de status para filtro
+  const statusOptions = useMemo(() => {
+    const uniqueStatuses = [...new Set(leads.map(lead => lead.status))];
+    return uniqueStatuses.map(status => ({
+      value: status,
+      label: translateStatus(status)
+    }));
+  }, [leads]);
+  
+  // Manipular o envio do formulário de adição de lead
+  const handleAddLead = (e: React.FormEvent) => {
+    e.preventDefault();
+    toast.success('Isso adicionaria um novo lead (apenas demonstração)');
+    setIsAddDialogOpen(false);
   };
-
-  // Filtrar leads por status
-  const getLeadsByStatus = (status: string) => {
-    return leads.filter(lead => lead.status === status);
+  
+  // Limpar filtros
+  const clearFilters = () => {
+    setSearchQuery('');
+    setFilterStatus(null);
+    setIsFilterDialogOpen(false);
   };
-
-  // Calcular totais para cada coluna
-  const calculateColumnTotal = (status: string) => {
-    return getLeadsByStatus(status).reduce((total, lead) => total + lead.value, 0);
+  
+  // Componente para coluna Kanban
+  const KanbanColumn = ({ status }: { status: string }) => {
+    const { setNodeRef } = useDroppable({
+      id: status,
+    });
+    
+    return (
+      <Card ref={setNodeRef} className="w-72 rounded-md border shadow-sm">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">{translateStatus(status)}</CardTitle>
+        </CardHeader>
+        <CardContent className="p-2">
+          <div className="space-y-2">
+            {groupedLeads[status]?.map(lead => (
+              <KanbanCard key={lead.id} lead={lead} />
+            ))}
+            {(!groupedLeads[status] || groupedLeads[status].length === 0) && (
+              <p className="text-center text-gray-500 py-4">Nenhum lead aqui</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
   };
-
-  // Obter o nome do status mais legível
-  const getStatusLabel = (status: string) => {
-    const column = columns.find(col => col.id === status);
-    return column ? column.title : status;
+  
+  // Componente para cartão de lead
+  const KanbanCard = ({ lead }: { lead: Lead }) => {
+    const { attributes, listeners, setNodeRef, transform } = useDraggable({
+      id: lead.id,
+    });
+    
+    const style = transform
+      ? {
+          transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        }
+      : undefined;
+    
+    return (
+      <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="bg-white p-3 rounded-md border shadow-sm">
+        <h4 className="font-medium">{lead.name}</h4>
+        <p className="text-sm text-gray-500">{lead.company}</p>
+      </div>
+    );
   };
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">{currentProfile} CRM</h1>
-        <Button onClick={() => setLeads(allLeads)}>Resetar Quadro</Button>
+        <h1 className="text-3xl font-bold">CRM {currentProfile}</h1>
+        <div className="flex gap-2">
+          <Button onClick={() => setIsAddDialogOpen(true)}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Adicionar Lead
+          </Button>
+          <Button variant="outline" onClick={() => setIsFilterDialogOpen(true)}>
+            <Filter className="mr-2 h-4 w-4" />
+            Filtrar
+          </Button>
+        </div>
       </div>
       
-      <div className="kanban-board overflow-x-auto pb-6">
-        {columns.map(column => (
-          <div 
-            key={column.id}
-            className="kanban-column"
-            onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, column.id)}
-          >
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex items-center gap-2">
-                {column.icon}
-                <h2 className="font-bold">{column.title}</h2>
-              </div>
-              <span className="text-sm text-gray-500">{getLeadsByStatus(column.id).length}</span>
-            </div>
-            
-            <div className="text-xs text-gray-500 mb-2">
-              {calculateColumnTotal(column.id) > 0 && (
-                <>Total: {formatCurrency(calculateColumnTotal(column.id))}</>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              {getLeadsByStatus(column.id).map(lead => (
-                <div
-                  key={lead.id}
-                  className={`kanban-card ${
-                    currentProfile === 'SALT' 
-                      ? 'border-l-[#9b87f5]' 
-                      : 'border-l-[#0EA5E9]'
-                  }`}
-                  draggable
-                  onDragStart={() => handleDragStart(lead)}
-                >
-                  <h3 
-                    className="font-medium cursor-pointer hover:text-blue-600 hover:underline"
-                    onClick={() => openLeadDetails(lead)}
-                  >
-                    {lead.name}
-                  </h3>
-                  <p className="text-xs text-gray-500">{lead.company}</p>
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="text-xs font-medium">
-                      {formatCurrency(lead.value)}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      {new Date(lead.updatedAt).toLocaleDateString('pt-BR')}
-                    </span>
-                  </div>
-                </div>
-              ))}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Gestão de Leads</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4 mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <Input
+                placeholder="Buscar leads..."
+                className="pl-8"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
           </div>
-        ))}
-      </div>
-
-      {/* Diálogo de detalhes do lead */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          {selectedLead && (
-            <>
-              <DialogHeader>
-                <DialogTitle>Detalhes do Lead - {selectedLead.name}</DialogTitle>
-                <DialogDescription>
-                  {selectedLead.company} | {selectedLead.position}
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="grid grid-cols-2 gap-4 py-4">
-                <div className="space-y-2">
-                  <div className="text-sm">
-                    <span className="font-semibold">Email:</span> {selectedLead.email}
-                  </div>
-                  <div className="text-sm">
-                    <span className="font-semibold">Telefone:</span> {selectedLead.phone}
-                  </div>
-                  <div className="text-sm">
-                    <span className="font-semibold">Valor:</span> {formatCurrency(selectedLead.value)}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="text-sm">
-                    <span className="font-semibold">Status Atual:</span> {getStatusLabel(selectedLead.status)}
-                  </div>
-                  <div className="text-sm">
-                    <span className="font-semibold">Último Contato:</span> {selectedLead.lastContact ? new Date(selectedLead.lastContact).toLocaleDateString('pt-BR') : 'Não registrado'}
-                  </div>
-                  <div className="text-sm">
-                    <span className="font-semibold">Próximo Acompanhamento:</span> {selectedLead.nextFollowUp ? new Date(selectedLead.nextFollowUp).toLocaleDateString('pt-BR') : 'Não agendado'}
-                  </div>
-                </div>
+          
+          <div className="flex gap-4 overflow-x-auto">
+            {statusOptions.map(status => (
+              <KanbanColumn key={status.value} status={status.value} />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Diálogo de Adição de Lead */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Adicionar Novo Lead</DialogTitle>
+          </DialogHeader>
+          
+          <form onSubmit={handleAddLead}>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Nome</label>
+                <Input placeholder="Digite o nome" />
               </div>
-
-              <div className="space-y-2 mt-2">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Info className="h-4 w-4" /> 
-                  Acompanhamento de Situação
-                </h3>
-                <div className="p-4 rounded-md bg-gray-50 border">
-                  <div className="font-semibold mb-2">Histórico de Status:</div>
-                  <div className="space-y-3">
-                    {columns.map((column, index) => {
-                      const isActive = selectedLead.status === column.id;
-                      const isPast = columns.findIndex(c => c.id === selectedLead.status) > index;
-                      
-                      return (
-                        <div 
-                          key={column.id} 
-                          className={`flex items-center gap-2 p-2 rounded-md ${
-                            isActive 
-                              ? 'bg-blue-50 border border-blue-200' 
-                              : isPast 
-                                ? 'text-green-700' 
-                                : 'text-gray-500'
-                          }`}
-                        >
-                          <div className={`rounded-full p-1 ${
-                            isActive 
-                              ? 'bg-blue-100 text-blue-700' 
-                              : isPast 
-                                ? 'bg-green-100 text-green-700' 
-                                : 'bg-gray-100 text-gray-500'
-                          }`}>
-                            {column.icon}
-                          </div>
-                          <span className={`text-sm ${isActive ? 'font-medium' : ''}`}>
-                            {column.title}
-                          </span>
-                          {isActive && (
-                            <span className="ml-auto text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                              Status Atual
-                            </span>
-                          )}
-                          {isPast && (
-                            <span className="ml-auto text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                              Concluído
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Empresa</label>
+                <Input placeholder="Digite a empresa" />
               </div>
-
-              <div className="mt-4">
-                <h3 className="font-semibold mb-2">Notas:</h3>
-                <p className="text-sm bg-gray-50 p-3 rounded-md border">
-                  {selectedLead.notes}
-                </p>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Cargo</label>
+                <Input placeholder="Digite o cargo" />
               </div>
-            </>
-          )}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Email</label>
+                <Input type="email" placeholder="Digite o email" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Telefone</label>
+                <Input placeholder="Digite o número de telefone" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Valor</label>
+                <Input type="number" placeholder="Digite o valor" />
+              </div>
+              <div className="col-span-2 space-y-2">
+                <label className="text-sm font-medium">Notas</label>
+                <Input placeholder="Digite notas" />
+              </div>
+            </div>
+            
+            <DialogFooter className="mt-6">
+              <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit">Adicionar Lead</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Diálogo de Filtro */}
+      <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Filtrar Leads</DialogTitle>
+            <DialogDescription>
+              Selecione os critérios de filtro
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="status" className="text-right text-sm font-medium">
+                Status
+              </label>
+              <select
+                id="status"
+                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={filterStatus || ''}
+                onChange={(e) => setFilterStatus(e.target.value)}
+              >
+                <option value="">Todos os Status</option>
+                {statusOptions.map(status => (
+                  <option key={status.value} value={status.value}>{status.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={clearFilters}>
+              Limpar Filtros
+            </Button>
+            <Button type="submit" onClick={() => setIsFilterDialogOpen(false)}>
+              Aplicar Filtro
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
   );
 };
 
-export default KanbanBoard;
+export default Kanban;
+

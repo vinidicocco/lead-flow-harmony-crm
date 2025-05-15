@@ -1,7 +1,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { useProfile } from '@/context/ProfileContext';
-import { getMeetingsByProfile } from '@/data/mockData';
+import { getMeetingsByProfile } from '@/data/mockDataWrapper';
 import { Meeting } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';

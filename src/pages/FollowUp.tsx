@@ -1,7 +1,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { useProfile } from '@/context/ProfileContext';
-import { getLeadsByProfile, getTasksByProfile } from '@/data/mockData';
+import { getLeadsByProfile, getTasksByProfile } from '@/data/mockDataWrapper';
 import { Lead, Task } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
