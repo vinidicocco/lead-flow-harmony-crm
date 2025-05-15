@@ -27,8 +27,9 @@ const ProfileSwitcher = () => {
     toast.success(`Switched to ${profile} profile`);
   };
 
-  const getProfileButtonColor = () => {
-    return `bg-${currentTenant.toLowerCase()} hover:bg-${currentTenant.toLowerCase()}-dark`;
+  // Safely get the tenant name with fallback to prevent toLowerCase errors
+  const getTenantName = () => {
+    return currentTenant?.toLowerCase() || 'default'; 
   };
 
   return (
@@ -37,7 +38,7 @@ const ProfileSwitcher = () => {
         <Button
           variant="default"
           size="sm"
-          className={`bg-${currentTenant.toLowerCase()} hover:bg-${currentTenant.toLowerCase()}-dark gap-1`}
+          className={`bg-${getTenantName()} hover:bg-${getTenantName()}-dark gap-1`}
         >
           {currentProfile}
           <ChevronDown size={16} />
@@ -48,9 +49,9 @@ const ProfileSwitcher = () => {
           <DropdownMenuItem
             key={profile}
             onClick={() => handleProfileChange(profile)}
-            className={`flex items-center ${currentProfile === profile ? `bg-${currentTenant.toLowerCase()}/20` : ''}`}
+            className={`flex items-center ${currentProfile === profile ? `bg-${getTenantName()}/20` : ''}`}
           >
-            <div className={`w-3 h-3 rounded-full bg-${currentTenant.toLowerCase()} mr-2`}></div>
+            <div className={`w-3 h-3 rounded-full bg-${getTenantName()} mr-2`}></div>
             {profile}
           </DropdownMenuItem>
         ))}
