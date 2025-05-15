@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Kanban, Users, Calendar, MessageSquare, Bot, Cog, MessageCircle, Settings, Shield } from 'lucide-react';
+import { LayoutDashboard, Kanban, Users, Calendar, MessageSquare, Bot, Cog, MessageCircle, Settings, Shield, HardHat } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   NavigationMenu,

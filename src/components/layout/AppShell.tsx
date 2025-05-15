@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useProfile } from '@/context/ProfileContext';
 import { useAuth } from '@/context/AuthContext';
-import { LogOut, User, Camera } from 'lucide-react';
+import { LogOut, User, Camera, HardHat } from 'lucide-react';
 import TopNavMenu from './TopNavMenu';
 import ProfileSwitcher from './ProfileSwitcher';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -56,6 +56,7 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
     const styleMap: Record<string, string> = {
       'SALT': 'bg-salt-light',
       'GHF': 'bg-salt-light', // Usando mesmo estilo por enquanto
+      'Neoin': 'bg-neoin-light',
     };
 
     return styleMap[profile] || 'bg-salt-light';
