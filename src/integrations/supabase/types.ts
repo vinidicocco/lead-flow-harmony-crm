@@ -199,7 +199,10 @@ export type Database = {
     }
     Functions: {
       has_permission: {
-        Args: { permission_code: string }
+        Args:
+          | { permission_code: string }
+          | { user_id: number; permission_type: string }
+          | { user_id: number; resource_id: number }
         Returns: boolean
       }
     }
