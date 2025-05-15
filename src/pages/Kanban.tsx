@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState } from 'react';
 import { useProfile } from '@/context/ProfileContext';
 import { getLeadsByProfile } from '@/data/mockDataWrapper';
@@ -7,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { PlusCircle, Search, Filter } from 'lucide-react';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
@@ -269,4 +271,3 @@ const Kanban = () => {
 };
 
 export default Kanban;
-
