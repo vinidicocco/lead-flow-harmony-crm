@@ -1,7 +1,6 @@
-
 import React, { useMemo, useState } from 'react';
 import { useProfile } from '@/context/ProfileContext';
-import { getLeadsByProfile } from '@/data/mockData';
+import { getLeadsByProfile } from '@/utils/dataHelpers';
 import { Lead } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +10,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { PlusCircle, Search } from 'lucide-react';
 import { toast } from 'sonner';
 
-const LeadsPage = () => {
+const Leads = () => {
   const { currentProfile } = useProfile();
   const leads = useMemo(() => getLeadsByProfile(currentProfile), [currentProfile]);
   
@@ -258,4 +257,4 @@ const LeadsPage = () => {
   );
 };
 
-export default LeadsPage;
+export default Leads;

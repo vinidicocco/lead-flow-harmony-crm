@@ -1,7 +1,8 @@
+
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useProfile } from '@/context/ProfileContext';
-import { getStatsByProfile, getLeadsByProfile, getTasksByProfile } from '@/data/mockData';
+import { getStatsByProfile, getLeadsByProfile, getTasksByProfile } from '@/utils/dataHelpers';
 import { 
   Bar, BarChart, 
   Pie, PieChart, 

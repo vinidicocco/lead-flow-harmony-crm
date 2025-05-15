@@ -1,7 +1,6 @@
-
 import React, { useMemo, useState } from 'react';
 import { useProfile } from '@/context/ProfileContext';
-import { getLeadsByProfile } from '@/data/mockData';
+import { getLeadsByProfile } from '@/utils/dataHelpers';
 import { Lead } from '@/types';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -14,7 +13,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
-const KanbanBoard = () => {
+const Kanban = () => {
   const { currentProfile } = useProfile();
   const allLeads = useMemo(() => getLeadsByProfile(currentProfile), [currentProfile]);
   
@@ -260,4 +259,4 @@ const KanbanBoard = () => {
   );
 };
 
-export default KanbanBoard;
+export default Kanban;

@@ -1,7 +1,6 @@
-
 import React, { useMemo, useState } from 'react';
 import { useProfile } from '@/context/ProfileContext';
-import { getMeetingsByProfile } from '@/data/mockData';
+import { getMeetingsByProfile } from '@/utils/dataHelpers';
 import { Meeting } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -18,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
-const MeetingsPage = () => {
+const Meetings = () => {
   const { currentProfile } = useProfile();
   const meetings = useMemo(() => getMeetingsByProfile(currentProfile), [currentProfile]);
   
@@ -276,4 +275,4 @@ const MeetingsPage = () => {
   );
 };
 
-export default MeetingsPage;
+export default Meetings;
