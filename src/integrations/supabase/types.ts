@@ -200,6 +200,7 @@ export type Database = {
     Functions: {
       has_permission: {
         Args:
+          | { p_user_id: string; p_permission: string }
           | { permission_code: string }
           | { user_id: number; permission_type: string }
           | { user_id: number; resource_id: number }
