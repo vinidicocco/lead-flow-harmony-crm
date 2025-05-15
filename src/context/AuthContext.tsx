@@ -1,20 +1,21 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { AuthContextType } from '@/types/auth';
+import { User, UserRole } from '@/types';
 import { usePermissions } from '@/hooks/usePermissions';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Criamos um usuário fictício para o sistema funcionar sem login
-  const [user, setUser] = useState({
+  const [user, setUser] = useState<User>({
     id: 'mock-user-id',
     email: 'neoin@example.com',
     first_name: 'Usuário',
     last_name: 'Neoin',
     avatar_url: null,
     organization_id: 'neoin-org-id',
-    role: 'MASTER',
+    role: 'MASTER' as UserRole, // Cast to UserRole type
     is_active: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
@@ -34,23 +35,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { hasPermission } = usePermissions(user);
 
   // Funções mock para manter a compatibilidade da interface
-  const login = async () => { 
+  const login = async (): Promise<void> => { 
     return Promise.resolve();
   };
   
-  const register = async () => {
+  const register = async (): Promise<void> => {
     return Promise.resolve();
   };
   
-  const logout = () => {
+  const logout = async (): Promise<void> => {
     // Não faz nada, apenas mantém compatibilidade
-  };
-  
-  const updateUserProfile = async () => {
     return Promise.resolve();
   };
   
-  const refreshUser = async () => {
+  const updateUserProfile = async (): Promise<void> => {
+    return Promise.resolve();
+  };
+  
+  const refreshUser = async (): Promise<void> => {
     return Promise.resolve();
   };
 
