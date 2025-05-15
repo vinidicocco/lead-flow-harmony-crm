@@ -9,6 +9,7 @@ import ProfileSwitcher from './ProfileSwitcher';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -19,6 +20,7 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const { currentProfile } = useProfile();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>('');
+  const navigate = useNavigate();
 
   const profileStyle = currentProfile === 'NEOIN' 
     ? 'bg-neoin-light' 
@@ -35,6 +37,11 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
     } else {
       toast.error('Por favor, insira um URL válido para a imagem');
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   const renderLogo = () => {
@@ -163,7 +170,7 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
                 <p className="text-xs text-gray-500">{user?.email}</p>
               </div>
             </div>
-            <Button variant="ghost" size="icon" onClick={logout} title="Logout">
+            <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout">
               <LogOut size={18} />
             </Button>
           </div>
