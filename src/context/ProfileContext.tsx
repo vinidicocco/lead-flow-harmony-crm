@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Profile, Tenant } from '@/types';
-import { useAuth } from './AuthContext';
+import { useAuth } from '@/context/AuthContext';
 
 interface ProfileContextType {
   currentProfile: Profile;
