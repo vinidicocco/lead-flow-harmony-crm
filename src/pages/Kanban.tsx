@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { PlusCircle, Search, Filter } from 'lucide-react';
-import { useDroppable, useDraggable } from '@dnd-kit/core';
+import { useDroppable, useDraggable, DndContext } from '@dnd-kit/core';
 
 const Kanban = () => {
   const { currentProfile } = useProfile();
