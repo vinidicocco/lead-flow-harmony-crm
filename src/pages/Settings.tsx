@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useProfile } from '@/context/ProfileContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PasswordChangeForm } from '@/components/settings/PasswordChangeForm';
+import PasswordChangeForm from '@/components/settings/PasswordChangeForm';
 
 const Settings: React.FC = () => {
   const { user } = useAuth();
