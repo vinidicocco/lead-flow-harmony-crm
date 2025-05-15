@@ -85,7 +85,7 @@ const LoginForm: React.FC = () => {
                   <FormControl>
                     <Input 
                       type="email" 
-                      placeholder="salt@example.com ou ghf@example.com" 
+                      placeholder="Seu email corporativo" 
                       {...field} 
                     />
                   </FormControl>
@@ -104,7 +104,7 @@ const LoginForm: React.FC = () => {
                     <div className="relative">
                       <Input 
                         type={isPasswordVisible ? "text" : "password"} 
-                        placeholder="Use 'password' para demo" 
+                        placeholder="Sua senha de acesso" 
                         {...field} 
                       />
                       <Button 
@@ -124,7 +124,7 @@ const LoginForm: React.FC = () => {
             />
           </CardContent>
           
-          <CardFooter>
+          <CardFooter className="flex-col space-y-4">
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
@@ -135,6 +135,9 @@ const LoginForm: React.FC = () => {
                 'Login'
               )}
             </Button>
+            <p className="text-xs text-gray-500 text-center">
+              Conta bloqueada ou esqueceu a senha? Entre em contato com seu administrador.
+            </p>
           </CardFooter>
         </form>
       </Form>

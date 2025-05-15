@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,11 +8,12 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { User, Organization, UserRole } from '@/types';
 import { toast } from 'sonner';
-import { Loader2, UserPlus, Check, X, RefreshCw, Edit, Shield, Building, Users } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Loader2, Check, X, RefreshCw, Edit, Shield, Building, Users } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useProfile } from '@/context/ProfileContext';
+import CreateUserForm from '@/components/admin/CreateUserForm';
 
 const Admin = () => {
   const { user: currentUser } = useAuth();
@@ -24,20 +24,9 @@ const Admin = () => {
   
   // Estado para formulários
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [newUserDialog, setNewUserDialog] = useState(false);
   const [editUserDialog, setEditUserDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   
-  // Formulário de novo usuário
-  const [newUserFormData, setNewUserFormData] = useState({
-    email: '',
-    password: '',
-    firstName: '',
-    lastName: '',
-    organizationId: '',
-    role: 'USER' as UserRole,
-  });
-
   // Formulário de edição de usuário
   const [editUserFormData, setEditUserFormData] = useState({
     firstName: '',
@@ -97,54 +86,6 @@ const Admin = () => {
   useEffect(() => {
     fetchData();
   }, []);
-  
-  // Funções para manipulação de usuários
-  const handleCreateUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    try {
-      const { email, password, firstName, lastName, organizationId, role } = newUserFormData;
-      
-      // Validar campos
-      if (!email || !password || !firstName || !lastName || !organizationId || !role) {
-        throw new Error('Todos os campos são obrigatórios');
-      }
-      
-      // Criar usuário na autenticação
-      const { data, error } = await supabase.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: {
-          first_name: firstName,
-          last_name: lastName,
-          organization: (organizations.find(org => org.id === organizationId)?.code) || null,
-          role
-        }
-      });
-      
-      if (error) throw error;
-      
-      toast.success('Usuário criado com sucesso!');
-      setNewUserDialog(false);
-      setNewUserFormData({
-        email: '',
-        password: '',
-        firstName: '',
-        lastName: '',
-        organizationId: '',
-        role: 'USER',
-      });
-      
-      // Atualizar lista de usuários
-      fetchData();
-    } catch (error: any) {
-      toast.error(`Erro ao criar usuário: ${error.message}`);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
   
   const handleUpdateUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -456,127 +397,10 @@ const Admin = () => {
             Atualizar
           </Button>
           
-          <Dialog open={newUserDialog} onOpenChange={setNewUserDialog}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
-                <UserPlus size={16} />
-                Novo Usuário
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Novo Usuário</DialogTitle>
-                <DialogDescription>
-                  Crie um novo usuário no sistema. Após a criação, o usuário poderá fazer login.
-                </DialogDescription>
-              </DialogHeader>
-              
-              <form onSubmit={handleCreateUser} className="space-y-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">Nome</Label>
-                    <Input 
-                      id="firstName" 
-                      value={newUserFormData.firstName}
-                      onChange={e => setNewUserFormData({...newUserFormData, firstName: e.target.value})}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">Sobrenome</Label>
-                    <Input 
-                      id="lastName" 
-                      value={newUserFormData.lastName}
-                      onChange={e => setNewUserFormData({...newUserFormData, lastName: e.target.value})}
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input 
-                    id="email" 
-                    type="email"
-                    value={newUserFormData.email}
-                    onChange={e => setNewUserFormData({...newUserFormData, email: e.target.value})}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="password">Senha</Label>
-                  <Input 
-                    id="password" 
-                    type="password"
-                    value={newUserFormData.password}
-                    onChange={e => setNewUserFormData({...newUserFormData, password: e.target.value})}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="organization">Organização</Label>
-                  <Select 
-                    value={newUserFormData.organizationId}
-                    onValueChange={value => setNewUserFormData({...newUserFormData, organizationId: value})}
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma organização" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {organizations.map(org => (
-                        <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="role">Perfil</Label>
-                  <Select 
-                    value={newUserFormData.role}
-                    onValueChange={value => setNewUserFormData({...newUserFormData, role: value as UserRole})}
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um perfil" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="MASTER">MASTER</SelectItem>
-                      <SelectItem value="ADMIN">ADMIN</SelectItem>
-                      <SelectItem value="USER">USER</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <DialogFooter className="pt-4">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setNewUserDialog(false)}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button 
-                    type="submit"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 size={16} className="mr-2 animate-spin" />
-                        Criando...
-                      </>
-                    ) : (
-                      'Criar Usuário'
-                    )}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <CreateUserForm 
+            organizations={organizations}
+            onSuccess={fetchData}
+          />
         </div>
       </div>
       
