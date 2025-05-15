@@ -78,6 +78,11 @@ export default {
 					DEFAULT: '#FBB02F', // Amarelo NEOIN
 					light: '#FFC75F',
 					dark: '#E19A21'
+				},
+				'neoin-blue': {
+					DEFAULT: '#051D40', // Azul marinho escuro
+					light: '#0A2C5A',
+					dark: '#031230'
 				}
 			},
 			borderRadius: {
