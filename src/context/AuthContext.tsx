@@ -1,11 +1,10 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { Session } from '@supabase/supabase-js';
 import { User, Tenant } from '@/types';
-import { supabase } from "@/integrations/supabase/client";
+import { authService } from "@/integrations/appwrite/auth";
 import { AuthContextType } from './types/AuthTypes';
-import { mapSupabaseUserToAppUser } from '@/utils/userMapper';
-import { useAuthOperations } from '@/hooks/useAuthOperations';
+import { mapAppwriteUserToAppUser } from '@/utils/appwriteUserMapper';
+import { useAppwriteAuthOperations } from '@/hooks/useAppwriteAuthOperations';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -13,22 +12,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentTenant, setCurrentTenant] = useState<Tenant>('SALT_GHF');
-  const [session, setSession] = useState<Session | null>(null);
 
-  const { login, updateUserAvatar, logout } = useAuthOperations(setUser, setIsLoading);
+  const { login, updateUserAvatar, logout } = useAppwriteAuthOperations(setUser, setIsLoading);
 
   // Initialize auth state
   useEffect(() => {
     // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+    const subscription = authService.onAuthStateChange(
+      async (appwriteUser) => {
         setIsLoading(true);
         
-        if (session?.user) {
-          // We use setTimeout to avoid potential Supabase auth deadlocks
+        if (appwriteUser) {
+          // We use setTimeout to avoid potential deadlocks
           setTimeout(async () => {
             try {
-              const mappedUser = await mapSupabaseUserToAppUser(session.user);
+              const mappedUser = await mapAppwriteUserToAppUser(appwriteUser);
               setUser(mappedUser);
               setCurrentTenant(mappedUser.tenant);
               localStorage.setItem('crm-user', JSON.stringify(mappedUser));
@@ -44,16 +42,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           localStorage.removeItem('crm-user');
           setIsLoading(false);
         }
-        
-        setSession(session);
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
+    // Check for existing user
+    authService.getCurrentUser().then(async (appwriteUser) => {
+      if (appwriteUser) {
         try {
-          const mappedUser = await mapSupabaseUserToAppUser(session.user);
+          const mappedUser = await mapAppwriteUserToAppUser(appwriteUser);
           setUser(mappedUser);
           setCurrentTenant(mappedUser.tenant);
           localStorage.setItem('crm-user', JSON.stringify(mappedUser));

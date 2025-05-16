@@ -1,5 +1,5 @@
 import { Tenant } from '@/types';
-import { supabase } from "@/integrations/supabase/client";
+import { dbService } from '@/integrations/appwrite/database';
 
 // Map organization IDs to tenant values
 export const organizationToTenant: Record<string, Tenant> = {
@@ -17,15 +17,15 @@ export const getTenantByOrganizationId = async (organizationId: string | null): 
   }
   
   // Otherwise, fetch the organization code to determine tenant
-  const { data: orgData } = await supabase
-    .from('organizations')
-    .select('code')
-    .eq('id', organizationId)
-    .maybeSingle();
-  
-  // Map organization code to tenant
-  if (orgData?.code === 'NEOIN') {
-    return 'NEOIN';
+  try {
+    const orgData = await dbService.organizations.getById(organizationId);
+    
+    // Map organization code to tenant
+    if (orgData && orgData.code === 'NEOIN') {
+      return 'NEOIN';
+    }
+  } catch (error) {
+    console.error('Error fetching organization:', error);
   }
   
   return 'SALT_GHF'; // Default for all other organizations

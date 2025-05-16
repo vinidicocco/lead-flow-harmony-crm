@@ -1,6 +1,6 @@
 
-import { User as SupabaseUser, Session } from '@supabase/supabase-js';
-import { User, Tenant } from '@/types';
+import { User } from '@/types';
+import { Tenant } from '@/types';
 
 export interface AuthContextType {
   user: User | null;

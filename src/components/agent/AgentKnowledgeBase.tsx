@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { knowledgeBaseService, checkStorageBucket } from '@/integrations/supabase/api';
+import { knowledgeBaseService, checkStorageBucket } from '@/integrations/appwrite/knowledgebase';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 import { Loader2, File, Trash2, Upload } from 'lucide-react';
@@ -88,11 +88,11 @@ export const AgentKnowledgeBase: React.FC<AgentKnowledgeBaseProps> = ({ onDocume
     }
   };
 
-  const handleDelete = async (filePath: string) => {
+  const handleDelete = async (fileId: string) => {
     if (!confirm("Deseja realmente excluir este documento?")) return;
     
     try {
-      await knowledgeBaseService.deleteDocument(filePath);
+      await knowledgeBaseService.deleteDocument(fileId);
       toast({
         title: "Sucesso",
         description: "Documento excluído com sucesso"

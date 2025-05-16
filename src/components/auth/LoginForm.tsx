@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -6,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/context/AuthContext';
 import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { authService } from "@/integrations/appwrite/auth";
 
 const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -41,19 +40,8 @@ const LoginForm: React.FC = () => {
           return;
         }
         
-        // Register new user
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              first_name: name.split(' ')[0],
-              last_name: name.split(' ').slice(1).join(' ') || '',
-            }
-          }
-        });
-        
-        if (signUpError) throw signUpError;
+        // Register new user with Appwrite
+        await authService.signUp(email, password, name);
         
         toast({
           title: "Cadastro realizado",
