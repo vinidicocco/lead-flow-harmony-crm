@@ -14,7 +14,10 @@ export const mapSupabaseUserToAppUser = async (supabaseUser: SupabaseUser): Prom
       .eq('id', supabaseUser.id)
       .maybeSingle();
     
-    if (profileError) throw profileError;
+    if (profileError) {
+      console.error('Error fetching profile:', profileError);
+      throw profileError;
+    }
 
     if (!profileData) {
       // Create default profile if not found

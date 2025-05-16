@@ -237,6 +237,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_my_organization_id: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -251,6 +255,10 @@ export type Database = {
           | { permission_code: string }
           | { user_id: number; permission_type: string }
           | { user_id: number; resource_id: number }
+        Returns: boolean
+      }
+      user_belongs_to_organization: {
+        Args: { profile_org_id: string }
         Returns: boolean
       }
     }

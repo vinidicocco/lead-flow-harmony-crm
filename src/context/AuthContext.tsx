@@ -27,11 +27,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (session?.user) {
           // We use setTimeout to avoid potential Supabase auth deadlocks
           setTimeout(async () => {
-            const mappedUser = await mapSupabaseUserToAppUser(session.user);
-            setUser(mappedUser);
-            setCurrentTenant(mappedUser.tenant);
-            localStorage.setItem('crm-user', JSON.stringify(mappedUser));
-            setIsLoading(false);
+            try {
+              const mappedUser = await mapSupabaseUserToAppUser(session.user);
+              setUser(mappedUser);
+              setCurrentTenant(mappedUser.tenant);
+              localStorage.setItem('crm-user', JSON.stringify(mappedUser));
+            } catch (error) {
+              console.error("Error mapping user:", error);
+              setUser(null);
+            } finally {
+              setIsLoading(false);
+            }
           }, 0);
         } else {
           setUser(null);
@@ -46,10 +52,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Check for existing session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
-        const mappedUser = await mapSupabaseUserToAppUser(session.user);
-        setUser(mappedUser);
-        setCurrentTenant(mappedUser.tenant);
-        localStorage.setItem('crm-user', JSON.stringify(mappedUser));
+        try {
+          const mappedUser = await mapSupabaseUserToAppUser(session.user);
+          setUser(mappedUser);
+          setCurrentTenant(mappedUser.tenant);
+          localStorage.setItem('crm-user', JSON.stringify(mappedUser));
+        } catch (error) {
+          console.error("Error mapping user:", error);
+        }
       }
       setIsLoading(false);
     });
