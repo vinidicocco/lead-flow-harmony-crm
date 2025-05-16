@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { User, Tenant } from '@/types';
@@ -16,6 +15,12 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Map organization IDs to tenant values
+const organizationToTenant: Record<string, Tenant> = {
+  // Add mappings for your organizations here
+  // Example: "123e4567-e89b-12d3-a456-426614174000": "SALT_GHF"
+};
+
 // Profile mapping helper
 const mapSupabaseUserToAppUser = async (supabaseUser: SupabaseUser): Promise<User> => {
   try {
@@ -24,12 +29,54 @@ const mapSupabaseUserToAppUser = async (supabaseUser: SupabaseUser): Promise<Use
       .from('profiles')
       .select('*')
       .eq('id', supabaseUser.id)
-      .single();
+      .maybeSingle();
     
     if (profileError) throw profileError;
 
-    // Default to SALT_GHF if no organization found
-    const tenant: Tenant = (profileData?.organization_id ? 'NEOIN' : 'SALT_GHF') as Tenant;
+    if (!profileData) {
+      // Create default profile if not found
+      console.log("Profile not found, creating default profile");
+      const defaultProfile = {
+        id: supabaseUser.id,
+        email: supabaseUser.email,
+        first_name: supabaseUser.email?.split('@')[0] || 'User',
+        last_name: '',
+        role: 'USER',
+        organization_id: null, // This will default to SALT_GHF later
+        is_active: true
+      };
+      
+      // Try to create a profile
+      try {
+        await supabase.from('profiles').insert([defaultProfile]);
+      } catch (err) {
+        console.error("Failed to create profile:", err);
+      }
+    }
+
+    // Determine tenant based on organization_id
+    let tenant: Tenant = 'SALT_GHF'; // Default tenant
+    
+    if (profileData?.organization_id) {
+      // If we have a specific mapping for this organization, use it
+      if (organizationToTenant[profileData.organization_id]) {
+        tenant = organizationToTenant[profileData.organization_id];
+      } else {
+        // Otherwise, fetch the organization code to determine tenant
+        const { data: orgData } = await supabase
+          .from('organizations')
+          .select('code')
+          .eq('id', profileData.organization_id)
+          .maybeSingle();
+        
+        // Map organization code to tenant
+        if (orgData?.code === 'NEOIN') {
+          tenant = 'NEOIN';
+        } else {
+          tenant = 'SALT_GHF'; // Default for all other organizations
+        }
+      }
+    }
     
     return {
       id: supabaseUser.id,

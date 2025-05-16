@@ -116,7 +116,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           last_name: string | null
-          organization_id: string | null
+          organization_id: string
           role: string
           updated_at: string | null
         }
@@ -128,7 +128,7 @@ export type Database = {
           id: string
           is_active?: boolean | null
           last_name?: string | null
-          organization_id?: string | null
+          organization_id: string
           role?: string
           updated_at?: string | null
         }
@@ -140,7 +140,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           last_name?: string | null
-          organization_id?: string | null
+          organization_id?: string
           role?: string
           updated_at?: string | null
         }
@@ -153,6 +153,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profiles_backup: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          email: string | null
+          first_name: string | null
+          id: string | null
+          is_active: boolean | null
+          last_name: string | null
+          organization_id: string | null
+          role: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          last_name?: string | null
+          organization_id?: string | null
+          role?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          last_name?: string | null
+          organization_id?: string | null
+          role?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       role_permissions: {
         Row: {
@@ -198,6 +237,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_my_organization_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_my_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       has_permission: {
         Args:
           | { p_user_id: string; p_permission: string }
