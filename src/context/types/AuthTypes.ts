@@ -10,4 +10,5 @@ export interface AuthContextType {
   isLoading: boolean;
   currentTenant: Tenant;
   connectionError: string | null;
+  retryConnection?: () => Promise<void>;
 }

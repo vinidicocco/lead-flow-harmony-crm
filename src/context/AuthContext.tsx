@@ -6,6 +6,7 @@ import { AuthContextType } from './types/AuthTypes';
 import { mapAppwriteUserToAppUser } from '@/utils/appwriteUserMapper';
 import { useAppwriteAuthOperations } from '@/hooks/useAppwriteAuthOperations';
 import { toast } from '@/components/ui/use-toast';
+import { checkAppwriteConnection } from '@/integrations/appwrite/client';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -14,11 +15,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [currentTenant, setCurrentTenant] = useState<Tenant>('SALT_GHF');
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [connectionChecked, setConnectionChecked] = useState(false);
 
   const { login, updateUserAvatar, logout } = useAppwriteAuthOperations(setUser, setIsLoading);
 
+  // Verificar conexão primeiro
+  useEffect(() => {
+    const verifyConnection = async () => {
+      try {
+        const result = await checkAppwriteConnection();
+        if (!result.success) {
+          setConnectionError(result.message);
+          console.error('Falha na conexão com o Appwrite:', result.message);
+        } else {
+          setConnectionError(null);
+        }
+      } catch (error: any) {
+        setConnectionError('Falha ao verificar conexão com o Appwrite');
+        console.error('Erro ao verificar conexão:', error);
+      } finally {
+        setConnectionChecked(true);
+      }
+    };
+
+    verifyConnection();
+  }, []);
+
   // Initialize auth state
   useEffect(() => {
+    if (!connectionChecked) return;
+    
     console.log('AuthProvider: Initializing auth state');
     
     // Set up auth state listener
@@ -76,7 +102,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           console.error("Error mapping user:", error);
           
           if (error.message?.includes('Network')) {
-            setConnectionError('Falha na conexão com o servidor Appwrite');
+            const errorMsg = 'Falha na conexão com o servidor Appwrite';
+            setConnectionError(errorMsg);
+            
+            // Mostrar toast apenas se não estiver na página de login
+            if (window.location.pathname !== '/login') {
+              toast({
+                variant: "destructive",
+                title: "Erro de conexão",
+                description: errorMsg
+              });
+            }
           }
         }
       } else {
@@ -87,12 +123,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error('Error checking existing user:', error);
       
       if (error.message?.includes('Network')) {
-        setConnectionError('Falha na conexão com o servidor Appwrite');
-        toast({
-          variant: "destructive",
-          title: "Erro de conexão",
-          description: "Não foi possível conectar ao servidor Appwrite. Verifique sua configuração."
-        });
+        const errorMsg = 'Falha na conexão com o servidor Appwrite';
+        setConnectionError(errorMsg);
+        
+        // Mostrar toast apenas se não estiver na página de login
+        if (window.location.pathname !== '/login') {
+          toast({
+            variant: "destructive",
+            title: "Erro de conexão",
+            description: errorMsg
+          });
+        }
       }
       
       setIsLoading(false);
@@ -101,7 +142,46 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [connectionChecked]);
+
+  const retryConnection = async () => {
+    setIsLoading(true);
+    try {
+      const result = await checkAppwriteConnection();
+      if (result.success) {
+        setConnectionError(null);
+        toast({
+          title: "Conexão restabelecida",
+          description: "A conexão com o servidor Appwrite foi restaurada com sucesso."
+        });
+        
+        // Re-verificar usuário
+        const appwriteUser = await authService.getCurrentUser();
+        if (appwriteUser) {
+          const mappedUser = await mapAppwriteUserToAppUser(appwriteUser);
+          setUser(mappedUser);
+          setCurrentTenant(mappedUser.tenant);
+          localStorage.setItem('crm-user', JSON.stringify(mappedUser));
+        }
+      } else {
+        setConnectionError(result.message);
+        toast({
+          variant: "destructive",
+          title: "Erro de conexão",
+          description: result.message
+        });
+      }
+    } catch (error: any) {
+      setConnectionError('Falha ao verificar conexão com o Appwrite');
+      toast({
+        variant: "destructive",
+        title: "Erro de conexão",
+        description: error.message || "Falha ao verificar conexão"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <AuthContext.Provider value={{ 
@@ -111,7 +191,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       updateUserAvatar, 
       isLoading, 
       currentTenant,
-      connectionError 
+      connectionError,
+      retryConnection
     }}>
       {children}
     </AuthContext.Provider>

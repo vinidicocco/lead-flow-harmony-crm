@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from '@/context/AuthContext';
 import { toast } from "@/components/ui/use-toast";
 import { authService } from "@/integrations/appwrite/auth";
-import { checkAppwriteConnection } from "@/integrations/appwrite/client";
-import { AlertCircle } from 'lucide-react';
+import { checkAppwriteConnection, appwriteConfig } from "@/integrations/appwrite/client";
+import { AlertCircle, ExternalLink } from 'lucide-react';
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -17,26 +19,40 @@ const LoginForm: React.FC = () => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [name, setName] = useState('');
   const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'failed'>('checking');
+  const [connectionError, setConnectionError] = useState<{ message: string; details?: string; code?: number } | null>(null);
+  const [showDebugInfo, setShowDebugInfo] = useState(false);
   const { login } = useAuth();
 
   // Check Appwrite connection on component mount
   useEffect(() => {
     const checkConnection = async () => {
       try {
-        const isConnected = await checkAppwriteConnection();
-        setConnectionStatus(isConnected ? 'connected' : 'failed');
+        const result = await checkAppwriteConnection();
         
-        if (!isConnected) {
-          console.error('Falha na conexão com o Appwrite');
+        if (result.success) {
+          setConnectionStatus('connected');
+          setConnectionError(null);
+        } else {
+          setConnectionStatus('failed');
+          setConnectionError({
+            message: result.message,
+            details: result.details,
+            code: result.code
+          });
+          
           toast({
             variant: "destructive",
             title: "Erro de conexão",
-            description: "Não foi possível conectar ao servidor Appwrite. Verifique sua configuração."
+            description: result.message
           });
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Erro ao verificar conexão:', error);
         setConnectionStatus('failed');
+        setConnectionError({
+          message: 'Falha ao verificar a conexão com o Appwrite',
+          details: error.message
+        });
       }
     };
     
@@ -99,16 +115,97 @@ const LoginForm: React.FC = () => {
     setPassword('');
   };
 
+  const retryConnection = async () => {
+    setConnectionStatus('checking');
+    setConnectionError(null);
+    
+    try {
+      const result = await checkAppwriteConnection();
+      
+      if (result.success) {
+        setConnectionStatus('connected');
+        setConnectionError(null);
+        
+        toast({
+          title: "Conexão restabelecida",
+          description: "A conexão com o Appwrite foi restabelecida com sucesso."
+        });
+      } else {
+        setConnectionStatus('failed');
+        setConnectionError({
+          message: result.message,
+          details: result.details,
+          code: result.code
+        });
+        
+        toast({
+          variant: "destructive",
+          title: "Erro persistente",
+          description: "A conexão com o Appwrite continua falhando."
+        });
+      }
+    } catch (error: any) {
+      console.error('Erro ao verificar conexão:', error);
+      setConnectionStatus('failed');
+      setConnectionError({
+        message: 'Falha ao verificar a conexão com o Appwrite',
+        details: error.message
+      });
+    }
+  };
+
   return (
     <Card className="w-full max-w-md mx-auto">
-      {connectionStatus === 'failed' && (
-        <div className="bg-red-50 p-4 rounded-t-lg border-b border-red-200 flex items-center gap-2">
-          <AlertCircle className="text-red-500" size={16} />
-          <p className="text-sm text-red-700">
-            Erro de conexão com o servidor Appwrite. 
-            <br />Verifique as configurações no arquivo .env ou no console EasyPanel.
-          </p>
-        </div>
+      {connectionStatus === 'failed' && connectionError && (
+        <Alert variant="destructive" className="rounded-t-lg rounded-b-none border-b">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erro de conexão com o servidor Appwrite</AlertTitle>
+          <AlertDescription>
+            <p className="mb-2">{connectionError.message}</p>
+            <div className="flex flex-col gap-2 mt-4">
+              <Button variant="outline" size="sm" onClick={retryConnection} className="text-xs">
+                Tentar novamente
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setShowDebugInfo(!showDebugInfo)} className="text-xs">
+                {showDebugInfo ? "Ocultar informações de debug" : "Mostrar informações de debug"}
+              </Button>
+            </div>
+            
+            {showDebugInfo && (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="mt-2 w-full text-xs">
+                    Ver detalhes técnicos
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Informações de Debug</DialogTitle>
+                    <DialogDescription>Detalhes técnicos da configuração e erro</DialogDescription>
+                  </DialogHeader>
+                  <div className="bg-slate-50 p-3 rounded text-xs font-mono overflow-auto max-h-[300px]">
+                    <p className="font-bold mb-2">Configuração Appwrite:</p>
+                    <p>Endpoint: {appwriteConfig.endpoint}</p>
+                    <p>Project ID: {appwriteConfig.projectId}</p>
+                    <p>Database ID: {appwriteConfig.databaseId}</p>
+                    
+                    {connectionError && (
+                      <>
+                        <p className="font-bold mt-4 mb-2">Detalhes do erro:</p>
+                        <p>Mensagem: {connectionError.details || 'Não disponível'}</p>
+                        {connectionError.code && <p>Código: {connectionError.code}</p>}
+                      </>
+                    )}
+                    
+                    <p className="mt-4 text-sm">
+                      Verifique se os valores no arquivo .env ou nas variáveis de ambiente do EasyPanel estão corretos.
+                    </p>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
+          </AlertDescription>
+        </Alert>
       )}
       <CardHeader className="space-y-1 text-center">
         <CardTitle className="text-2xl font-bold">
