@@ -2,7 +2,7 @@
 import { Account, Client, Databases, Storage, ID, Teams, Functions } from 'appwrite';
 
 // Appwrite configuration
-const endpoint = import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1';
+const endpoint = import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://alias.assistu.com.br/v1';
 const projectId = import.meta.env.VITE_APPWRITE_PROJECT_ID || 'assistu'; 
 const databaseId = import.meta.env.VITE_APPWRITE_DATABASE_ID || 'assistu-aiv';
 const debugMode = import.meta.env.VITE_APPWRITE_DEBUG === 'true';
@@ -60,7 +60,7 @@ export const checkAppwriteConnection = async () => {
     let errorMessage = 'Falha na conexão com o servidor Appwrite';
     
     if (error.message?.includes('Network')) {
-      errorMessage = 'Erro de rede: O servidor Appwrite não está acessível. Verifique se a URL está correta e acessível a partir deste ambiente.';
+      errorMessage = 'Erro de rede: O servidor Appwrite não está acessível. Verifique se a URL está correta e se o CORS está configurado adequadamente.';
     } else if (error.code === 401) {
       errorMessage = 'Erro de autenticação: Credenciais inválidas para o projeto Appwrite.';
     } else if (error.code === 403) {
