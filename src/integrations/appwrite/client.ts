@@ -2,9 +2,9 @@
 import { Account, Client, Databases, Storage, ID, Teams, Functions } from 'appwrite';
 
 // Appwrite configuration
-const endpoint = 'https://cloud.appwrite.io/v1';
-const projectId = 'your-appwrite-project-id'; // Replace with your Appwrite project ID
-const databaseId = 'your-appwrite-database-id'; // Replace with your database ID
+const endpoint = import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1';
+const projectId = import.meta.env.VITE_APPWRITE_PROJECT_ID || 'your-appwrite-project-id'; // Replace with your Appwrite project ID
+const databaseId = import.meta.env.VITE_APPWRITE_DATABASE_ID || 'your-appwrite-database-id'; // Replace with your database ID
 
 // Initialize Appwrite client
 const client = new Client();
@@ -19,3 +19,10 @@ export const functions = new Functions(client);
 
 // Helper to generate unique IDs
 export { ID };
+
+// Export config for reference in other files
+export const appwriteConfig = {
+  endpoint,
+  projectId,
+  databaseId
+};
