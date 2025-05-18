@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -6,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from '@/context/AuthContext';
 import { toast } from "@/components/ui/use-toast";
 import { authService } from "@/integrations/appwrite/auth";
+import { checkAppwriteConnection } from "@/integrations/appwrite/client";
+import { AlertCircle } from 'lucide-react';
 
 const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -13,7 +16,32 @@ const LoginForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [name, setName] = useState('');
+  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'failed'>('checking');
   const { login } = useAuth();
+
+  // Check Appwrite connection on component mount
+  useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        const isConnected = await checkAppwriteConnection();
+        setConnectionStatus(isConnected ? 'connected' : 'failed');
+        
+        if (!isConnected) {
+          console.error('Falha na conexão com o Appwrite');
+          toast({
+            variant: "destructive",
+            title: "Erro de conexão",
+            description: "Não foi possível conectar ao servidor Appwrite. Verifique sua configuração."
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao verificar conexão:', error);
+        setConnectionStatus('failed');
+      }
+    };
+    
+    checkConnection();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,6 +101,15 @@ const LoginForm: React.FC = () => {
 
   return (
     <Card className="w-full max-w-md mx-auto">
+      {connectionStatus === 'failed' && (
+        <div className="bg-red-50 p-4 rounded-t-lg border-b border-red-200 flex items-center gap-2">
+          <AlertCircle className="text-red-500" size={16} />
+          <p className="text-sm text-red-700">
+            Erro de conexão com o servidor Appwrite. 
+            <br />Verifique as configurações no arquivo .env ou no console EasyPanel.
+          </p>
+        </div>
+      )}
       <CardHeader className="space-y-1 text-center">
         <CardTitle className="text-2xl font-bold">
           {isRegistering ? "Cadastro CRM" : "Login CRM"}
@@ -124,7 +161,10 @@ const LoginForm: React.FC = () => {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-2">
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isLoading || connectionStatus === 'failed'}>
             {isLoading 
               ? (isRegistering ? "Cadastrando..." : "Entrando...") 
               : (isRegistering ? "Cadastrar" : "Entrar")}
@@ -140,6 +180,12 @@ const LoginForm: React.FC = () => {
               ? "Já tem uma conta? Entre aqui" 
               : "Não tem uma conta? Cadastre-se"}
           </Button>
+          
+          {connectionStatus === 'checking' && (
+            <p className="text-xs text-center mt-2 text-gray-500">
+              Verificando conexão com o servidor Appwrite...
+            </p>
+          )}
         </CardFooter>
       </form>
     </Card>

@@ -1,4 +1,3 @@
-
 import { account, ID } from './client';
 import { AppwriteException } from 'appwrite';
 
@@ -19,7 +18,17 @@ export const authService = {
       return session;
     } catch (error: any) {
       console.error('Appwrite signUp error:', error);
-      throw error;
+      
+      // More descriptive error messages
+      if (error.code === 429) {
+        throw new Error('Muitas tentativas. Por favor, tente novamente mais tarde.');
+      } else if (error.code === 400) {
+        throw new Error(error.message || 'Dados inválidos. Verifique seu email e senha.');
+      } else if (error.message && error.message.includes('Network')) {
+        throw new Error('Erro de conexão com o servidor Appwrite. Verifique sua conexão de internet.');
+      } else {
+        throw error;
+      }
     }
   },
   
@@ -29,7 +38,17 @@ export const authService = {
       return session;
     } catch (error: any) {
       console.error('Appwrite login error:', error);
-      throw error;
+      
+      // More descriptive error messages
+      if (error.code === 401) {
+        throw new Error('Email ou senha incorretos.');
+      } else if (error.code === 429) {
+        throw new Error('Muitas tentativas. Por favor, tente novamente mais tarde.');
+      } else if (error.message && error.message.includes('Network')) {
+        throw new Error('Erro de conexão com o servidor Appwrite. Verifique sua conexão de internet.');
+      } else {
+        throw error;
+      }
     }
   },
   
@@ -63,6 +82,9 @@ export const authService = {
   },
 
   onAuthStateChange(callback: (user: any) => void) {
+    // Add debug info
+    console.log('Setting up auth state change listener');
+    
     // Appwrite doesn't have a direct equivalent to Supabase's onAuthStateChange
     // We'll implement a polling mechanism to check auth status
     const checkAuthStatus = async () => {
@@ -70,6 +92,7 @@ export const authService = {
         const user = await this.getCurrentUser();
         callback(user);
       } catch (error) {
+        console.error('Error checking auth status:', error);
         callback(null);
       }
     };
@@ -82,7 +105,10 @@ export const authService = {
     
     // Return cleanup function
     return {
-      unsubscribe: () => clearInterval(interval)
+      unsubscribe: () => {
+        console.log('Cleaning up auth state change listener');
+        clearInterval(interval);
+      }
     };
   }
 };

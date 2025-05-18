@@ -9,4 +9,5 @@ export interface AuthContextType {
   updateUserAvatar: (avatarUrl: string) => void;
   isLoading: boolean;
   currentTenant: Tenant;
+  connectionError: string | null;
 }
