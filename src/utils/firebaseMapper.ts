@@ -13,10 +13,10 @@ export const mapFirebaseUserToAppUser = async (firebaseUser: FirebaseUser): Prom
       id: firebaseUser.uid,
       name: firebaseUser.displayName || 'Usuário',
       email: firebaseUser.email || '',
-      avatar: firebaseUser.photoURL || profile?.avatar || '',
-      profile: profile?.profile || 'SALT',
-      tenant: profile?.tenant || 'SALT_GHF',
-      isAdmin: profile?.isAdmin || false
+      avatar: firebaseUser.photoURL || (profile ? profile.avatar : '') || '',
+      profile: profile ? (profile.profile as 'SALT' | 'GHF' | 'NEOIN') : 'SALT',
+      tenant: profile ? (profile.tenant as 'SALT_GHF' | 'NEOIN') : 'SALT_GHF',
+      isAdmin: profile ? !!profile.isAdmin : false
     };
   } catch (error) {
     console.error('Error mapping Firebase user:', error);
