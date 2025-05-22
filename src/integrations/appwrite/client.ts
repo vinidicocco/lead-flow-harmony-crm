@@ -6,6 +6,7 @@ const endpoint = import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://alias.assist
 const projectId = import.meta.env.VITE_APPWRITE_PROJECT_ID || 'assistu'; 
 const databaseId = import.meta.env.VITE_APPWRITE_DATABASE_ID || 'assistu-aiv';
 const debugMode = import.meta.env.VITE_APPWRITE_DEBUG === 'true';
+const useFirebaseFallback = import.meta.env.VITE_USE_FIREBASE_FALLBACK === 'true';
 
 // Debug information
 if (debugMode) {
@@ -13,6 +14,7 @@ if (debugMode) {
   console.log('- Endpoint:', endpoint);
   console.log('- Project ID:', projectId);
   console.log('- Database ID:', databaseId);
+  console.log('- Firebase Fallback:', useFirebaseFallback);
 }
 
 // Initialize Appwrite client
@@ -40,7 +42,8 @@ export const appwriteConfig = {
   endpoint,
   projectId,
   databaseId,
-  debugMode
+  debugMode,
+  useFirebaseFallback
 };
 
 // Health check function to test connectivity with detailed error information
