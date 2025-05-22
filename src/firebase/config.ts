@@ -1,5 +1,5 @@
 
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
@@ -25,15 +25,22 @@ if (debugMode) {
   console.log('- Auth Domain:', firebaseConfig.authDomain);
 }
 
-// Initialize Firebase with error handling
-let app;
+// Initialize Firebase with error handling and prevent multiple initializations
+let app: FirebaseApp;
 let auth;
 let firestore;
 let storage;
 
 try {
-  app = initializeApp(firebaseConfig);
-  if (debugMode) console.log('Firebase app initialized successfully');
+  // Check if Firebase app is already initialized
+  const existingApps = getApps();
+  if (existingApps.length === 0) {
+    app = initializeApp(firebaseConfig);
+    if (debugMode) console.log('Firebase app initialized successfully');
+  } else {
+    app = existingApps[0];
+    if (debugMode) console.log('Using existing Firebase app instance');
+  }
   
   auth = getAuth(app);
   firestore = getFirestore(app);
