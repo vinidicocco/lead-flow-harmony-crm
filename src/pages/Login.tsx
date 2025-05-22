@@ -7,6 +7,7 @@ import { toast } from "@/components/ui/use-toast";
 import { AlertCircle, Settings, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { appwriteConfig } from '@/integrations/appwrite/client';
+import { firebaseAppConfig } from '@/integrations/firebase/client';
 
 const Login = () => {
   const { user, isLoading, connectionError, retryConnection } = useAuth();
@@ -59,9 +60,9 @@ const Login = () => {
           <div className="bg-white/50 rounded p-3 border border-red-100 text-sm text-red-800">
             <p className="font-medium mb-1">Possíveis soluções:</p>
             <ol className="list-decimal ml-4 space-y-1 text-xs">
-              <li>Verifique se o servidor Appwrite está acessível</li>
-              <li>Confira se o endpoint no arquivo .env está correto</li>
-              <li>Certifique-se que o projeto e banco de dados existem no Appwrite</li>
+              <li>Verifique se o servidor backend está acessível</li>
+              <li>Confira se as configurações no arquivo .env estão corretas</li>
+              <li>Certifique-se que os recursos necessários foram criados no Firebase ou Appwrite</li>
               <li>Verifique se o CORS está configurado para permitir solicitações</li>
             </ol>
           </div>
@@ -84,7 +85,9 @@ const Login = () => {
         <div className="mt-6 text-center text-sm text-gray-500">
           <p>Sistema CRM - Assistu</p>
           <p className="text-xs mt-1 text-gray-400">
-            Versão 1.0 - Endpoint: {appwriteConfig.endpoint}
+            Versão 1.0 - {appwriteConfig.useFirebaseFallback ? 
+              `Usando Firebase (${firebaseAppConfig.projectId})` : 
+              `Endpoint: ${appwriteConfig.endpoint}`}
           </p>
         </div>
       </div>

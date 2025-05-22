@@ -14,6 +14,7 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:123456789:web:abcdef123456789"
 };
 
+// Debug mode flag
 const debugMode = import.meta.env.VITE_FIREBASE_DEBUG === 'true';
 
 // Debug information
@@ -23,22 +24,25 @@ if (debugMode) {
   console.log('- Auth Domain:', firebaseConfig.authDomain);
 }
 
-// Firebase app instance
+// Export Firebase configuration for reference in other files
+export const firebaseAppConfig = {
+  projectId: firebaseConfig.projectId,
+  debugMode
+};
+
+// Initialize Firebase and services
 let app;
 let auth;
 let firestore;
 let storage;
 
-// Initialize Firebase
 try {
   app = initializeApp(firebaseConfig);
   if (debugMode) console.log('Firebase app initialized successfully');
   
-  // Initialize Firebase services
   auth = getAuth(app);
   firestore = getFirestore(app);
   storage = getStorage(app);
-  
 } catch (error) {
   console.error('Error initializing Firebase:', error);
   throw error;
@@ -46,12 +50,6 @@ try {
 
 // Export Firebase services
 export { app, auth, firestore, storage };
-
-// Firebase configuration for reference in other files
-export const firebaseAppConfig = {
-  projectId: firebaseConfig.projectId,
-  debugMode
-};
 
 // Health check function to test Firebase connectivity
 export const checkFirebaseConnection = async () => {
