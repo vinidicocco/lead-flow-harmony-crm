@@ -23,22 +23,29 @@ if (debugMode) {
   console.log('- Auth Domain:', firebaseConfig.authDomain);
 }
 
+// Firebase app instance
+let app;
+let auth;
+let firestore;
+let storage;
+
 // Initialize Firebase
 try {
-  const app = initializeApp(firebaseConfig);
+  app = initializeApp(firebaseConfig);
   if (debugMode) console.log('Firebase app initialized successfully');
   
   // Initialize Firebase services
-  const auth = getAuth(app);
-  const firestore = getFirestore(app);
-  const storage = getStorage(app);
-  
-  export { app, auth, firestore, storage };
+  auth = getAuth(app);
+  firestore = getFirestore(app);
+  storage = getStorage(app);
   
 } catch (error) {
   console.error('Error initializing Firebase:', error);
   throw error;
 }
+
+// Export Firebase services
+export { app, auth, firestore, storage };
 
 // Firebase configuration for reference in other files
 export const firebaseAppConfig = {
