@@ -8,15 +8,18 @@ export const mapFirebaseUserToAppUser = async (firebaseUser: FirebaseUser): Prom
     // Get additional user profile from Firestore
     const profile = await profilesService.getByUserId(firebaseUser.uid);
     
+    // Check if profile exists and has expected fields
+    const profileData = profile || {};
+    
     // Create user with Firebase Auth and profile data
     return {
       id: firebaseUser.uid,
       name: firebaseUser.displayName || 'Usuário',
       email: firebaseUser.email || '',
-      avatar: firebaseUser.photoURL || (profile ? profile.avatar : '') || '',
-      profile: profile ? (profile.profile as 'SALT' | 'GHF' | 'NEOIN') : 'SALT',
-      tenant: profile ? (profile.tenant as 'SALT_GHF' | 'NEOIN') : 'SALT_GHF',
-      isAdmin: profile ? !!profile.isAdmin : false
+      avatar: firebaseUser.photoURL || (profileData.avatar as string || '') || '',
+      profile: (profileData.profile as 'SALT' | 'GHF' | 'NEOIN') || 'SALT',
+      tenant: (profileData.tenant as 'SALT_GHF' | 'NEOIN') || 'SALT_GHF',
+      isAdmin: Boolean(profileData.isAdmin) || false
     };
   } catch (error) {
     console.error('Error mapping Firebase user:', error);

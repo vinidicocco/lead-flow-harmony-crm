@@ -6,13 +6,12 @@ import { getStorage } from 'firebase/storage';
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "demo-mode-key",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "demo-mode.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "demo-mode",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "demo-mode.appspot.com",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDfake-key-for-development",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "your-app.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "your-app-id",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "your-app.appspot.com",
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "123456789",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:123456789:web:abcdef123456789",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:123456789:web:abcdef123456789"
 };
 
 // Debug mode flag
@@ -25,7 +24,13 @@ if (debugMode) {
   console.log('- Auth Domain:', firebaseConfig.authDomain);
 }
 
-// Initialize Firebase with error handling
+// Export Firebase configuration for reference in other files
+export const firebaseAppConfig = {
+  projectId: firebaseConfig.projectId,
+  debugMode
+};
+
+// Initialize Firebase and services
 let app;
 let auth;
 let firestore;
@@ -46,28 +51,6 @@ try {
 // Export Firebase services
 export { app, auth, firestore, storage };
 
-// Export Firebase configuration for reference in other files
-export const firebaseAppConfig = {
-  projectId: firebaseConfig.projectId,
-  debugMode
-};
-
-// Collection names for consistent usage
-export const collections = {
-  PROFILES: 'profiles',
-  ORGANIZATIONS: 'organizations',
-  AGENT_CONFIGS: 'agent_configs',
-  LEADS: 'leads',
-  CONVERSATIONS: 'conversations'
-};
-
-// Debug logger
-export const logDebug = (message: string, data?: any) => {
-  if (debugMode) {
-    console.log(`[Firebase Debug] ${message}`, data || '');
-  }
-};
-
 // Health check function to test Firebase connectivity
 export const checkFirebaseConnection = async () => {
   try {
@@ -86,11 +69,9 @@ export const checkFirebaseConnection = async () => {
     // Informações mais detalhadas sobre o erro
     let errorMessage = 'Falha na conexão com o Firebase';
     
-    if (error.code === 'auth/invalid-api-key') {
-      errorMessage = 'Erro de autenticação: API Key inválida. Verifique suas variáveis de ambiente.';
-    } else if (error.code === 'auth/invalid-credential') {
+    if (error.code === 'app/invalid-credential') {
       errorMessage = 'Erro de autenticação: Credenciais Firebase inválidas.';
-    } else if (error.code === 'auth/invalid-app-id') {
+    } else if (error.code === 'app/invalid-app-id') {
       errorMessage = 'ID do aplicativo Firebase inválido.';
     } else if (error.code?.includes('network')) {
       errorMessage = 'Erro de rede: Verifique sua conexão com a internet.';
