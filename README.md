@@ -1,152 +1,183 @@
 
-# Welcome to your Lovable project
+# CRM AssistU - Sistema integrado com Firebase
 
-## Project info
+## Visão Geral do Projeto
 
-**URL**: https://lovable.dev/projects/fbf0ab7b-9057-477f-be66-8369f95a888b
+Sistema CRM para gerenciamento de leads, reuniões e acompanhamento de negócios. O frontend é construído com React, TypeScript e Tailwind CSS, enquanto o backend utiliza os serviços do Firebase (Authentication, Firestore e Storage).
 
-## System Architecture
+## Tecnologias Utilizadas
 
-This CRM is built with a modern stack:
+- **Frontend**: 
+  - React + TypeScript
+  - Tailwind CSS + shadcn/ui
+  - React Router
+  - TanStack Query
+  
+- **Backend**: 
+  - Firebase Authentication
+  - Cloud Firestore
+  - Firebase Storage
+  - Firebase Hosting
 
-1. **Frontend (React + TypeScript)**
-   - Hosted on your VPS via EasyPanel
-   - Provides the user interface that clients interact with
+## Configuração do Ambiente
 
-2. **Backend (Appwrite)**
-   - Hosted on your VPS as a separate service
-   - Handles authentication, database, storage, and functions
+### Pré-requisitos
 
-### Key Technologies
+- Node.js (versão 16.x ou superior)
+- npm ou yarn
+- Conta no Firebase com um projeto criado
 
-- **React**: Frontend UI library
-- **TypeScript**: Type-safe JavaScript
-- **Appwrite**: Backend-as-a-Service for authentication, database, storage
-- **Tailwind CSS**: Utility-first CSS framework
-- **shadcn/ui**: UI component library
-- **React Router**: Client-side routing
-- **TanStack Query**: Data fetching and state management
+### Configuração do Firebase
 
-## Deployment Instructions
+1. Acesse o [Firebase Console](https://console.firebase.google.com/)
+2. Crie um novo projeto (ou use um existente)
+3. Adicione um aplicativo Web ao seu projeto
+4. Copie as configurações do Firebase (apiKey, authDomain, etc.)
 
-### Step 1: Configure Appwrite
+### Configuração do Projeto
 
-1. Set up an Appwrite instance on your VPS or use Appwrite Cloud
-2. Create a project and note the Project ID
-3. Create a database and note the Database ID
-4. Set up collections for users, organizations, leads, etc.
-5. Configure authentication methods
+1. Clone este repositório
+2. Instale as dependências:
+   ```bash
+   npm install
+   ```
+3. Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
+   ```
+   VITE_FIREBASE_API_KEY=seu_api_key
+   VITE_FIREBASE_AUTH_DOMAIN=seu_projeto.firebaseapp.com
+   VITE_FIREBASE_PROJECT_ID=seu_projeto_id
+   VITE_FIREBASE_STORAGE_BUCKET=seu_projeto.appspot.com
+   VITE_FIREBASE_MESSAGING_SENDER_ID=seu_sender_id
+   VITE_FIREBASE_APP_ID=seu_app_id
+   VITE_FIREBASE_MEASUREMENT_ID=seu_measurement_id
+   VITE_FIREBASE_DEBUG=true
+   ```
 
-### Step 2: Configure Environment Variables
+## Executando Localmente
 
-1. Create a `.env` file in the root directory based on the `.env.example` template
-2. Fill in your Appwrite endpoint, project ID, and database ID
-
-```
-VITE_APPWRITE_ENDPOINT=https://your-appwrite-instance/v1
-VITE_APPWRITE_PROJECT_ID=your-project-id
-VITE_APPWRITE_DATABASE_ID=your-database-id
-```
-
-### Step 3: GitHub Repository
-
-1. Create a new GitHub repository
-2. Push your code to the repository:
-
-```sh
-git init
-git add .
-git commit -m "Initial commit"
-git branch -M main
-git remote add origin https://github.com/yourusername/your-repo.git
-git push -u origin main
-```
-
-### Step 4: Configure EasyPanel
-
-1. Access your EasyPanel dashboard on your VPS
-2. Create a new application
-3. Select GitHub as the source
-4. Configure the build settings:
-   - Build command: `npm run build`
-   - Output directory: `dist`
-5. Set the environment variables from Step 2
-6. Deploy the application
-
-### Step 5: Configure Domain and SSL
-
-1. In EasyPanel, configure your domain (e.g., crm.assistu.com.br)
-2. Enable automatic SSL certificate generation
-
-### Step 6: Test and Verify
-
-1. Access your application at the configured domain
-2. Verify authentication, data loading, and other functionality
-
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/fbf0ab7b-9057-477f-be66-8369f95a888b) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+O aplicativo estará disponível em `http://localhost:5173`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Estrutura do Projeto
 
-**Use GitHub Codespaces**
+```
+/src/
+├── firebase/           # Integrações com Firebase
+│   ├── config.ts       # Configuração e inicialização do Firebase
+│   ├── auth.ts         # Serviços de autenticação
+│   ├── firestore.ts    # Serviços de banco de dados
+│   ├── storage.ts      # Serviços de armazenamento
+│   └── index.ts        # Exportações centralizadas
+├── components/         # Componentes reutilizáveis da UI
+├── context/            # Contextos React, incluindo AuthContext
+├── hooks/              # Hooks personalizados
+├── pages/              # Componentes de página
+├── types/              # Definições de tipos TypeScript
+└── utils/              # Utilitários e funções auxiliares
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Deploy para Firebase Hosting
 
-## What technologies are used for this project?
+### Deploy Manual
 
-This project is built with:
+1. Instale o Firebase CLI globalmente:
+   ```bash
+   npm install -g firebase-tools
+   ```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+2. Faça login no Firebase:
+   ```bash
+   firebase login
+   ```
 
-## How can I deploy this project?
+3. Inicialize o projeto Firebase (se ainda não estiver configurado):
+   ```bash
+   firebase init
+   ```
+   - Selecione "Hosting"
+   - Escolha seu projeto Firebase
+   - Defina "dist" como diretório público
+   - Configure como aplicação de página única
+   - Não sobrescreva o arquivo index.html
 
-Simply open [Lovable](https://lovable.dev/projects/fbf0ab7b-9057-477f-be66-8369f95a888b) and click on Share -> Publish.
+4. Construa o projeto:
+   ```bash
+   npm run build
+   ```
 
-## Can I connect a custom domain to my Lovable project?
+5. Faça o deploy:
+   ```bash
+   firebase deploy
+   ```
 
-Yes, you can!
+### Deploy Automatizado (GitHub Actions)
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+O projeto está configurado com GitHub Actions para fazer deploy automático para o Firebase Hosting quando houver um push para a branch main.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Para configurar:
+
+1. No GitHub, vá para Settings > Secrets > Actions
+2. Adicione os seguintes secrets:
+   - `FIREBASE_API_KEY`
+   - `FIREBASE_AUTH_DOMAIN`
+   - `FIREBASE_PROJECT_ID`
+   - `FIREBASE_STORAGE_BUCKET`
+   - `FIREBASE_MESSAGING_SENDER_ID`
+   - `FIREBASE_APP_ID`
+   - `FIREBASE_MEASUREMENT_ID`
+   - `FIREBASE_SERVICE_ACCOUNT` (conteúdo JSON da chave privada do Service Account)
+
+## Regras de Segurança do Firebase
+
+Para garantir a segurança dos dados, configure as regras de segurança no Firebase Console:
+
+### Firestore
+
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /profiles/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /organizations/{organizationId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
+                    exists(/databases/$(database)/documents/profiles/$(request.auth.uid)) &&
+                    get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.isAdmin == true;
+    }
+    
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+```
+
+### Storage
+
+```
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{userId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /public/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}
+```
+
+## Suporte
+
+Em caso de dúvidas ou problemas, abra uma issue no GitHub.

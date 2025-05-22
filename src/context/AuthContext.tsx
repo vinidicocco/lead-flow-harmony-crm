@@ -1,12 +1,12 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { User, Tenant } from '@/types';
-import { authService } from "@/integrations/appwrite/auth";
+import { authService } from "@/firebase";
 import { AuthContextType } from './types/AuthTypes';
-import { mapAppwriteUserToAppUser } from '@/utils/appwriteUserMapper';
-import { useAppwriteAuthOperations } from '@/hooks/useAppwriteAuthOperations';
+import { mapFirebaseUserToAppUser } from '@/utils/firebaseMapper';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { toast } from '@/components/ui/use-toast';
-import { checkAppwriteConnection } from '@/integrations/appwrite/client';
+import { checkFirebaseConnection } from '@/firebase';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -17,21 +17,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [connectionChecked, setConnectionChecked] = useState(false);
 
-  const { login, updateUserAvatar, logout } = useAppwriteAuthOperations(setUser, setIsLoading);
+  const { login, updateUserAvatar, logout } = useFirebaseAuth(setUser, setIsLoading);
 
-  // Verificar conexão primeiro
+  // Check connection first
   useEffect(() => {
     const verifyConnection = async () => {
       try {
-        const result = await checkAppwriteConnection();
+        const result = await checkFirebaseConnection();
         if (!result.success) {
           setConnectionError(result.message);
-          console.error('Falha na conexão com o Appwrite:', result.message);
+          console.error('Falha na conexão com o Firebase:', result.message);
         } else {
           setConnectionError(null);
         }
       } catch (error: any) {
-        setConnectionError('Falha ao verificar conexão com o Appwrite');
+        setConnectionError('Falha ao verificar conexão com o Firebase');
         console.error('Erro ao verificar conexão:', error);
       } finally {
         setConnectionChecked(true);
@@ -48,16 +48,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     console.log('AuthProvider: Initializing auth state');
     
     // Set up auth state listener
-    const subscription = authService.onAuthStateChange(
-      async (appwriteUser) => {
+    const unsubscribe = authService.onAuthStateChange(
+      async (firebaseUser) => {
         setIsLoading(true);
         
-        if (appwriteUser) {
-          console.log('AuthProvider: User authenticated', appwriteUser.$id);
-          // We use setTimeout to avoid potential deadlocks
+        if (firebaseUser) {
+          console.log('AuthProvider: User authenticated', firebaseUser.uid);
           setTimeout(async () => {
             try {
-              const mappedUser = await mapAppwriteUserToAppUser(appwriteUser);
+              const mappedUser = await mapFirebaseUserToAppUser(firebaseUser);
               setUser(mappedUser);
               setCurrentTenant(mappedUser.tenant);
               localStorage.setItem('crm-user', JSON.stringify(mappedUser));
@@ -66,11 +65,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               console.error("Error mapping user:", error);
               
               if (error.message?.includes('Network')) {
-                setConnectionError('Falha na conexão com o servidor Appwrite');
+                setConnectionError('Falha na conexão com o servidor Firebase');
                 toast({
                   variant: "destructive",
                   title: "Erro de conexão",
-                  description: "Não foi possível conectar ao servidor Appwrite. Verifique sua configuração."
+                  description: "Não foi possível conectar ao servidor Firebase."
                 });
               }
               
@@ -89,76 +88,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     );
 
     // Check for existing user
-    authService.getCurrentUser().then(async (appwriteUser) => {
-      if (appwriteUser) {
-        console.log('AuthProvider: Found existing user session', appwriteUser.$id);
-        try {
-          const mappedUser = await mapAppwriteUserToAppUser(appwriteUser);
-          setUser(mappedUser);
-          setCurrentTenant(mappedUser.tenant);
-          localStorage.setItem('crm-user', JSON.stringify(mappedUser));
-          setConnectionError(null);
-        } catch (error: any) {
-          console.error("Error mapping user:", error);
-          
-          if (error.message?.includes('Network')) {
-            const errorMsg = 'Falha na conexão com o servidor Appwrite';
-            setConnectionError(errorMsg);
-            
-            // Mostrar toast apenas se não estiver na página de login
-            if (window.location.pathname !== '/login') {
-              toast({
-                variant: "destructive",
-                title: "Erro de conexão",
-                description: errorMsg
-              });
-            }
-          }
-        }
-      } else {
-        console.log('AuthProvider: No existing user session found');
-      }
+    const currentUser = authService.getCurrentUser();
+    if (currentUser) {
+      console.log('AuthProvider: Found existing user session', currentUser.uid);
+      mapFirebaseUserToAppUser(currentUser).then(mappedUser => {
+        setUser(mappedUser);
+        setCurrentTenant(mappedUser.tenant);
+        localStorage.setItem('crm-user', JSON.stringify(mappedUser));
+        setConnectionError(null);
+        setIsLoading(false);
+      }).catch(error => {
+        console.error("Error mapping user:", error);
+        setIsLoading(false);
+      });
+    } else {
+      console.log('AuthProvider: No existing user session found');
       setIsLoading(false);
-    }).catch(error => {
-      console.error('Error checking existing user:', error);
-      
-      if (error.message?.includes('Network')) {
-        const errorMsg = 'Falha na conexão com o servidor Appwrite';
-        setConnectionError(errorMsg);
-        
-        // Mostrar toast apenas se não estiver na página de login
-        if (window.location.pathname !== '/login') {
-          toast({
-            variant: "destructive",
-            title: "Erro de conexão",
-            description: errorMsg
-          });
-        }
-      }
-      
-      setIsLoading(false);
-    });
+    }
 
     return () => {
-      subscription.unsubscribe();
+      unsubscribe();
     };
   }, [connectionChecked]);
 
   const retryConnection = async () => {
     setIsLoading(true);
     try {
-      const result = await checkAppwriteConnection();
+      const result = await checkFirebaseConnection();
       if (result.success) {
         setConnectionError(null);
         toast({
           title: "Conexão restabelecida",
-          description: "A conexão com o servidor Appwrite foi restaurada com sucesso."
+          description: "A conexão com o servidor Firebase foi restaurada com sucesso."
         });
         
-        // Re-verificar usuário
-        const appwriteUser = await authService.getCurrentUser();
-        if (appwriteUser) {
-          const mappedUser = await mapAppwriteUserToAppUser(appwriteUser);
+        // Re-verify user
+        const firebaseUser = authService.getCurrentUser();
+        if (firebaseUser) {
+          const mappedUser = await mapFirebaseUserToAppUser(firebaseUser);
           setUser(mappedUser);
           setCurrentTenant(mappedUser.tenant);
           localStorage.setItem('crm-user', JSON.stringify(mappedUser));
@@ -172,7 +139,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
       }
     } catch (error: any) {
-      setConnectionError('Falha ao verificar conexão com o Appwrite');
+      setConnectionError('Falha ao verificar conexão com o Firebase');
       toast({
         variant: "destructive",
         title: "Erro de conexão",

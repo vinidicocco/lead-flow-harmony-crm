@@ -6,8 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/context/AuthContext';
 import { toast } from "@/components/ui/use-toast";
-import { authService } from "@/integrations/appwrite/auth";
-import { checkAppwriteConnection, appwriteConfig } from "@/integrations/appwrite/client";
+import { authService } from "@/firebase";
+import { checkFirebaseConnection, firebaseAppConfig } from "@/firebase";
 import { AlertCircle, ExternalLink } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -19,15 +19,15 @@ const LoginForm: React.FC = () => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [name, setName] = useState('');
   const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'failed'>('checking');
-  const [connectionError, setConnectionError] = useState<{ message: string; details?: string; code?: number } | null>(null);
+  const [connectionError, setConnectionError] = useState<{ message: string; details?: string; code?: string | number } | null>(null);
   const [showDebugInfo, setShowDebugInfo] = useState(false);
   const { login } = useAuth();
 
-  // Check Appwrite connection on component mount
+  // Check Firebase connection on component mount
   useEffect(() => {
     const checkConnection = async () => {
       try {
-        const result = await checkAppwriteConnection();
+        const result = await checkFirebaseConnection();
         
         if (result.success) {
           setConnectionStatus('connected');
@@ -50,7 +50,7 @@ const LoginForm: React.FC = () => {
         console.error('Erro ao verificar conexão:', error);
         setConnectionStatus('failed');
         setConnectionError({
-          message: 'Falha ao verificar a conexão com o Appwrite',
+          message: 'Falha ao verificar a conexão com o Firebase',
           details: error.message
         });
       }
@@ -84,7 +84,7 @@ const LoginForm: React.FC = () => {
           return;
         }
         
-        // Register new user with Appwrite
+        // Register new user with Firebase
         await authService.signUp(email, password, name);
         
         toast({
@@ -120,7 +120,7 @@ const LoginForm: React.FC = () => {
     setConnectionError(null);
     
     try {
-      const result = await checkAppwriteConnection();
+      const result = await checkFirebaseConnection();
       
       if (result.success) {
         setConnectionStatus('connected');
@@ -128,7 +128,7 @@ const LoginForm: React.FC = () => {
         
         toast({
           title: "Conexão restabelecida",
-          description: "A conexão com o Appwrite foi restabelecida com sucesso."
+          description: "A conexão com o Firebase foi restabelecida com sucesso."
         });
       } else {
         setConnectionStatus('failed');
@@ -141,14 +141,14 @@ const LoginForm: React.FC = () => {
         toast({
           variant: "destructive",
           title: "Erro persistente",
-          description: "A conexão com o Appwrite continua falhando."
+          description: "A conexão com o Firebase continua falhando."
         });
       }
     } catch (error: any) {
       console.error('Erro ao verificar conexão:', error);
       setConnectionStatus('failed');
       setConnectionError({
-        message: 'Falha ao verificar a conexão com o Appwrite',
+        message: 'Falha ao verificar a conexão com o Firebase',
         details: error.message
       });
     }
@@ -159,7 +159,7 @@ const LoginForm: React.FC = () => {
       {connectionStatus === 'failed' && connectionError && (
         <Alert variant="destructive" className="rounded-t-lg rounded-b-none border-b">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Erro de conexão com o servidor Appwrite</AlertTitle>
+          <AlertTitle>Erro de conexão com o servidor Firebase</AlertTitle>
           <AlertDescription>
             <p className="mb-2">{connectionError.message}</p>
             <div className="flex flex-col gap-2 mt-4">
@@ -184,10 +184,9 @@ const LoginForm: React.FC = () => {
                     <DialogDescription>Detalhes técnicos da configuração e erro</DialogDescription>
                   </DialogHeader>
                   <div className="bg-slate-50 p-3 rounded text-xs font-mono overflow-auto max-h-[300px]">
-                    <p className="font-bold mb-2">Configuração Appwrite:</p>
-                    <p>Endpoint: {appwriteConfig.endpoint}</p>
-                    <p>Project ID: {appwriteConfig.projectId}</p>
-                    <p>Database ID: {appwriteConfig.databaseId}</p>
+                    <p className="font-bold mb-2">Configuração Firebase:</p>
+                    <p>Project ID: {firebaseAppConfig.projectId || 'Não configurado'}</p>
+                    <p>Debug Mode: {firebaseAppConfig.debugMode ? 'Ativado' : 'Desativado'}</p>
                     
                     {connectionError && (
                       <>
@@ -198,7 +197,7 @@ const LoginForm: React.FC = () => {
                     )}
                     
                     <p className="mt-4 text-sm">
-                      Verifique se os valores no arquivo .env ou nas variáveis de ambiente do EasyPanel estão corretos.
+                      Verifique se os valores no arquivo .env estão corretos.
                     </p>
                   </div>
                 </DialogContent>
@@ -280,7 +279,7 @@ const LoginForm: React.FC = () => {
           
           {connectionStatus === 'checking' && (
             <p className="text-xs text-center mt-2 text-gray-500">
-              Verificando conexão com o servidor Appwrite...
+              Verificando conexão com o servidor Firebase...
             </p>
           )}
         </CardFooter>
