@@ -11,7 +11,7 @@ export interface User {
   profile: Profile;
   tenant: Tenant;
   isAdmin?: boolean;
-  organizationId: string; // Adicionado organizationId
+  organizationId: string;
 }
 
 export interface Lead {

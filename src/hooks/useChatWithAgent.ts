@@ -44,8 +44,8 @@ export const useChatWithAgent = () => {
         organizationId: getOrganizationId()
       });
       
-      // Type assertion para corrigir o erro de tipo
-      const responseData = result.data as AgentResponse;
+      // Type assertion corrigida para evitar erros de TypeScript
+      const responseData = result.data as { response?: string } | null | undefined;
       const agentResponse = responseData?.response || 'Desculpe, não consegui processar sua mensagem.';
       
       // Add agent response
