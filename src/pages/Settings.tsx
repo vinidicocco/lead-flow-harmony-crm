@@ -11,6 +11,7 @@ import { Save, Bell, User, Shield, Palette } from 'lucide-react';
 
 const Settings = () => {
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState('profile'); // Adicionado estado activeTab
   const { 
     settings, 
     profileData, 
@@ -32,6 +33,31 @@ const Settings = () => {
   React.useEffect(() => {
     setLocalSettings(settings);
   }, [settings]);
+
+  // Adicionar timeout de segurança para evitar loading infinito
+  React.useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
+    if (loading) {
+      timeoutId = setTimeout(() => {
+        console.warn('Timeout ao carregar configurações');
+        // Forçar parada do loading após 10 segundos
+        if (loading) {
+          toast({
+            variant: "destructive",
+            title: "Timeout",
+            description: "Tempo limite excedido ao carregar configurações. Tente recarregar a página."
+          });
+        }
+      }, 10000);
+    }
+    
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [loading, toast]);
 
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -96,6 +122,21 @@ const Settings = () => {
       });
     }
   };
+
+  // Fallback para dados não encontrados
+  if (!settings && !loading && !error) {
+    return (
+      <div className="p-6">
+        <h1 className="text-3xl font-bold mb-2">Configurações</h1>
+        <div className="text-center py-12">
+          <p className="text-gray-500 mb-4">Não foi possível carregar suas configurações.</p>
+          <Button onClick={() => window.location.reload()}>
+            Tentar Novamente
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

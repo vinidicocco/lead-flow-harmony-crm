@@ -11,6 +11,7 @@ export interface User {
   profile: Profile;
   tenant: Tenant;
   isAdmin?: boolean;
+  organizationId: string; // Adicionado organizationId
 }
 
 export interface Lead {
@@ -27,6 +28,7 @@ export interface Lead {
   createdAt: string;
   updatedAt: string;
   profile: Profile;
+  organizationId: string;
   nextFollowUp?: string;
   lastContact?: string;
 }
@@ -42,6 +44,7 @@ export interface Meeting {
   notes: string;
   status: 'scheduled' | 'completed' | 'canceled';
   profile: Profile;
+  organizationId: string;
 }
 
 export interface Task {
@@ -54,6 +57,7 @@ export interface Task {
   assignedTo: string;
   leadId?: string;
   profile: Profile;
+  organizationId: string;
 }
 
 export interface Stats {

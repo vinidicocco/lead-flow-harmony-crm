@@ -64,11 +64,11 @@ export const useFollowUps = () => {
   };
 
   const scheduleNextFollowUp = async (leadId: string, dueDate: Date, notes: string) => {
-    if (!user?.id) return { success: false, error: 'Usuário não autenticado' };
+    if (!user?.id || !user?.organizationId) return { success: false, error: 'Usuário não autenticado' };
     
     try {
       const followUpData = {
-        organizationId: user.organizationId || 'default-org-id',
+        organizationId: user.organizationId,
         leadId,
         userId: user.id,
         dueDate,

@@ -11,7 +11,7 @@ export interface FirestoreCollections {
   WHATSAPP_SESSIONS: string;
   FOLLOW_UPS: string;
   USER_SETTINGS: string;
-  PROFILES: string;
+  PROFILES: string; // Adicionado PROFILES
 }
 
 export interface FirestoreUser {

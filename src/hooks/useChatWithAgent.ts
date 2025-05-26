@@ -12,6 +12,11 @@ interface ChatMessage {
   timestamp: Date;
 }
 
+interface AgentResponse {
+  response: string;
+  data?: any;
+}
+
 export const useChatWithAgent = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
@@ -39,11 +44,15 @@ export const useChatWithAgent = () => {
         organizationId: getOrganizationId()
       });
       
+      // Type assertion para corrigir o erro de tipo
+      const responseData = result.data as AgentResponse;
+      const agentResponse = responseData?.response || 'Desculpe, não consegui processar sua mensagem.';
+      
       // Add agent response
       const agentMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         sender: 'agent',
-        content: result.data?.response || 'Desculpe, não consegui processar sua mensagem.',
+        content: agentResponse,
         timestamp: new Date()
       };
       

@@ -1,69 +1,49 @@
-
-import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { initializeApp } from 'firebase/app';
+import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
-import { getFunctions } from 'firebase/functions';
+import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
+
 import { FirestoreCollections } from '@/types/firestore';
 
-// Firebase configuration
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "demo-mode-key",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "demo-mode.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "demo-mode",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "demo-mode.appspot.com",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "123456789",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:123456789:web:abcdef123456789",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-// Debug mode flag
-const debugMode = import.meta.env.VITE_FIREBASE_DEBUG === 'true';
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const functions = getFunctions(app);
 
-// Debug information
-if (debugMode) {
-  console.log('Firebase Configuration:');
-  console.log('- Project ID:', firebaseConfig.projectId);
-  console.log('- Auth Domain:', firebaseConfig.authDomain);
+// Enable authentication with Google
+const googleAuthProvider = new GoogleAuthProvider();
+
+// Connect to emulator in development
+if (process.env.NODE_ENV === 'development') {
+  // connectAuthEmulator(auth, 'http://localhost:9099');
+  // connectFirestoreEmulator(db, 'localhost', 8080);
+  connectFunctionsEmulator(functions, 'localhost', 5001);
 }
 
-// Initialize Firebase with error handling and prevent multiple initializations
-let app: FirebaseApp;
-let auth;
-let firestore;
-let storage;
-let functions;
+export { app, auth, db, functions, googleAuthProvider };
 
-try {
-  // Check if Firebase app is already initialized
-  const existingApps = getApps();
-  if (existingApps.length === 0) {
-    app = initializeApp(firebaseConfig);
-    if (debugMode) console.log('Firebase app initialized successfully');
-  } else {
-    app = existingApps[0];
-    if (debugMode) console.log('Using existing Firebase app instance');
+export const logDebug = (message: string, data?: any) => {
+  if (process.env.NODE_ENV === 'development') {
+    console.debug(message, data ? JSON.stringify(data, null, 2) : '');
   }
-  
-  auth = getAuth(app);
-  firestore = getFirestore(app);
-  storage = getStorage(app);
-  functions = getFunctions(app);
-} catch (error) {
-  console.error('Error initializing Firebase:', error);
-  throw error;
-}
-
-// Export Firebase services
-export { app, auth, firestore, storage, functions };
-
-// Export Firebase configuration for reference in other files
-export const firebaseAppConfig = {
-  projectId: firebaseConfig.projectId,
-  debugMode
 };
 
-// Collection names for consistent usage
+export const getOrganizationId = (): string | null => {
+  // @ts-ignore
+  return auth?.currentUser?.tenantId || localStorage.getItem('organizationId') || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || null;
+};
+
 export const collections: FirestoreCollections = {
   USERS: 'users',
   ORGANIZATIONS: 'organizations',
@@ -74,73 +54,5 @@ export const collections: FirestoreCollections = {
   WHATSAPP_SESSIONS: 'whatsapp_sessions',
   FOLLOW_UPS: 'follow_ups',
   USER_SETTINGS: 'user_settings',
-  PROFILES: 'profiles'
-};
-
-// Debug logger
-export const logDebug = (message: string, data?: any) => {
-  if (debugMode) {
-    console.log(`[Firebase Debug] ${message}`, data || '');
-  }
-};
-
-// Health check function to test Firebase connectivity
-export const checkFirebaseConnection = async () => {
-  try {
-    // A simple health check by trying to get auth state
-    const auth = getAuth();
-    await auth.authStateReady();
-    
-    if (debugMode) console.log('Firebase connection successful');
-    return {
-      success: true,
-      message: 'Conexão com Firebase estabelecida com sucesso'
-    };
-  } catch (error: any) {
-    console.error('Firebase connection failed:', error);
-    
-    // Informações mais detalhadas sobre o erro
-    let errorMessage = 'Falha na conexão com o Firebase';
-    
-    if (error.code === 'auth/invalid-api-key') {
-      errorMessage = 'Erro de autenticação: API Key inválida. Verifique suas variáveis de ambiente.';
-    } else if (error.code === 'auth/invalid-credential') {
-      errorMessage = 'Erro de autenticação: Credenciais Firebase inválidas.';
-    } else if (error.code === 'auth/invalid-app-id') {
-      errorMessage = 'ID do aplicativo Firebase inválido.';
-    } else if (error.code?.includes('network')) {
-      errorMessage = 'Erro de rede: Verifique sua conexão com a internet.';
-    }
-    
-    return {
-      success: false,
-      message: errorMessage,
-      details: error.message,
-      code: error.code || '0'
-    };
-  }
-};
-
-// Get organization ID from URL or subdomain
-export const getOrganizationId = (): string | null => {
-  // Try to get from URL parameters first
-  const urlParams = new URLSearchParams(window.location.search);
-  const orgFromUrl = urlParams.get('org');
-  
-  if (orgFromUrl) {
-    return orgFromUrl;
-  }
-  
-  // Try to get from subdomain
-  const hostname = window.location.hostname;
-  const subdomain = hostname.split('.')[0];
-  
-  // Map known subdomains to organization IDs
-  const subdomainMap: Record<string, string> = {
-    'salt': 'salt-org-id',
-    'ghf': 'ghf-org-id',
-    'neoin': 'neoin-org-id'
-  };
-  
-  return subdomainMap[subdomain] || 'default-org-id';
+  PROFILES: 'profiles' // Adicionado PROFILES
 };
