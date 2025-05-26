@@ -1,37 +1,66 @@
 
 import { User as FirebaseUser } from 'firebase/auth';
-import { User } from '@/types';
-import { profilesService } from '@/firebase';
+import { User, Profile, Tenant } from '@/types';
+import { usersService } from '@/services/firebaseService';
+import { getOrganizationId } from '@/firebase/config';
+
+// Map organization to profile and tenant
+const getProfileAndTenant = (orgId: string | null): { profile: Profile; tenant: Tenant } => {
+  const orgMap: Record<string, { profile: Profile; tenant: Tenant }> = {
+    'salt-org-id': { profile: 'SALT', tenant: 'SALT_GHF' },
+    'ghf-org-id': { profile: 'GHF', tenant: 'SALT_GHF' },
+    'neoin-org-id': { profile: 'NEOIN', tenant: 'NEOIN' }
+  };
+
+  return orgMap[orgId || 'default-org-id'] || { profile: 'SALT', tenant: 'SALT_GHF' };
+};
 
 export const mapFirebaseUserToAppUser = async (firebaseUser: FirebaseUser): Promise<User> => {
   try {
-    // Get additional user profile from Firestore
-    const profile = await profilesService.getByUserId(firebaseUser.uid);
+    // Get additional user data from Firestore
+    let userData = await usersService.getByEmail(firebaseUser.email || '');
     
-    // Check if profile exists and has expected fields
-    const profileData = profile || {};
+    // Get organization context
+    const orgId = getOrganizationId();
+    const { profile, tenant } = getProfileAndTenant(orgId);
     
-    // Create user with Firebase Auth and profile data
+    // If user doesn't exist in Firestore, create it
+    if (!userData) {
+      const newUserData = {
+        name: firebaseUser.displayName || 'Usuário',
+        email: firebaseUser.email || '',
+        avatar: firebaseUser.photoURL || '',
+        profile,
+        tenant,
+        isAdmin: false
+      };
+      
+      userData = await usersService.create(newUserData);
+    }
+    
+    // Create user with Firebase Auth and Firestore data
     return {
       id: firebaseUser.uid,
-      name: firebaseUser.displayName || 'Usuário',
-      email: firebaseUser.email || '',
-      avatar: firebaseUser.photoURL || (profileData as any).avatar || '',
-      profile: (profileData as any).profile || 'SALT',
-      tenant: (profileData as any).tenant || 'SALT_GHF',
-      isAdmin: Boolean((profileData as any).isAdmin) || false
+      name: userData.name || firebaseUser.displayName || 'Usuário',
+      email: userData.email || firebaseUser.email || '',
+      avatar: userData.avatar || firebaseUser.photoURL || '',
+      profile: userData.profile || profile,
+      tenant: userData.tenant || tenant,
+      isAdmin: userData.isAdmin || false
     };
   } catch (error) {
     console.error('Error mapping Firebase user:', error);
     
     // Return basic user in case of error
+    const { profile, tenant } = getProfileAndTenant(getOrganizationId());
+    
     return {
       id: firebaseUser.uid,
       name: firebaseUser.displayName || 'Usuário',
       email: firebaseUser.email || '',
       avatar: firebaseUser.photoURL || '',
-      profile: 'SALT',
-      tenant: 'SALT_GHF'
+      profile,
+      tenant
     };
   }
 };

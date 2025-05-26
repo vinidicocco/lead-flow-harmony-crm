@@ -1,258 +1,374 @@
-import React, { useMemo, useState } from 'react';
-import { useProfile } from '@/context/ProfileContext';
-import { getLeadsByProfile } from '@/utils/dataHelpers';
-import { Lead } from '@/types';
+
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { PlusCircle, Search } from 'lucide-react';
-import { toast } from 'sonner';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { useLeads } from '@/hooks/useFirebaseData';
+import { leadsService } from '@/services/firebaseService';
+import { Lead } from '@/types';
+import { Plus, Search, Phone, Mail, Building, User } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 const Leads = () => {
-  const { currentProfile } = useProfile();
-  const leads = useMemo(() => getLeadsByProfile(currentProfile), [currentProfile]);
-  
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [viewLead, setViewLead] = useState<Lead | null>(null);
-  
-  // Filtrar leads pela consulta de pesquisa
-  const filteredLeads = useMemo(() => {
-    if (!searchQuery) return leads;
-    
-    return leads.filter(lead => 
-      lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lead.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lead.email.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [leads, searchQuery]);
-  
-  // Formatar moeda
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
-  
-  // Manipular a abertura do diálogo para visualizar um lead
-  const handleViewLead = (lead: Lead) => {
-    setViewLead(lead);
-  };
-  
-  // Fechar o diálogo de visualização
-  const handleCloseViewDialog = () => {
-    setViewLead(null);
-  };
-  
-  // Mostrar diálogo de adição
-  const handleShowAddDialog = () => {
-    setIsAddDialogOpen(true);
-  };
-  
-  // Manipular o envio do formulário de adição de lead
-  const handleAddLead = (e: React.FormEvent) => {
+  const { leads, loading, refetch } = useLeads();
+  const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingLead, setEditingLead] = useState<Lead | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    company: '',
+    position: '',
+    status: 'qualified' as const,
+    value: 0,
+    notes: ''
+  });
+
+  const statusOptions = [
+    { value: 'qualified', label: 'Qualificado', color: 'bg-blue-500' },
+    { value: 'contact_attempt', label: 'Tentativa de Contato', color: 'bg-yellow-500' },
+    { value: 'contacted', label: 'Contatado', color: 'bg-orange-500' },
+    { value: 'proposal', label: 'Proposta', color: 'bg-purple-500' },
+    { value: 'contract', label: 'Contrato', color: 'bg-indigo-500' },
+    { value: 'payment', label: 'Pagamento', color: 'bg-green-500' },
+    { value: 'closed', label: 'Fechado', color: 'bg-emerald-500' }
+  ];
+
+  const filteredLeads = leads.filter(lead => {
+    const matchesSearch = lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         lead.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         lead.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || lead.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success('Isso adicionaria um novo lead (apenas demonstração)');
-    setIsAddDialogOpen(false);
+    
+    try {
+      if (editingLead) {
+        await leadsService.update(editingLead.id, formData);
+        toast({
+          title: "Lead atualizado",
+          description: "Lead foi atualizado com sucesso.",
+        });
+      } else {
+        await leadsService.create({
+          ...formData,
+          profile: 'SALT', // Will be determined by organization
+          assignedTo: '1'
+        });
+        toast({
+          title: "Lead criado",
+          description: "Novo lead foi adicionado com sucesso.",
+        });
+      }
+      
+      setIsDialogOpen(false);
+      setEditingLead(null);
+      resetForm();
+      refetch();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: error.message || "Não foi possível salvar o lead.",
+      });
+    }
   };
 
-  // Tradução dos status
-  const translateStatus = (status: string) => {
-    const statusMap: Record<string, string> = {
-      'qualified': 'Lead Qualificado',
-      'contact_attempt': 'Tentativa de Contato',
-      'contacted': 'Contato Realizado',
-      'proposal': 'Proposta',
-      'contract': 'Ass. de Contrato',
-      'payment': 'Transferência/Pagamento',
-      'closed': 'Negócio Fechado'
-    };
-    return statusMap[status] || status;
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      company: '',
+      position: '',
+      status: 'qualified',
+      value: 0,
+      notes: ''
+    });
   };
+
+  const openEditDialog = (lead: Lead) => {
+    setEditingLead(lead);
+    setFormData({
+      name: lead.name,
+      email: lead.email,
+      phone: lead.phone,
+      company: lead.company,
+      position: lead.position,
+      status: lead.status,
+      value: lead.value,
+      notes: lead.notes
+    });
+    setIsDialogOpen(true);
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusInfo = statusOptions.find(opt => opt.value === status);
+    return (
+      <Badge variant="secondary" className={`${statusInfo?.color} text-white`}>
+        {statusInfo?.label || status}
+      </Badge>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Carregando leads...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Leads {currentProfile}</h1>
-        <Button onClick={handleShowAddDialog}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Adicionar Lead
-        </Button>
-      </div>
-      
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Gestão de Leads</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-              <Input
-                placeholder="Buscar leads..."
-                className="pl-8"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
-          
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Empresa</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Valor</TableHead>
-                  <TableHead>Última Atualização</TableHead>
-                  <TableHead className="w-[100px]">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredLeads.map((lead) => (
-                  <TableRow key={lead.id}>
-                    <TableCell className="font-medium">{lead.name}</TableCell>
-                    <TableCell>{lead.company}</TableCell>
-                    <TableCell>
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        lead.status === 'qualified' || lead.status === 'contacted'
-                          ? 'bg-blue-100 text-blue-800'
-                          : lead.status === 'proposal' || lead.status === 'contract'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : lead.status === 'payment' || lead.status === 'closed'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {translateStatus(lead.status)}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(lead.value)}
-                    </TableCell>
-                    <TableCell>
-                      {new Date(lead.updatedAt).toLocaleDateString('pt-BR')}
-                    </TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="sm" onClick={() => handleViewLead(lead)}>
-                        Ver
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            
-            {filteredLeads.length === 0 && (
-              <div className="text-center p-4">
-                <p className="text-gray-500">Nenhum lead encontrado correspondente à sua busca.</p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Diálogo de Visualização de Lead */}
-      <Dialog open={!!viewLead} onOpenChange={handleCloseViewDialog}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{viewLead?.name}</DialogTitle>
-          </DialogHeader>
-          
-          {viewLead && (
-            <div className="space-y-4">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Gestão de Leads</h1>
+          <p className="text-muted-foreground">Gerencie seus contatos e oportunidades</p>
+        </div>
+        
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={() => { resetForm(); setEditingLead(null); }}>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Lead
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>{editingLead ? 'Editar Lead' : 'Novo Lead'}</DialogTitle>
+              <DialogDescription>
+                {editingLead ? 'Atualize as informações do lead.' : 'Adicione um novo lead ao seu pipeline.'}
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div className="text-sm text-gray-500">Empresa</div>
-                  <div>{viewLead.company}</div>
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nome *</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    required
+                  />
                 </div>
-                <div>
-                  <div className="text-sm text-gray-500">Cargo</div>
-                  <div>{viewLead.position}</div>
-                </div>
-                <div>
-                  <div className="text-sm text-gray-500">Email</div>
-                  <div>{viewLead.email}</div>
-                </div>
-                <div>
-                  <div className="text-sm text-gray-500">Telefone</div>
-                  <div>{viewLead.phone}</div>
-                </div>
-                <div>
-                  <div className="text-sm text-gray-500">Status</div>
-                  <div>{translateStatus(viewLead.status)}</div>
-                </div>
-                <div>
-                  <div className="text-sm text-gray-500">Valor</div>
-                  <div>{formatCurrency(viewLead.value)}</div>
-                </div>
-                <div className="col-span-2">
-                  <div className="text-sm text-gray-500">Notas</div>
-                  <div className="p-2 bg-gray-50 rounded-md mt-1">{viewLead.notes}</div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    required
+                  />
                 </div>
               </div>
-            </div>
-          )}
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCloseViewDialog}>Fechar</Button>
-            <Button>Editar Lead</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Diálogo de Adição de Lead */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Adicionar Novo Lead</DialogTitle>
-          </DialogHeader>
-          
-          <form onSubmit={handleAddLead}>
-            <div className="grid grid-cols-2 gap-4">
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Telefone</Label>
+                  <Input
+                    id="phone"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="company">Empresa</Label>
+                  <Input
+                    id="company"
+                    value={formData.company}
+                    onChange={(e) => setFormData({...formData, company: e.target.value})}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="position">Cargo</Label>
+                  <Input
+                    id="position"
+                    value={formData.position}
+                    onChange={(e) => setFormData({...formData, position: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="value">Valor Estimado</Label>
+                  <Input
+                    id="value"
+                    type="number"
+                    value={formData.value}
+                    onChange={(e) => setFormData({...formData, value: Number(e.target.value)})}
+                  />
+                </div>
+              </div>
+              
               <div className="space-y-2">
-                <label className="text-sm font-medium">Nome</label>
-                <Input placeholder="Digite o nome" />
+                <Label htmlFor="status">Status</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value: any) => setFormData({...formData, status: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statusOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+              
               <div className="space-y-2">
-                <label className="text-sm font-medium">Empresa</label>
-                <Input placeholder="Digite a empresa" />
+                <Label htmlFor="notes">Observações</Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                  rows={3}
+                />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Cargo</label>
-                <Input placeholder="Digite o cargo" />
+              
+              <div className="flex justify-end gap-3">
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit">
+                  {editingLead ? 'Atualizar' : 'Criar'} Lead
+                </Button>
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Email</label>
-                <Input type="email" placeholder="Digite o email" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Telefone</label>
-                <Input placeholder="Digite o número de telefone" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Valor</label>
-                <Input type="number" placeholder="Digite o valor" />
-              </div>
-              <div className="col-span-2 space-y-2">
-                <label className="text-sm font-medium">Notas</label>
-                <Input placeholder="Digite notas" />
-              </div>
-            </div>
-            
-            <DialogFooter className="mt-6">
-              <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit">Adicionar Lead</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Filtros */}
+      <div className="flex gap-4 items-center">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Buscar leads..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filtrar por status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os status</SelectItem>
+            {statusOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Lista de leads */}
+      <div className="grid gap-4">
+        {filteredLeads.length > 0 ? (
+          filteredLeads.map((lead) => (
+            <Card key={lead.id} className="cursor-pointer hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-lg font-semibold">{lead.name}</h3>
+                      {getStatusBadge(lead.status)}
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <Building className="h-4 w-4" />
+                        <span>{lead.company}</span>
+                        {lead.position && <span>• {lead.position}</span>}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4" />
+                        <span>{lead.email}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4" />
+                        <span>{lead.phone}</span>
+                      </div>
+                    </div>
+                    
+                    {lead.notes && (
+                      <p className="mt-3 text-sm text-muted-foreground line-clamp-2">
+                        {lead.notes}
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div className="flex flex-col items-end gap-2">
+                    <div className="text-right">
+                      <div className="text-lg font-semibold text-green-600">
+                        R$ {lead.value.toLocaleString('pt-BR')}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(lead.createdAt).toLocaleDateString('pt-BR')}
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openEditDialog(lead)}
+                    >
+                      Editar
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <Card>
+            <CardContent className="text-center py-12">
+              <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">Nenhum lead encontrado</h3>
+              <p className="text-muted-foreground mb-4">
+                {searchTerm || statusFilter !== 'all' 
+                  ? 'Tente ajustar os filtros de busca.'
+                  : 'Comece adicionando seu primeiro lead.'}
+              </p>
+              {!searchTerm && statusFilter === 'all' && (
+                <Button onClick={() => { resetForm(); setEditingLead(null); setIsDialogOpen(true); }}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar Primeiro Lead
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 };

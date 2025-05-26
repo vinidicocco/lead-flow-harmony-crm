@@ -61,11 +61,12 @@ export const firebaseAppConfig = {
 
 // Collection names for consistent usage
 export const collections = {
-  PROFILES: 'profiles',
+  USERS: 'users',
   ORGANIZATIONS: 'organizations',
-  AGENT_CONFIGS: 'agent_configs',
   LEADS: 'leads',
-  CONVERSATIONS: 'conversations'
+  MEETINGS: 'meetings',
+  COMMUNICATIONS: 'communications',
+  AGENT_CONFIGS: 'agent_configs'
 };
 
 // Debug logger
@@ -110,4 +111,28 @@ export const checkFirebaseConnection = async () => {
       code: error.code || '0'
     };
   }
+};
+
+// Get organization ID from URL or subdomain
+export const getOrganizationId = (): string | null => {
+  // Try to get from URL parameters first
+  const urlParams = new URLSearchParams(window.location.search);
+  const orgFromUrl = urlParams.get('org');
+  
+  if (orgFromUrl) {
+    return orgFromUrl;
+  }
+  
+  // Try to get from subdomain
+  const hostname = window.location.hostname;
+  const subdomain = hostname.split('.')[0];
+  
+  // Map known subdomains to organization IDs
+  const subdomainMap: Record<string, string> = {
+    'salt': 'salt-org-id',
+    'ghf': 'ghf-org-id',
+    'neoin': 'neoin-org-id'
+  };
+  
+  return subdomainMap[subdomain] || 'default-org-id';
 };
