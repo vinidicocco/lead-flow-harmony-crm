@@ -66,7 +66,10 @@ export const collections = {
   LEADS: 'leads',
   MEETINGS: 'meetings',
   COMMUNICATIONS: 'communications',
-  AGENT_CONFIGS: 'agent_configs'
+  AGENT_CONFIGS: 'agent_configs',
+  WHATSAPP_SESSIONS: 'whatsapp_sessions',
+  FOLLOW_UPS: 'follow_ups',
+  USER_SETTINGS: 'user_settings'
 };
 
 // Debug logger

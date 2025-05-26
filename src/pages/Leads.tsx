@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useLeads } from '@/hooks/useFirebaseData';
 import { leadsService } from '@/services/firebaseService';
 import { Lead } from '@/types';
+import { useProfile } from '@/context/ProfileContext';
 import { Plus, Search, Phone, Mail, Building, User } from 'lucide-react';
 import {
   Dialog,
@@ -23,6 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 const Leads = () => {
   const { leads, loading, refetch } = useLeads();
+  const { currentProfile } = useProfile();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -34,7 +36,7 @@ const Leads = () => {
     phone: '',
     company: '',
     position: '',
-    status: 'qualified' as const,
+    status: 'qualified' as Lead['status'],
     value: 0,
     notes: ''
   });
@@ -70,7 +72,7 @@ const Leads = () => {
       } else {
         await leadsService.create({
           ...formData,
-          profile: 'SALT', // Will be determined by organization
+          profile: currentProfile,
           assignedTo: '1'
         });
         toast({

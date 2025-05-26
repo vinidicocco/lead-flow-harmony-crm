@@ -1,7 +1,8 @@
 
 import { useState, useEffect } from 'react';
-import { leadsService, meetingsService } from '@/services/firebaseService';
+import { leadsService, meetingsService, followUpsService } from '@/services/firebaseService';
 import { Lead, Meeting, Stats, Profile } from '@/types';
+import { FirestoreLead, FirestoreMeeting, FollowUp } from '@/types/firestore';
 import { useProfile } from '@/context/ProfileContext';
 
 export const useLeads = (profile?: Profile) => {
@@ -18,7 +19,26 @@ export const useLeads = (profile?: Profile) => {
         ? await leadsService.getByProfile(targetProfile)
         : await leadsService.getAll();
       
-      setLeads(result.documents as Lead[]);
+      const firestoreLeads = result.documents as FirestoreLead[];
+      const mappedLeads: Lead[] = firestoreLeads.map(lead => ({
+        id: lead.id,
+        name: lead.name,
+        company: lead.company,
+        position: lead.position,
+        email: lead.email,
+        phone: lead.phone,
+        status: lead.status,
+        value: lead.value,
+        notes: lead.notes,
+        assignedTo: lead.assignedTo,
+        profile: lead.profile,
+        nextFollowUp: lead.nextFollowUp,
+        lastContact: lead.lastContact,
+        createdAt: lead.createdAt instanceof Date ? lead.createdAt.toISOString() : new Date().toISOString(),
+        updatedAt: lead.updatedAt instanceof Date ? lead.updatedAt.toISOString() : new Date().toISOString()
+      }));
+      
+      setLeads(mappedLeads);
       setError(null);
     } catch (err: any) {
       setError(err.message);
@@ -49,7 +69,21 @@ export const useMeetings = (profile?: Profile) => {
         ? await meetingsService.getByProfile(targetProfile)
         : await meetingsService.getAll();
       
-      setMeetings(result.documents as Meeting[]);
+      const firestoreMeetings = result.documents as FirestoreMeeting[];
+      const mappedMeetings: Meeting[] = firestoreMeetings.map(meeting => ({
+        id: meeting.id,
+        title: meeting.title,
+        date: meeting.date,
+        time: meeting.time,
+        duration: meeting.duration,
+        leadId: meeting.leadId,
+        leadName: meeting.leadName,
+        notes: meeting.notes,
+        status: meeting.status,
+        profile: meeting.profile
+      }));
+      
+      setMeetings(mappedMeetings);
       setError(null);
     } catch (err: any) {
       setError(err.message);
@@ -66,6 +100,35 @@ export const useMeetings = (profile?: Profile) => {
   return { meetings, loading, error, refetch: fetchMeetings };
 };
 
+export const useFollowUps = (userId?: string) => {
+  const [followUps, setFollowUps] = useState<FollowUp[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchFollowUps = async () => {
+    try {
+      setLoading(true);
+      const result = userId 
+        ? await followUpsService.getByUserId(userId)
+        : await followUpsService.getAll();
+      
+      setFollowUps(result.documents as FollowUp[]);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message);
+      console.error('Error fetching follow-ups:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchFollowUps();
+  }, [userId]);
+
+  return { followUps, loading, error, refetch: fetchFollowUps };
+};
+
 export const useStats = (profile?: Profile) => {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -80,7 +143,7 @@ export const useStats = (profile?: Profile) => {
         ? await leadsService.getByProfile(targetProfile)
         : await leadsService.getAll();
       
-      const allLeads = leadsResult.documents as Lead[];
+      const allLeads = leadsResult.documents as FirestoreLead[];
       
       // Calculate stats from real data
       const totalLeads = allLeads.length;
@@ -88,14 +151,14 @@ export const useStats = (profile?: Profile) => {
       const currentYear = new Date().getFullYear();
       
       const thisMonthLeads = allLeads.filter(lead => {
-        const createdDate = new Date(lead.createdAt);
+        const createdDate = lead.createdAt instanceof Date ? lead.createdAt : new Date(lead.createdAt);
         return createdDate.getMonth() === currentMonth && 
                createdDate.getFullYear() === currentYear;
       });
       
       const wonDeals = allLeads.filter(lead => lead.status === 'closed');
       const wonThisMonth = wonDeals.filter(lead => {
-        const updatedDate = new Date(lead.updatedAt);
+        const updatedDate = lead.updatedAt instanceof Date ? lead.updatedAt : new Date(lead.updatedAt);
         return updatedDate.getMonth() === currentMonth && 
                updatedDate.getFullYear() === currentYear;
       });

@@ -1,6 +1,7 @@
 
 import { User as FirebaseUser } from 'firebase/auth';
 import { User, Profile, Tenant } from '@/types';
+import { FirestoreUser } from '@/types/firestore';
 import { usersService } from '@/services/firebaseService';
 import { getOrganizationId } from '@/firebase/config';
 
@@ -18,7 +19,7 @@ const getProfileAndTenant = (orgId: string | null): { profile: Profile; tenant: 
 export const mapFirebaseUserToAppUser = async (firebaseUser: FirebaseUser): Promise<User> => {
   try {
     // Get additional user data from Firestore
-    let userData = await usersService.getByEmail(firebaseUser.email || '');
+    let userData = await usersService.getByEmail(firebaseUser.email || '') as FirestoreUser | null;
     
     // Get organization context
     const orgId = getOrganizationId();
@@ -32,10 +33,11 @@ export const mapFirebaseUserToAppUser = async (firebaseUser: FirebaseUser): Prom
         avatar: firebaseUser.photoURL || '',
         profile,
         tenant,
-        isAdmin: false
+        isAdmin: false,
+        organizationId: orgId || 'default-org-id'
       };
       
-      userData = await usersService.create(newUserData);
+      userData = await usersService.create(newUserData) as FirestoreUser;
     }
     
     // Create user with Firebase Auth and Firestore data

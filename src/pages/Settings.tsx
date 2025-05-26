@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,70 +6,179 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { useProfile } from '@/context/ProfileContext';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
+import { userSettingsService, usersService } from '@/services/firebaseService';
+import { UserSettings } from '@/types/firestore';
 import { Save, Bell, User, Shield, Palette } from 'lucide-react';
 
 const Settings = () => {
   const { currentProfile } = useProfile();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('profile');
-  const [settings, setSettings] = useState({
-    profile: {
-      name: currentProfile === 'SALT' ? 'Alexandre Silva' : 'Marina Santos',
-      email: currentProfile === 'SALT' ? 'alexandre@empresa.com.br' : 'marina@empresa.com.br',
-      phone: currentProfile === 'SALT' ? '+55 (11) 98765-4321' : '+55 (11) 97654-3210',
-      bio: currentProfile === 'SALT' ? 'Gerente de vendas com 8 anos de experiência no setor financeiro.' : 'Especialista em vendas no setor de saúde com 6 anos de experiência.'
-    },
-    notifications: {
-      emailNotifications: true,
-      pushNotifications: true,
-      meetingReminders: true,
-      leadUpdates: true,
-      taskReminders: true,
-      dailyDigest: false
-    },
-    appearance: {
-      theme: 'light',
-      denseMode: false,
-      highContrast: false,
-      fontSize: 'medium'
-    }
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  
+  const [profileData, setProfileData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    bio: ''
   });
+
+  const [settings, setSettings] = useState<UserSettings['notifications'] & UserSettings['appearance']>({
+    emailNotifications: true,
+    pushNotifications: true,
+    meetingReminders: true,
+    leadUpdates: true,
+    taskReminders: true,
+    dailyDigest: false,
+    theme: 'light' as const,
+    denseMode: false,
+    highContrast: false,
+    fontSize: 'medium' as const
+  });
+
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load user profile data (mock user ID for now - should come from auth context)
+      const mockUserId = 'current-user-id';
+      const userData = await usersService.getById(mockUserId);
+      
+      if (userData) {
+        setProfileData({
+          name: userData.name,
+          email: userData.email,
+          phone: '', // Add phone to user model if needed
+          bio: '' // Add bio to user model if needed
+        });
+      }
+
+      // Load user settings
+      const userSettings = await userSettingsService.getByUserId(mockUserId);
+      if (userSettings) {
+        setSettings({
+          ...userSettings.notifications,
+          ...userSettings.appearance
+        });
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setSettings({
-      ...settings,
-      profile: {
-        ...settings.profile,
-        [name]: value
-      }
-    });
+    setProfileData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleNotificationChange = (name: string, checked: boolean) => {
-    setSettings({
-      ...settings,
-      notifications: {
-        ...settings.notifications,
-        [name]: checked
-      }
-    });
+    setSettings(prev => ({
+      ...prev,
+      [name]: checked
+    }));
   };
 
   const handleAppearanceChange = (name: string, value: any) => {
-    setSettings({
-      ...settings,
-      appearance: {
-        ...settings.appearance,
-        [name]: value
-      }
-    });
+    setSettings(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast.success('Configurações salvas com sucesso!');
+  const saveProfile = async () => {
+    try {
+      setSaving(true);
+      const mockUserId = 'current-user-id';
+      
+      await usersService.update(mockUserId, {
+        name: profileData.name,
+        email: profileData.email
+      });
+
+      toast({
+        title: "Perfil atualizado",
+        description: "Suas informações foram salvas com sucesso."
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: error.message || "Não foi possível salvar o perfil."
+      });
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const saveSettings = async () => {
+    try {
+      setSaving(true);
+      const mockUserId = 'current-user-id';
+      const mockOrgId = 'current-org-id';
+
+      const existingSettings = await userSettingsService.getByUserId(mockUserId);
+      
+      const settingsData = {
+        userId: mockUserId,
+        organizationId: mockOrgId,
+        notifications: {
+          emailNotifications: settings.emailNotifications,
+          pushNotifications: settings.pushNotifications,
+          meetingReminders: settings.meetingReminders,
+          leadUpdates: settings.leadUpdates,
+          taskReminders: settings.taskReminders,
+          dailyDigest: settings.dailyDigest
+        },
+        appearance: {
+          theme: settings.theme,
+          denseMode: settings.denseMode,
+          highContrast: settings.highContrast,
+          fontSize: settings.fontSize
+        }
+      };
+
+      if (existingSettings) {
+        await userSettingsService.update(existingSettings.id, settingsData);
+      } else {
+        await userSettingsService.create(settingsData);
+      }
+
+      toast({
+        title: "Configurações salvas",
+        description: "Suas preferências foram atualizadas com sucesso."
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: error.message || "Não foi possível salvar as configurações."
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Carregando configurações...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
@@ -106,13 +214,13 @@ const Settings = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form className="space-y-6" onSubmit={handleSubmit}>
+              <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Nome Completo</label>
                     <Input 
                       name="name"
-                      value={settings.profile.name}
+                      value={profileData.name}
                       onChange={handleProfileChange}
                     />
                   </div>
@@ -121,7 +229,7 @@ const Settings = () => {
                     <Input 
                       type="email"
                       name="email"
-                      value={settings.profile.email}
+                      value={profileData.email}
                       onChange={handleProfileChange}
                     />
                   </div>
@@ -129,7 +237,7 @@ const Settings = () => {
                     <label className="text-sm font-medium">Telefone</label>
                     <Input 
                       name="phone"
-                      value={settings.profile.phone}
+                      value={profileData.phone}
                       onChange={handleProfileChange}
                     />
                   </div>
@@ -139,17 +247,17 @@ const Settings = () => {
                   <label className="text-sm font-medium">Biografia Profissional</label>
                   <Textarea 
                     name="bio"
-                    value={settings.profile.bio}
+                    value={profileData.bio}
                     onChange={handleProfileChange}
                     rows={4}
                   />
                 </div>
                 
-                <Button type="submit">
+                <Button onClick={saveProfile} disabled={saving}>
                   <Save className="w-4 h-4 mr-2" />
-                  Salvar Alterações
+                  {saving ? 'Salvando...' : 'Salvar Alterações'}
                 </Button>
-              </form>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -163,7 +271,7 @@ const Settings = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form className="space-y-6" onSubmit={handleSubmit}>
+              <div className="space-y-6">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -171,7 +279,7 @@ const Settings = () => {
                       <p className="text-sm text-gray-500">Receba atualizações por email</p>
                     </div>
                     <Switch 
-                      checked={settings.notifications.emailNotifications}
+                      checked={settings.emailNotifications}
                       onCheckedChange={(checked) => handleNotificationChange('emailNotifications', checked)}
                     />
                   </div>
@@ -182,7 +290,7 @@ const Settings = () => {
                       <p className="text-sm text-gray-500">Receba notificações no navegador</p>
                     </div>
                     <Switch 
-                      checked={settings.notifications.pushNotifications}
+                      checked={settings.pushNotifications}
                       onCheckedChange={(checked) => handleNotificationChange('pushNotifications', checked)}
                     />
                   </div>
@@ -193,7 +301,7 @@ const Settings = () => {
                       <p className="text-sm text-gray-500">Notificações antes de reuniões agendadas</p>
                     </div>
                     <Switch 
-                      checked={settings.notifications.meetingReminders}
+                      checked={settings.meetingReminders}
                       onCheckedChange={(checked) => handleNotificationChange('meetingReminders', checked)}
                     />
                   </div>
@@ -204,7 +312,7 @@ const Settings = () => {
                       <p className="text-sm text-gray-500">Notificações quando leads são atualizados</p>
                     </div>
                     <Switch 
-                      checked={settings.notifications.leadUpdates}
+                      checked={settings.leadUpdates}
                       onCheckedChange={(checked) => handleNotificationChange('leadUpdates', checked)}
                     />
                   </div>
@@ -215,7 +323,7 @@ const Settings = () => {
                       <p className="text-sm text-gray-500">Notificações para tarefas pendentes</p>
                     </div>
                     <Switch 
-                      checked={settings.notifications.taskReminders}
+                      checked={settings.taskReminders}
                       onCheckedChange={(checked) => handleNotificationChange('taskReminders', checked)}
                     />
                   </div>
@@ -226,17 +334,17 @@ const Settings = () => {
                       <p className="text-sm text-gray-500">Receba um resumo diário das atividades</p>
                     </div>
                     <Switch 
-                      checked={settings.notifications.dailyDigest}
+                      checked={settings.dailyDigest}
                       onCheckedChange={(checked) => handleNotificationChange('dailyDigest', checked)}
                     />
                   </div>
                 </div>
                 
-                <Button type="submit">
+                <Button onClick={saveSettings} disabled={saving}>
                   <Save className="w-4 h-4 mr-2" />
-                  Salvar Alterações
+                  {saving ? 'Salvando...' : 'Salvar Alterações'}
                 </Button>
-              </form>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -250,14 +358,14 @@ const Settings = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form className="space-y-6" onSubmit={handleSubmit}>
+              <div className="space-y-6">
                 <div className="space-y-4">
                   <div>
                     <label className="text-sm font-medium mb-2 block">Tema</label>
                     <div className="flex gap-4">
                       <div
                         className={`cursor-pointer p-4 rounded-lg border ${
-                          settings.appearance.theme === 'light'
+                          settings.theme === 'light'
                             ? 'border-primary bg-primary/10'
                             : 'border-gray-200'
                         }`}
@@ -268,7 +376,7 @@ const Settings = () => {
                       </div>
                       <div
                         className={`cursor-pointer p-4 rounded-lg border ${
-                          settings.appearance.theme === 'dark'
+                          settings.theme === 'dark'
                             ? 'border-primary bg-primary/10'
                             : 'border-gray-200'
                         }`}
@@ -279,7 +387,7 @@ const Settings = () => {
                       </div>
                       <div
                         className={`cursor-pointer p-4 rounded-lg border ${
-                          settings.appearance.theme === 'system'
+                          settings.theme === 'system'
                             ? 'border-primary bg-primary/10'
                             : 'border-gray-200'
                         }`}
@@ -297,7 +405,7 @@ const Settings = () => {
                       <p className="text-sm text-gray-500">Reduz o espaçamento na interface</p>
                     </div>
                     <Switch 
-                      checked={settings.appearance.denseMode}
+                      checked={settings.denseMode}
                       onCheckedChange={(checked) => handleAppearanceChange('denseMode', checked)}
                     />
                   </div>
@@ -308,7 +416,7 @@ const Settings = () => {
                       <p className="text-sm text-gray-500">Aumenta o contraste para melhor legibilidade</p>
                     </div>
                     <Switch 
-                      checked={settings.appearance.highContrast}
+                      checked={settings.highContrast}
                       onCheckedChange={(checked) => handleAppearanceChange('highContrast', checked)}
                     />
                   </div>
@@ -320,7 +428,7 @@ const Settings = () => {
                         <div 
                           key={size}
                           className={`cursor-pointer flex-1 p-3 rounded-lg border text-center ${
-                            settings.appearance.fontSize === size
+                            settings.fontSize === size
                               ? 'border-primary bg-primary/10'
                               : 'border-gray-200'
                           }`}
@@ -337,11 +445,11 @@ const Settings = () => {
                   </div>
                 </div>
                 
-                <Button type="submit">
+                <Button onClick={saveSettings} disabled={saving}>
                   <Save className="w-4 h-4 mr-2" />
-                  Salvar Alterações
+                  {saving ? 'Salvando...' : 'Salvar Alterações'}
                 </Button>
-              </form>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -355,7 +463,7 @@ const Settings = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form className="space-y-6" onSubmit={handleSubmit}>
+              <div className="space-y-6">
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Senha Atual</label>
@@ -389,11 +497,11 @@ const Settings = () => {
                   <Button variant="outline">Gerenciar Sessões</Button>
                 </div>
                 
-                <Button type="submit">
+                <Button onClick={saveSettings} disabled={saving}>
                   <Save className="w-4 h-4 mr-2" />
-                  Salvar Alterações
+                  {saving ? 'Salvando...' : 'Salvar Alterações'}
                 </Button>
-              </form>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

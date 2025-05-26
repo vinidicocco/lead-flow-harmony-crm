@@ -18,6 +18,7 @@ import {
 } from 'firebase/firestore';
 import { firestore, collections, logDebug, getOrganizationId } from '@/firebase/config';
 import { Lead, Meeting, User, Profile, Tenant } from '@/types';
+import { FirestoreLead, FirestoreMeeting, FirestoreUser, FollowUp, UserSettings } from '@/types/firestore';
 
 // Generic database service
 export const dbService = {
@@ -193,8 +194,8 @@ export const leadsService = {
     return await dbService.query(collections.LEADS, [orderBy('createdAt', 'desc')]);
   },
 
-  async getById(id: string) {
-    return await dbService.getById(collections.LEADS, id);
+  async getById(id: string): Promise<FirestoreLead | null> {
+    return await dbService.getById(collections.LEADS, id) as FirestoreLead | null;
   },
 
   async create(leadData: Omit<Lead, 'id' | 'createdAt' | 'updatedAt'>) {
@@ -230,8 +231,8 @@ export const meetingsService = {
     return await dbService.query(collections.MEETINGS, [orderBy('date', 'asc')]);
   },
 
-  async getById(id: string) {
-    return await dbService.getById(collections.MEETINGS, id);
+  async getById(id: string): Promise<FirestoreMeeting | null> {
+    return await dbService.getById(collections.MEETINGS, id) as FirestoreMeeting | null;
   },
 
   async create(meetingData: Omit<Meeting, 'id'>) {
@@ -265,11 +266,11 @@ export const meetingsService = {
 
 // Users service
 export const usersService = {
-  async getById(id: string) {
-    return await dbService.getById(collections.USERS, id);
+  async getById(id: string): Promise<FirestoreUser | null> {
+    return await dbService.getById(collections.USERS, id) as FirestoreUser | null;
   },
 
-  async create(userData: Omit<User, 'id'>) {
+  async create(userData: Omit<User, 'id'> & { organizationId: string }) {
     return await dbService.create(collections.USERS, userData, userData.email);
   },
 
@@ -277,11 +278,64 @@ export const usersService = {
     return await dbService.update(collections.USERS, id, updates);
   },
 
-  async getByEmail(email: string) {
+  async getByEmail(email: string): Promise<FirestoreUser | null> {
     const result = await dbService.query(collections.USERS, [
       where('email', '==', email)
     ]);
-    return result.documents[0] || null;
+    return (result.documents[0] as FirestoreUser) || null;
+  }
+};
+
+// Follow-ups service
+export const followUpsService = {
+  async getAll() {
+    return await dbService.query(collections.FOLLOW_UPS, [orderBy('dueDate', 'asc')]);
+  },
+
+  async getById(id: string): Promise<FollowUp | null> {
+    return await dbService.getById(collections.FOLLOW_UPS, id) as FollowUp | null;
+  },
+
+  async create(followUpData: Omit<FollowUp, 'id' | 'createdAt' | 'updatedAt'>) {
+    return await dbService.create(collections.FOLLOW_UPS, followUpData);
+  },
+
+  async update(id: string, updates: Partial<FollowUp>) {
+    return await dbService.update(collections.FOLLOW_UPS, id, updates);
+  },
+
+  async getByUserId(userId: string) {
+    return await dbService.query(collections.FOLLOW_UPS, [
+      where('userId', '==', userId),
+      orderBy('dueDate', 'asc')
+    ]);
+  },
+
+  async getOverdue() {
+    const now = new Date();
+    return await dbService.query(collections.FOLLOW_UPS, [
+      where('dueDate', '<', now),
+      where('status', '==', 'pending'),
+      orderBy('dueDate', 'asc')
+    ]);
+  }
+};
+
+// User Settings service
+export const userSettingsService = {
+  async getByUserId(userId: string): Promise<UserSettings | null> {
+    const result = await dbService.query(collections.USER_SETTINGS, [
+      where('userId', '==', userId)
+    ]);
+    return (result.documents[0] as UserSettings) || null;
+  },
+
+  async create(settingsData: Omit<UserSettings, 'id' | 'createdAt' | 'updatedAt'>) {
+    return await dbService.create(collections.USER_SETTINGS, settingsData);
+  },
+
+  async update(id: string, updates: Partial<UserSettings>) {
+    return await dbService.update(collections.USER_SETTINGS, id, updates);
   }
 };
 
