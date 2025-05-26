@@ -3,6 +3,8 @@ import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import { getFunctions } from 'firebase/functions';
+import { FirestoreCollections } from '@/types/firestore';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -30,6 +32,7 @@ let app: FirebaseApp;
 let auth;
 let firestore;
 let storage;
+let functions;
 
 try {
   // Check if Firebase app is already initialized
@@ -45,13 +48,14 @@ try {
   auth = getAuth(app);
   firestore = getFirestore(app);
   storage = getStorage(app);
+  functions = getFunctions(app);
 } catch (error) {
   console.error('Error initializing Firebase:', error);
   throw error;
 }
 
 // Export Firebase services
-export { app, auth, firestore, storage };
+export { app, auth, firestore, storage, functions };
 
 // Export Firebase configuration for reference in other files
 export const firebaseAppConfig = {
@@ -60,7 +64,7 @@ export const firebaseAppConfig = {
 };
 
 // Collection names for consistent usage
-export const collections = {
+export const collections: FirestoreCollections = {
   USERS: 'users',
   ORGANIZATIONS: 'organizations',
   LEADS: 'leads',
@@ -69,7 +73,8 @@ export const collections = {
   AGENT_CONFIGS: 'agent_configs',
   WHATSAPP_SESSIONS: 'whatsapp_sessions',
   FOLLOW_UPS: 'follow_ups',
-  USER_SETTINGS: 'user_settings'
+  USER_SETTINGS: 'user_settings',
+  PROFILES: 'profiles'
 };
 
 // Debug logger

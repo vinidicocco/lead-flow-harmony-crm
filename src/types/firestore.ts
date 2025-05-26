@@ -1,6 +1,19 @@
 
 import { Profile, Tenant } from './index';
 
+export interface FirestoreCollections {
+  USERS: string;
+  ORGANIZATIONS: string;
+  LEADS: string;
+  MEETINGS: string;
+  COMMUNICATIONS: string;
+  AGENT_CONFIGS: string;
+  WHATSAPP_SESSIONS: string;
+  FOLLOW_UPS: string;
+  USER_SETTINGS: string;
+  PROFILES: string;
+}
+
 export interface FirestoreUser {
   id: string;
   name: string;
@@ -104,6 +117,31 @@ export interface Communication {
   direction: 'inbound' | 'outbound';
   content: string;
   status: 'sent' | 'delivered' | 'read' | 'failed';
+  createdAt: any;
+  updatedAt: any;
+}
+
+export interface AgentConfig {
+  id: string;
+  organizationId: string;
+  name: string;
+  personality: string;
+  welcomeMessage: string;
+  qualificationFlow: string;
+  whatsappInstance: string;
+  n8nWebhookUrl?: string;
+  openaiApiKey?: string;
+  createdAt: any;
+  updatedAt: any;
+}
+
+export interface FirestoreProfile {
+  id: string;
+  userId: string;
+  organizationId: string;
+  profile: Profile;
+  tenant: Tenant;
+  isActive: boolean;
   createdAt: any;
   updatedAt: any;
 }

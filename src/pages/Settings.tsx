@@ -1,171 +1,99 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
-import { useProfile } from '@/context/ProfileContext';
 import { useToast } from '@/hooks/use-toast';
-import { userSettingsService, usersService } from '@/services/firebaseService';
-import { UserSettings } from '@/types/firestore';
+import { useUserSettings } from '@/hooks/useUserSettings';
 import { Save, Bell, User, Shield, Palette } from 'lucide-react';
 
 const Settings = () => {
-  const { currentProfile } = useProfile();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('profile');
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const { 
+    settings, 
+    profileData, 
+    loading, 
+    saving, 
+    error,
+    saveProfile, 
+    saveSettings 
+  } = useUserSettings();
   
-  const [profileData, setProfileData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    bio: ''
-  });
+  const [localProfileData, setLocalProfileData] = useState(profileData);
+  const [localSettings, setLocalSettings] = useState(settings);
 
-  const [settings, setSettings] = useState<UserSettings['notifications'] & UserSettings['appearance']>({
-    emailNotifications: true,
-    pushNotifications: true,
-    meetingReminders: true,
-    leadUpdates: true,
-    taskReminders: true,
-    dailyDigest: false,
-    theme: 'light' as const,
-    denseMode: false,
-    highContrast: false,
-    fontSize: 'medium' as const
-  });
+  // Update local state when data loads
+  React.useEffect(() => {
+    setLocalProfileData(profileData);
+  }, [profileData]);
 
-  useEffect(() => {
-    loadUserData();
-  }, []);
-
-  const loadUserData = async () => {
-    try {
-      setLoading(true);
-      
-      // Load user profile data (mock user ID for now - should come from auth context)
-      const mockUserId = 'current-user-id';
-      const userData = await usersService.getById(mockUserId);
-      
-      if (userData) {
-        setProfileData({
-          name: userData.name,
-          email: userData.email,
-          phone: '', // Add phone to user model if needed
-          bio: '' // Add bio to user model if needed
-        });
-      }
-
-      // Load user settings
-      const userSettings = await userSettingsService.getByUserId(mockUserId);
-      if (userSettings) {
-        setSettings({
-          ...userSettings.notifications,
-          ...userSettings.appearance
-        });
-      }
-    } catch (error) {
-      console.error('Error loading user data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  React.useEffect(() => {
+    setLocalSettings(settings);
+  }, [settings]);
 
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setProfileData(prev => ({
+    setLocalProfileData(prev => ({
       ...prev,
       [name]: value
     }));
   };
 
   const handleNotificationChange = (name: string, checked: boolean) => {
-    setSettings(prev => ({
+    setLocalSettings(prev => prev ? {
       ...prev,
-      [name]: checked
-    }));
+      notifications: {
+        ...prev.notifications,
+        [name]: checked
+      }
+    } : null);
   };
 
   const handleAppearanceChange = (name: string, value: any) => {
-    setSettings(prev => ({
+    setLocalSettings(prev => prev ? {
       ...prev,
-      [name]: value
-    }));
+      appearance: {
+        ...prev.appearance,
+        [name]: value
+      }
+    } : null);
   };
 
-  const saveProfile = async () => {
-    try {
-      setSaving(true);
-      const mockUserId = 'current-user-id';
-      
-      await usersService.update(mockUserId, {
-        name: profileData.name,
-        email: profileData.email
-      });
-
+  const handleSaveProfile = async () => {
+    const result = await saveProfile(localProfileData);
+    
+    if (result.success) {
       toast({
         title: "Perfil atualizado",
         description: "Suas informações foram salvas com sucesso."
       });
-    } catch (error: any) {
+    } else {
       toast({
         variant: "destructive",
         title: "Erro",
-        description: error.message || "Não foi possível salvar o perfil."
+        description: result.error || "Não foi possível salvar o perfil."
       });
-    } finally {
-      setSaving(false);
     }
   };
 
-  const saveSettings = async () => {
-    try {
-      setSaving(true);
-      const mockUserId = 'current-user-id';
-      const mockOrgId = 'current-org-id';
-
-      const existingSettings = await userSettingsService.getByUserId(mockUserId);
-      
-      const settingsData = {
-        userId: mockUserId,
-        organizationId: mockOrgId,
-        notifications: {
-          emailNotifications: settings.emailNotifications,
-          pushNotifications: settings.pushNotifications,
-          meetingReminders: settings.meetingReminders,
-          leadUpdates: settings.leadUpdates,
-          taskReminders: settings.taskReminders,
-          dailyDigest: settings.dailyDigest
-        },
-        appearance: {
-          theme: settings.theme,
-          denseMode: settings.denseMode,
-          highContrast: settings.highContrast,
-          fontSize: settings.fontSize
-        }
-      };
-
-      if (existingSettings) {
-        await userSettingsService.update(existingSettings.id, settingsData);
-      } else {
-        await userSettingsService.create(settingsData);
-      }
-
+  const handleSaveSettings = async () => {
+    if (!localSettings) return;
+    
+    const result = await saveSettings(localSettings);
+    
+    if (result.success) {
       toast({
         title: "Configurações salvas",
         description: "Suas preferências foram atualizadas com sucesso."
       });
-    } catch (error: any) {
+    } else {
       toast({
         variant: "destructive",
         title: "Erro",
-        description: error.message || "Não foi possível salvar as configurações."
+        description: result.error || "Não foi possível salvar as configurações."
       });
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -175,6 +103,17 @@ const Settings = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p>Carregando configurações...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">Erro ao carregar configurações: {error}</p>
+          <Button onClick={() => window.location.reload()}>Tentar Novamente</Button>
         </div>
       </div>
     );
@@ -220,7 +159,7 @@ const Settings = () => {
                     <label className="text-sm font-medium">Nome Completo</label>
                     <Input 
                       name="name"
-                      value={profileData.name}
+                      value={localProfileData.name}
                       onChange={handleProfileChange}
                     />
                   </div>
@@ -229,7 +168,7 @@ const Settings = () => {
                     <Input 
                       type="email"
                       name="email"
-                      value={profileData.email}
+                      value={localProfileData.email}
                       onChange={handleProfileChange}
                     />
                   </div>
@@ -237,7 +176,7 @@ const Settings = () => {
                     <label className="text-sm font-medium">Telefone</label>
                     <Input 
                       name="phone"
-                      value={profileData.phone}
+                      value={localProfileData.phone}
                       onChange={handleProfileChange}
                     />
                   </div>
@@ -247,13 +186,13 @@ const Settings = () => {
                   <label className="text-sm font-medium">Biografia Profissional</label>
                   <Textarea 
                     name="bio"
-                    value={profileData.bio}
+                    value={localProfileData.bio}
                     onChange={handleProfileChange}
                     rows={4}
                   />
                 </div>
                 
-                <Button onClick={saveProfile} disabled={saving}>
+                <Button onClick={handleSaveProfile} disabled={saving}>
                   <Save className="w-4 h-4 mr-2" />
                   {saving ? 'Salvando...' : 'Salvar Alterações'}
                 </Button>
@@ -272,75 +211,77 @@ const Settings = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Notificações por Email</p>
-                      <p className="text-sm text-gray-500">Receba atualizações por email</p>
+                {localSettings && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Notificações por Email</p>
+                        <p className="text-sm text-gray-500">Receba atualizações por email</p>
+                      </div>
+                      <Switch 
+                        checked={localSettings.notifications.emailNotifications}
+                        onCheckedChange={(checked) => handleNotificationChange('emailNotifications', checked)}
+                      />
                     </div>
-                    <Switch 
-                      checked={settings.emailNotifications}
-                      onCheckedChange={(checked) => handleNotificationChange('emailNotifications', checked)}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Notificações Push</p>
-                      <p className="text-sm text-gray-500">Receba notificações no navegador</p>
+                    
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Notificações Push</p>
+                        <p className="text-sm text-gray-500">Receba notificações no navegador</p>
+                      </div>
+                      <Switch 
+                        checked={localSettings.notifications.pushNotifications}
+                        onCheckedChange={(checked) => handleNotificationChange('pushNotifications', checked)}
+                      />
                     </div>
-                    <Switch 
-                      checked={settings.pushNotifications}
-                      onCheckedChange={(checked) => handleNotificationChange('pushNotifications', checked)}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Lembretes de Reuniões</p>
-                      <p className="text-sm text-gray-500">Notificações antes de reuniões agendadas</p>
+                    
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Lembretes de Reuniões</p>
+                        <p className="text-sm text-gray-500">Notificações antes de reuniões agendadas</p>
+                      </div>
+                      <Switch 
+                        checked={localSettings.notifications.meetingReminders}
+                        onCheckedChange={(checked) => handleNotificationChange('meetingReminders', checked)}
+                      />
                     </div>
-                    <Switch 
-                      checked={settings.meetingReminders}
-                      onCheckedChange={(checked) => handleNotificationChange('meetingReminders', checked)}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Atualizações de Leads</p>
-                      <p className="text-sm text-gray-500">Notificações quando leads são atualizados</p>
+                    
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Atualizações de Leads</p>
+                        <p className="text-sm text-gray-500">Notificações quando leads são atualizados</p>
+                      </div>
+                      <Switch 
+                        checked={localSettings.notifications.leadUpdates}
+                        onCheckedChange={(checked) => handleNotificationChange('leadUpdates', checked)}
+                      />
                     </div>
-                    <Switch 
-                      checked={settings.leadUpdates}
-                      onCheckedChange={(checked) => handleNotificationChange('leadUpdates', checked)}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Lembretes de Tarefas</p>
-                      <p className="text-sm text-gray-500">Notificações para tarefas pendentes</p>
+                    
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Lembretes de Tarefas</p>
+                        <p className="text-sm text-gray-500">Notificações para tarefas pendentes</p>
+                      </div>
+                      <Switch 
+                        checked={localSettings.notifications.taskReminders}
+                        onCheckedChange={(checked) => handleNotificationChange('taskReminders', checked)}
+                      />
                     </div>
-                    <Switch 
-                      checked={settings.taskReminders}
-                      onCheckedChange={(checked) => handleNotificationChange('taskReminders', checked)}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Resumo Diário</p>
-                      <p className="text-sm text-gray-500">Receba um resumo diário das atividades</p>
+                    
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Resumo Diário</p>
+                        <p className="text-sm text-gray-500">Receba um resumo diário das atividades</p>
+                      </div>
+                      <Switch 
+                        checked={localSettings.notifications.dailyDigest}
+                        onCheckedChange={(checked) => handleNotificationChange('dailyDigest', checked)}
+                      />
                     </div>
-                    <Switch 
-                      checked={settings.dailyDigest}
-                      onCheckedChange={(checked) => handleNotificationChange('dailyDigest', checked)}
-                    />
                   </div>
-                </div>
+                )}
                 
-                <Button onClick={saveSettings} disabled={saving}>
+                <Button onClick={handleSaveSettings} disabled={saving}>
                   <Save className="w-4 h-4 mr-2" />
                   {saving ? 'Salvando...' : 'Salvar Alterações'}
                 </Button>
@@ -359,93 +300,95 @@ const Settings = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Tema</label>
-                    <div className="flex gap-4">
-                      <div
-                        className={`cursor-pointer p-4 rounded-lg border ${
-                          settings.theme === 'light'
-                            ? 'border-primary bg-primary/10'
-                            : 'border-gray-200'
-                        }`}
-                        onClick={() => handleAppearanceChange('theme', 'light')}
-                      >
-                        <div className="h-16 w-full bg-white border rounded-md shadow-sm mb-2"></div>
-                        <p className="text-center text-sm font-medium">Claro</p>
-                      </div>
-                      <div
-                        className={`cursor-pointer p-4 rounded-lg border ${
-                          settings.theme === 'dark'
-                            ? 'border-primary bg-primary/10'
-                            : 'border-gray-200'
-                        }`}
-                        onClick={() => handleAppearanceChange('theme', 'dark')}
-                      >
-                        <div className="h-16 w-full bg-gray-800 border rounded-md shadow-sm mb-2"></div>
-                        <p className="text-center text-sm font-medium">Escuro</p>
-                      </div>
-                      <div
-                        className={`cursor-pointer p-4 rounded-lg border ${
-                          settings.theme === 'system'
-                            ? 'border-primary bg-primary/10'
-                            : 'border-gray-200'
-                        }`}
-                        onClick={() => handleAppearanceChange('theme', 'system')}
-                      >
-                        <div className="h-16 w-full bg-gradient-to-r from-white to-gray-800 border rounded-md shadow-sm mb-2"></div>
-                        <p className="text-center text-sm font-medium">Sistema</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
+                {localSettings && (
+                  <div className="space-y-4">
                     <div>
-                      <p className="font-medium">Modo Compacto</p>
-                      <p className="text-sm text-gray-500">Reduz o espaçamento na interface</p>
-                    </div>
-                    <Switch 
-                      checked={settings.denseMode}
-                      onCheckedChange={(checked) => handleAppearanceChange('denseMode', checked)}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Alto Contraste</p>
-                      <p className="text-sm text-gray-500">Aumenta o contraste para melhor legibilidade</p>
-                    </div>
-                    <Switch 
-                      checked={settings.highContrast}
-                      onCheckedChange={(checked) => handleAppearanceChange('highContrast', checked)}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Tamanho da Fonte</label>
-                    <div className="flex gap-4">
-                      {['small', 'medium', 'large'].map((size) => (
-                        <div 
-                          key={size}
-                          className={`cursor-pointer flex-1 p-3 rounded-lg border text-center ${
-                            settings.fontSize === size
+                      <label className="text-sm font-medium mb-2 block">Tema</label>
+                      <div className="flex gap-4">
+                        <div
+                          className={`cursor-pointer p-4 rounded-lg border ${
+                            localSettings.appearance.theme === 'light'
                               ? 'border-primary bg-primary/10'
                               : 'border-gray-200'
                           }`}
-                          onClick={() => handleAppearanceChange('fontSize', size)}
+                          onClick={() => handleAppearanceChange('theme', 'light')}
                         >
-                          <p className={`font-medium ${
-                            size === 'small' ? 'text-sm' : size === 'large' ? 'text-lg' : ''
-                          }`}>
-                            {size === 'small' ? 'Pequeno' : size === 'medium' ? 'Médio' : 'Grande'}
-                          </p>
+                          <div className="h-16 w-full bg-white border rounded-md shadow-sm mb-2"></div>
+                          <p className="text-center text-sm font-medium">Claro</p>
                         </div>
-                      ))}
+                        <div
+                          className={`cursor-pointer p-4 rounded-lg border ${
+                            localSettings.appearance.theme === 'dark'
+                              ? 'border-primary bg-primary/10'
+                              : 'border-gray-200'
+                          }`}
+                          onClick={() => handleAppearanceChange('theme', 'dark')}
+                        >
+                          <div className="h-16 w-full bg-gray-800 border rounded-md shadow-sm mb-2"></div>
+                          <p className="text-center text-sm font-medium">Escuro</p>
+                        </div>
+                        <div
+                          className={`cursor-pointer p-4 rounded-lg border ${
+                            localSettings.appearance.theme === 'system'
+                              ? 'border-primary bg-primary/10'
+                              : 'border-gray-200'
+                          }`}
+                          onClick={() => handleAppearanceChange('theme', 'system')}
+                        >
+                          <div className="h-16 w-full bg-gradient-to-r from-white to-gray-800 border rounded-md shadow-sm mb-2"></div>
+                          <p className="text-center text-sm font-medium">Sistema</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Modo Compacto</p>
+                        <p className="text-sm text-gray-500">Reduz o espaçamento na interface</p>
+                      </div>
+                      <Switch 
+                        checked={localSettings.appearance.denseMode}
+                        onCheckedChange={(checked) => handleAppearanceChange('denseMode', checked)}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Alto Contraste</p>
+                        <p className="text-sm text-gray-500">Aumenta o contraste para melhor legibilidade</p>
+                      </div>
+                      <Switch 
+                        checked={localSettings.appearance.highContrast}
+                        onCheckedChange={(checked) => handleAppearanceChange('highContrast', checked)}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Tamanho da Fonte</label>
+                      <div className="flex gap-4">
+                        {['small', 'medium', 'large'].map((size) => (
+                          <div 
+                            key={size}
+                            className={`cursor-pointer flex-1 p-3 rounded-lg border text-center ${
+                              localSettings.appearance.fontSize === size
+                                ? 'border-primary bg-primary/10'
+                                : 'border-gray-200'
+                            }`}
+                            onClick={() => handleAppearanceChange('fontSize', size)}
+                          >
+                            <p className={`font-medium ${
+                              size === 'small' ? 'text-sm' : size === 'large' ? 'text-lg' : ''
+                            }`}>
+                              {size === 'small' ? 'Pequeno' : size === 'medium' ? 'Médio' : 'Grande'}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
                 
-                <Button onClick={saveSettings} disabled={saving}>
+                <Button onClick={handleSaveSettings} disabled={saving}>
                   <Save className="w-4 h-4 mr-2" />
                   {saving ? 'Salvando...' : 'Salvar Alterações'}
                 </Button>
@@ -497,7 +440,7 @@ const Settings = () => {
                   <Button variant="outline">Gerenciar Sessões</Button>
                 </div>
                 
-                <Button onClick={saveSettings} disabled={saving}>
+                <Button onClick={handleSaveSettings} disabled={saving}>
                   <Save className="w-4 h-4 mr-2" />
                   {saving ? 'Salvando...' : 'Salvar Alterações'}
                 </Button>
