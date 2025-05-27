@@ -49,11 +49,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     // Set up auth state listener
     const unsubscribe = authService.onAuthStateChange(
-      async (firebaseUser) => {
+      (firebaseUser) => {
         setIsLoading(true);
         
         if (firebaseUser) {
           console.log('AuthProvider: User authenticated', firebaseUser.uid);
+          // Use setTimeout to avoid blocking the auth state change
           setTimeout(async () => {
             try {
               const mappedUser = await mapFirebaseUserToAppUser(firebaseUser);

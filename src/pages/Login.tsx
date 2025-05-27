@@ -6,8 +6,7 @@ import LoginForm from '@/components/auth/LoginForm';
 import { toast } from "@/components/ui/use-toast";
 import { AlertCircle, Settings, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { appwriteConfig } from '@/integrations/appwrite/client';
-import { firebaseAppConfig } from '@/integrations/firebase/client';
+import { firebaseAppConfig } from '@/firebase/config';
 
 const Login = () => {
   const { user, isLoading, connectionError, retryConnection } = useAuth();
@@ -62,7 +61,7 @@ const Login = () => {
             <ol className="list-decimal ml-4 space-y-1 text-xs">
               <li>Verifique se o servidor backend está acessível</li>
               <li>Confira se as configurações no arquivo .env estão corretas</li>
-              <li>Certifique-se que os recursos necessários foram criados no Firebase ou Appwrite</li>
+              <li>Certifique-se que os recursos necessários foram criados no Firebase</li>
               <li>Verifique se o CORS está configurado para permitir solicitações</li>
             </ol>
           </div>
@@ -85,9 +84,7 @@ const Login = () => {
         <div className="mt-6 text-center text-sm text-gray-500">
           <p>Sistema CRM - Assistu</p>
           <p className="text-xs mt-1 text-gray-400">
-            Versão 1.0 - {appwriteConfig.useFirebaseFallback ? 
-              `Usando Firebase (${firebaseAppConfig.projectId})` : 
-              `Endpoint: ${appwriteConfig.endpoint}`}
+            Versão 1.0 - Firebase ({firebaseAppConfig.projectId})
           </p>
         </div>
       </div>
