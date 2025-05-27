@@ -11,7 +11,10 @@ export const useLeadsByStatus = () => {
   const { user } = useAuth();
 
   const fetchLeadsByStatus = async () => {
-    if (!user?.organizationId) return;
+    if (!user?.organizationId) {
+      setLoading(false);
+      return;
+    }
     
     try {
       setLoading(true);
@@ -31,6 +34,7 @@ export const useLeadsByStatus = () => {
     } catch (err: any) {
       setError(err.message);
       console.error('Error fetching leads by status:', err);
+      setLeadsByStatus({});
     } finally {
       setLoading(false);
     }

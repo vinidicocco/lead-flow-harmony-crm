@@ -25,7 +25,10 @@ export const useAgentMetrics = () => {
   const { user } = useAuth();
 
   const fetchMetrics = async () => {
-    if (!user?.organizationId) return;
+    if (!user?.organizationId) {
+      setLoading(false);
+      return;
+    }
     
     try {
       setLoading(true);
@@ -63,6 +66,13 @@ export const useAgentMetrics = () => {
     } catch (err: any) {
       setError(err.message);
       console.error('Error fetching agent metrics:', err);
+      setMetrics({
+        messagesSent: 0,
+        activeConversations: 0,
+        qualifiedLeads: 0,
+        scheduledMeetings: 0,
+        conversionRate: 0
+      });
     } finally {
       setLoading(false);
     }

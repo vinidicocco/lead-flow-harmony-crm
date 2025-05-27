@@ -1,3 +1,4 @@
+
 import { User, Profile, Tenant } from '@/types';
 
 export const mapFirebaseUserToUser = (firebaseUser: any): User => {
@@ -33,6 +34,8 @@ export const mapFirebaseUserToUser = (firebaseUser: any): User => {
     organizationId
   };
 };
+
+export const mapFirebaseUserToAppUser = mapFirebaseUserToUser;
 
 export const createDefaultUserFromFirebase = (firebaseUser: any): User => {
   return {

@@ -153,6 +153,10 @@ export const dbService = {
       
       // Add organization filter
       const orgId = getOrganizationId();
+      if (!orgId) {
+        return { documents: [], total: 0 };
+      }
+      
       const allConstraints = [
         where('organizationId', '==', orgId),
         ...constraints
@@ -182,7 +186,7 @@ export const dbService = {
       };
     } catch (error) {
       logDebug(`Error querying documents in ${collectionId}`, error);
-      throw error;
+      return { documents: [], total: 0 };
     }
   }
 };

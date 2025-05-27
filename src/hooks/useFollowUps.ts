@@ -11,7 +11,10 @@ export const useFollowUps = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchFollowUps = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
     
     try {
       setLoading(true);
