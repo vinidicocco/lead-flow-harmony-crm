@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { leadsService, meetingsService, followUpsService } from '@/services/firebaseService';
 import { Lead, Meeting, Stats, Profile } from '@/types';
@@ -32,6 +31,7 @@ export const useLeads = (profile?: Profile) => {
         notes: lead.notes,
         assignedTo: lead.assignedTo,
         profile: lead.profile,
+        organizationId: lead.organizationId,
         nextFollowUp: lead.nextFollowUp,
         lastContact: lead.lastContact,
         createdAt: lead.createdAt instanceof Date ? lead.createdAt.toISOString() : new Date().toISOString(),
@@ -80,7 +80,8 @@ export const useMeetings = (profile?: Profile) => {
         leadName: meeting.leadName,
         notes: meeting.notes,
         status: meeting.status,
-        profile: meeting.profile
+        profile: meeting.profile,
+        organizationId: meeting.organizationId
       }));
       
       setMeetings(mappedMeetings);

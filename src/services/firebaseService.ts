@@ -1,4 +1,3 @@
-
 import { 
   collection, 
   doc, 
@@ -375,3 +374,5 @@ export const agentConfigsService = {
     return await dbService.update(collections.AGENT_CONFIGS, id, updates);
   }
 };
+
+export { collections };

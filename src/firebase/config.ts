@@ -1,7 +1,9 @@
+
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
+import { getStorage } from 'firebase/storage';
 
 import { FirestoreCollections } from '@/types/firestore';
 
@@ -19,6 +21,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const firestore = getFirestore(app);
+const storage = getStorage(app);
 const functions = getFunctions(app);
 
 // Enable authentication with Google
@@ -31,7 +35,7 @@ if (process.env.NODE_ENV === 'development') {
   connectFunctionsEmulator(functions, 'localhost', 5001);
 }
 
-export { app, auth, db, functions, googleAuthProvider };
+export { app, auth, db, firestore, storage, functions, googleAuthProvider };
 
 export const logDebug = (message: string, data?: any) => {
   if (process.env.NODE_ENV === 'development') {
@@ -54,5 +58,10 @@ export const collections: FirestoreCollections = {
   WHATSAPP_SESSIONS: 'whatsapp_sessions',
   FOLLOW_UPS: 'follow_ups',
   USER_SETTINGS: 'user_settings',
-  PROFILES: 'profiles' // Adicionado PROFILES
+  PROFILES: 'profiles'
+};
+
+export const firebaseAppConfig = {
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'crm-assistu',
+  debugMode: process.env.NODE_ENV === 'development'
 };

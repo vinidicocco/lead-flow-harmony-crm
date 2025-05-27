@@ -1,7 +1,9 @@
 
 import { useState, useEffect } from 'react';
 import { getOrganizationId } from '@/firebase/config';
-import { dbService, collections } from '@/services/firebaseService';
+import { dbService } from '@/services/firebaseService';
+import { collections } from '@/services/firebaseService';
+import { WhatsAppSession as WhatsAppSessionType } from '@/types/firestore';
 
 interface WhatsAppSession {
   status: 'connected' | 'disconnected' | 'connecting';
@@ -13,9 +15,9 @@ interface WhatsAppSession {
 export const useWhatsAppSession = () => {
   const [session, setSession] = useState<WhatsAppSession>({
     status: 'disconnected',
-    qrCode: null,
-    lastConnection: null,
-    phoneNumber: null
+    qrCode: undefined,
+    lastConnection: undefined,
+    phoneNumber: undefined
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,11 +36,11 @@ export const useWhatsAppSession = () => {
       ]);
       
       if (result.documents.length > 0) {
-        const sessionData = result.documents[0];
+        const sessionData = result.documents[0] as WhatsAppSessionType;
         setSession({
           status: sessionData.status || 'disconnected',
           qrCode: sessionData.qrCode,
-          lastConnection: sessionData.lastActivity ? new Date(sessionData.lastActivity) : null,
+          lastConnection: sessionData.lastActivity ? new Date(sessionData.lastActivity) : undefined,
           phoneNumber: sessionData.phoneNumber
         });
       }
@@ -81,7 +83,7 @@ export const useWhatsAppSession = () => {
 
   const disconnectWhatsApp = async () => {
     try {
-      setSession(prev => ({ ...prev, status: 'disconnected', qrCode: null }));
+      setSession(prev => ({ ...prev, status: 'disconnected', qrCode: undefined }));
       return { success: true };
     } catch (err: any) {
       return { success: false, error: err.message };

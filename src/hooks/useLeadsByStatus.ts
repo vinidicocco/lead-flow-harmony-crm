@@ -20,7 +20,7 @@ export const useLeadsByStatus = () => {
       
       // Group leads by status
       const grouped = leads.reduce((acc: Record<string, Lead[]>, lead) => {
-        const status = lead.status || 'qualified';
+        const status = lead.status as string || 'qualified';
         if (!acc[status]) acc[status] = [];
         acc[status].push(lead);
         return acc;
@@ -38,7 +38,7 @@ export const useLeadsByStatus = () => {
 
   const updateLeadStatus = async (leadId: string, newStatus: string) => {
     try {
-      await leadsService.update(leadId, { status: newStatus });
+      await leadsService.update(leadId, { status: newStatus as Lead['status'] });
       await fetchLeadsByStatus(); // Refresh data
       return { success: true };
     } catch (err: any) {

@@ -10,29 +10,27 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { userSettingsService } from '@/services/firebaseService';
+import { UserSettings } from '@/types/firestore';
 
 const Settings = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [userSettings, setUserSettings] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    bio: '',
+  const [userSettings, setUserSettings] = useState<Partial<UserSettings>>({
     notifications: {
-      email: true,
-      push: true,
-      sms: false
+      emailNotifications: true,
+      pushNotifications: true,
+      meetingReminders: true,
+      leadUpdates: true,
+      taskReminders: true,
+      dailyDigest: false
     },
     appearance: {
       theme: 'light',
-      language: 'pt-BR'
-    },
-    security: {
-      twoFactorEnabled: false,
-      sessionTimeout: 30
+      denseMode: false,
+      highContrast: false,
+      fontSize: 'medium'
     }
   });
 
@@ -52,20 +50,26 @@ const Settings = () => {
         
         if (isMounted) {
           if (settings) {
-            setUserSettings(prev => ({
-              ...prev,
-              ...settings,
-              name: user.name || '',
-              email: user.email || '',
-            }));
+            setUserSettings(settings);
           } else {
             // Criar configurações padrão para o usuário
             const defaultSettings = {
-              ...userSettings,
-              name: user.name || '',
-              email: user.email || '',
               userId: user.id,
-              organizationId: user.organizationId
+              organizationId: user.organizationId,
+              notifications: {
+                emailNotifications: true,
+                pushNotifications: true,
+                meetingReminders: true,
+                leadUpdates: true,
+                taskReminders: true,
+                dailyDigest: false
+              },
+              appearance: {
+                theme: 'light' as const,
+                denseMode: false,
+                highContrast: false,
+                fontSize: 'medium' as const
+              }
             };
             
             await userSettingsService.create(defaultSettings);
@@ -101,11 +105,19 @@ const Settings = () => {
   }, [user]);
 
   const handleSave = async () => {
-    if (!user?.id) return;
+    if (!user?.id || !userSettings) return;
 
     setSaving(true);
     try {
-      await userSettingsService.update(user.id, userSettings);
+      if (userSettings.id) {
+        await userSettingsService.update(userSettings.id, userSettings);
+      } else {
+        await userSettingsService.create({
+          ...userSettings,
+          userId: user.id,
+          organizationId: user.organizationId
+        } as Omit<UserSettings, 'id' | 'createdAt' | 'updatedAt'>);
+      }
       toast.success('Configurações salvas com sucesso!');
     } catch (error) {
       console.error('Erro ao salvar configurações:', error);
@@ -119,9 +131,10 @@ const Settings = () => {
     setUserSettings(prev => {
       const newSettings = { ...prev };
       const keys = path.split('.');
-      let current = newSettings;
+      let current: any = newSettings;
       
       for (let i = 0; i < keys.length - 1; i++) {
+        if (!current[keys[i]]) current[keys[i]] = {};
         current = current[keys[i]];
       }
       
@@ -162,11 +175,10 @@ const Settings = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-4 gap-2 w-full md:w-auto">
+        <TabsList className="grid grid-cols-3 gap-2 w-full md:w-auto">
           <TabsTrigger value="profile">Perfil</TabsTrigger>
           <TabsTrigger value="notifications">Notificações</TabsTrigger>
           <TabsTrigger value="appearance">Aparência</TabsTrigger>
-          <TabsTrigger value="security">Segurança</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="space-y-4">
@@ -180,8 +192,8 @@ const Settings = () => {
                   <Label htmlFor="name">Nome</Label>
                   <Input
                     id="name"
-                    value={userSettings.name}
-                    onChange={(e) => updateSetting('name', e.target.value)}
+                    value={user.name || ''}
+                    readOnly
                   />
                 </div>
                 <div className="space-y-2">
@@ -189,27 +201,10 @@ const Settings = () => {
                   <Input
                     id="email"
                     type="email"
-                    value={userSettings.email}
-                    onChange={(e) => updateSetting('email', e.target.value)}
+                    value={user.email || ''}
+                    readOnly
                   />
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Telefone</Label>
-                <Input
-                  id="phone"
-                  value={userSettings.phone}
-                  onChange={(e) => updateSetting('phone', e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
-                <Textarea
-                  id="bio"
-                  placeholder="Conte um pouco sobre você..."
-                  value={userSettings.bio}
-                  onChange={(e) => updateSetting('bio', e.target.value)}
-                />
               </div>
             </CardContent>
           </Card>
@@ -227,8 +222,8 @@ const Settings = () => {
                   <p className="text-sm text-muted-foreground">Receba notificações importantes por email</p>
                 </div>
                 <Switch
-                  checked={userSettings.notifications.email}
-                  onCheckedChange={(checked) => updateSetting('notifications.email', checked)}
+                  checked={userSettings.notifications?.emailNotifications || false}
+                  onCheckedChange={(checked) => updateSetting('notifications.emailNotifications', checked)}
                 />
               </div>
               <div className="flex items-center justify-between">
@@ -237,18 +232,18 @@ const Settings = () => {
                   <p className="text-sm text-muted-foreground">Receba notificações push no navegador</p>
                 </div>
                 <Switch
-                  checked={userSettings.notifications.push}
-                  onCheckedChange={(checked) => updateSetting('notifications.push', checked)}
+                  checked={userSettings.notifications?.pushNotifications || false}
+                  onCheckedChange={(checked) => updateSetting('notifications.pushNotifications', checked)}
                 />
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Notificações por SMS</Label>
-                  <p className="text-sm text-muted-foreground">Receba notificações importantes por SMS</p>
+                  <Label>Lembretes de Reunião</Label>
+                  <p className="text-sm text-muted-foreground">Receba lembretes de reuniões agendadas</p>
                 </div>
                 <Switch
-                  checked={userSettings.notifications.sms}
-                  onCheckedChange={(checked) => updateSetting('notifications.sms', checked)}
+                  checked={userSettings.notifications?.meetingReminders || false}
+                  onCheckedChange={(checked) => updateSetting('notifications.meetingReminders', checked)}
                 />
               </div>
             </CardContent>
@@ -265,53 +260,13 @@ const Settings = () => {
                 <Label>Tema</Label>
                 <select
                   className="w-full px-3 py-2 border rounded-md"
-                  value={userSettings.appearance.theme}
+                  value={userSettings.appearance?.theme || 'light'}
                   onChange={(e) => updateSetting('appearance.theme', e.target.value)}
                 >
                   <option value="light">Claro</option>
                   <option value="dark">Escuro</option>
-                  <option value="auto">Automático</option>
+                  <option value="system">Automático</option>
                 </select>
-              </div>
-              <div className="space-y-2">
-                <Label>Idioma</Label>
-                <select
-                  className="w-full px-3 py-2 border rounded-md"
-                  value={userSettings.appearance.language}
-                  onChange={(e) => updateSetting('appearance.language', e.target.value)}
-                >
-                  <option value="pt-BR">Português (Brasil)</option>
-                  <option value="en-US">English (US)</option>
-                  <option value="es-ES">Español</option>
-                </select>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="security" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Segurança</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Autenticação de Dois Fatores</Label>
-                  <p className="text-sm text-muted-foreground">Adicione uma camada extra de segurança</p>
-                </div>
-                <Switch
-                  checked={userSettings.security.twoFactorEnabled}
-                  onCheckedChange={(checked) => updateSetting('security.twoFactorEnabled', checked)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Timeout da Sessão (minutos)</Label>
-                <Input
-                  type="number"
-                  value={userSettings.security.sessionTimeout}
-                  onChange={(e) => updateSetting('security.sessionTimeout', parseInt(e.target.value) || 30)}
-                />
               </div>
             </CardContent>
           </Card>

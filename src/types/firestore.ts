@@ -1,4 +1,3 @@
-
 import { Profile, Tenant } from './index';
 
 export interface FirestoreCollections {
@@ -97,6 +96,18 @@ export interface UserSettings {
   updatedAt: any;
 }
 
+export interface Communication {
+  id: string;
+  organizationId: string;
+  leadId: string;
+  type: 'whatsapp' | 'email' | 'call';
+  direction: 'inbound' | 'outbound';
+  content: string;
+  status: 'sent' | 'delivered' | 'read' | 'failed' | 'active';
+  createdAt: any;
+  updatedAt: any;
+}
+
 export interface WhatsAppSession {
   id: string;
   organizationId: string;
@@ -105,18 +116,6 @@ export interface WhatsAppSession {
   status: 'connected' | 'disconnected' | 'connecting';
   qrCode?: string;
   lastActivity: any;
-  createdAt: any;
-  updatedAt: any;
-}
-
-export interface Communication {
-  id: string;
-  organizationId: string;
-  leadId: string;
-  type: 'whatsapp' | 'email' | 'call';
-  direction: 'inbound' | 'outbound';
-  content: string;
-  status: 'sent' | 'delivered' | 'read' | 'failed';
   createdAt: any;
   updatedAt: any;
 }

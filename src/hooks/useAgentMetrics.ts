@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { communicationsService, leadsService, meetingsService } from '@/services/firebaseService';
 import { useAuth } from '@/context/AuthContext';
+import { Communication } from '@/types/firestore';
 
 interface AgentMetrics {
   messagesSent: number;
@@ -36,15 +37,15 @@ export const useAgentMetrics = () => {
         meetingsService.getAll()
       ]);
       
-      const messages = messagesResult.documents;
+      const messages = messagesResult.documents as Communication[];
       const leads = leadsResult.documents;
       const meetings = meetingsResult.documents;
       
       // Calculate metrics
       const messagesSent = messages.filter(m => m.direction === 'outbound').length;
       const activeConversations = messages.filter(m => m.status === 'active').length;
-      const qualifiedLeads = leads.filter(l => l.status === 'qualified').length;
-      const scheduledMeetings = meetings.filter(m => m.status === 'scheduled').length;
+      const qualifiedLeads = leads.filter(l => (l as any).status === 'qualified').length;
+      const scheduledMeetings = meetings.filter(m => (m as any).status === 'scheduled').length;
       
       const conversionRate = qualifiedLeads > 0 && scheduledMeetings > 0 
         ? Math.round((scheduledMeetings / qualifiedLeads) * 100) 
