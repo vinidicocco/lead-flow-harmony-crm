@@ -32,6 +32,6 @@ export const checkFirebaseConnection = async (): Promise<ConnectionResult> => {
 };
 
 export const firebaseAppConfig = {
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'crm-assistu',
-  debugMode: process.env.NODE_ENV === 'development'
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'crm-assistu',
+  debugMode: import.meta.env.DEV
 };
