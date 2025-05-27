@@ -1,5 +1,5 @@
 
-// This file is intentionally empty - no test data seeding
+// Arquivo intencionalmente vazio - sem dados de teste
 export const seedTestData = () => {
-  console.log('Test data seeding removed - using real Firebase data only');
+  console.log('Dados de teste removidos - usando apenas dados reais');
 };

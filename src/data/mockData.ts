@@ -1,7 +1,7 @@
 
 import { Lead, Meeting, Task, Stats } from '@/types';
 
-// No mock data - all empty arrays
+// Dados vazios - sem mock data
 export const mockLeads: Lead[] = [];
 export const mockMeetings: Meeting[] = [];
 export const mockTasks: Task[] = [];
@@ -25,7 +25,7 @@ export const mockStats: { [key in 'SALT' | 'GHF']: Stats } = {
   }
 };
 
-// Functions that return real data from Firebase (empty arrays as fallback)
+// Funções que retornam dados vazios
 export const getLeadsByProfile = (profile: 'SALT' | 'GHF') => {
   return [];
 };

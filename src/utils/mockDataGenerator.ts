@@ -1,7 +1,7 @@
 
 import { Lead, Meeting, Task } from '@/types';
 
-// Utility for generating empty data structures - no mock data
+// Utilitário para gerar estruturas de dados vazias - sem dados mock
 export const generateEmptyLeads = (): Lead[] => {
   return [];
 };
