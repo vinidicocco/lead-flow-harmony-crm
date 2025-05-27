@@ -9,3 +9,6 @@ export * from './connection';
 // Export types
 export type { AuthErrorResponse } from './auth';
 export type { ConnectionResult } from './connection';
+
+// Explicitly re-export to resolve ambiguity
+export { firebaseAppConfig } from './config';

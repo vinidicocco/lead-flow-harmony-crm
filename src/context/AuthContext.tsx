@@ -91,16 +91,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const currentUser = authService.getCurrentUser();
     if (currentUser) {
       console.log('AuthProvider: Found existing user session', currentUser.uid);
-      mapFirebaseUserToAppUser(currentUser).then(mappedUser => {
-        setUser(mappedUser);
-        setCurrentTenant(mappedUser.tenant);
-        localStorage.setItem('crm-user', JSON.stringify(mappedUser));
-        setConnectionError(null);
-        setIsLoading(false);
-      }).catch(error => {
-        console.error("Error mapping user:", error);
-        setIsLoading(false);
-      });
+      const processUser = async () => {
+        try {
+          const mappedUser = await mapFirebaseUserToAppUser(currentUser);
+          setUser(mappedUser);
+          setCurrentTenant(mappedUser.tenant);
+          localStorage.setItem('crm-user', JSON.stringify(mappedUser));
+          setConnectionError(null);
+        } catch (error) {
+          console.error("Error mapping user:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      processUser();
     } else {
       console.log('AuthProvider: No existing user session found');
       setIsLoading(false);
