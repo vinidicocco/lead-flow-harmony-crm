@@ -8,16 +8,17 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useUserSettings } from '@/hooks/useUserSettings';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Save } from 'lucide-react';
 
 const Settings = () => {
-  const { settings, isLoading, updateSettings } = useUserSettings();
+  const { settings, isLoading, error, updateSettings } = useUserSettings();
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
   });
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (settings?.profile) {
@@ -29,28 +30,32 @@ const Settings = () => {
     }
   }, [settings]);
 
-  const handleSave = async () => {
+  const handleSaveProfile = async () => {
+    if (!settings) return;
+    
+    setIsSaving(true);
     try {
       await updateSettings({
         profile: {
-          ...settings?.profile,
+          ...settings.profile,
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
-          avatar: settings?.profile?.avatar || '',
         }
       });
       
       toast({
-        title: "Configurações salvas",
-        description: "Suas configurações foram atualizadas com sucesso.",
+        title: "Perfil salvo",
+        description: "Suas informações de perfil foram atualizadas com sucesso.",
       });
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Erro",
-        description: "Não foi possível salvar as configurações.",
+        description: "Não foi possível salvar o perfil.",
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -63,12 +68,44 @@ const Settings = () => {
         [type]: value,
       }
     });
+
+    toast({
+      title: "Notificação atualizada",
+      description: `Configuração de ${type} foi ${value ? 'ativada' : 'desativada'}.`,
+    });
+  };
+
+  const handleThemeChange = async (theme: 'light' | 'dark' | 'system') => {
+    await updateSettings({ theme });
+    toast({
+      title: "Tema atualizado",
+      description: `Tema alterado para ${theme === 'light' ? 'claro' : theme === 'dark' ? 'escuro' : 'sistema'}.`,
+    });
+  };
+
+  const handleLanguageChange = async (language: 'pt' | 'en' | 'es') => {
+    await updateSettings({ language });
+    toast({
+      title: "Idioma atualizado",
+      description: "Configuração de idioma foi atualizada.",
+    });
   };
 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="text-center">
+          <p className="text-destructive mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>Tentar novamente</Button>
+        </div>
       </div>
     );
   }
@@ -94,6 +131,7 @@ const Settings = () => {
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Seu nome completo"
               />
             </div>
             <div className="space-y-2">
@@ -103,6 +141,7 @@ const Settings = () => {
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                placeholder="seu@email.com"
               />
             </div>
             <div className="space-y-2">
@@ -114,7 +153,23 @@ const Settings = () => {
                 placeholder="(11) 99999-9999"
               />
             </div>
-            <Button onClick={handleSave}>Salvar Perfil</Button>
+            <Button 
+              onClick={handleSaveProfile} 
+              disabled={isSaving}
+              className="w-full"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Salvar Perfil
+                </>
+              )}
+            </Button>
           </CardContent>
         </Card>
 
@@ -169,9 +224,7 @@ const Settings = () => {
               <Label>Tema</Label>
               <Select 
                 value={settings?.theme || 'light'} 
-                onValueChange={(value: 'light' | 'dark' | 'system') => 
-                  updateSettings({ theme: value })
-                }
+                onValueChange={handleThemeChange}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -187,9 +240,7 @@ const Settings = () => {
               <Label>Idioma</Label>
               <Select 
                 value={settings?.language || 'pt'} 
-                onValueChange={(value: 'pt' | 'en' | 'es') => 
-                  updateSettings({ language: value })
-                }
+                onValueChange={handleLanguageChange}
               >
                 <SelectTrigger>
                   <SelectValue />

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { agentService, AgentMetrics, AgentPerformanceData, AgentActivity } from '@/services/agentService';
+import { RefreshCw, Bot } from 'lucide-react';
 
 // Imported refactored components
 import { AgentDashboard } from '@/components/agent/AgentDashboard';
@@ -24,6 +25,7 @@ const GestaoAgenteIA = () => {
   const [performanceData, setPerformanceData] = useState<AgentPerformanceData[]>([]);
   const [recentActivities, setRecentActivities] = useState<AgentActivity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     loadAgentData();
@@ -32,7 +34,6 @@ const GestaoAgenteIA = () => {
   const loadAgentData = async () => {
     setIsLoading(true);
     try {
-      // Usando um ID de organização fixo para demonstração
       const organizationId = 'demo-org';
       
       const [metrics, performance, activities] = await Promise.all([
@@ -53,6 +54,25 @@ const GestaoAgenteIA = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await loadAgentData();
+      toast({
+        title: "Dados atualizados",
+        description: "Os dados do agente foram atualizados com sucesso.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível atualizar os dados."
+      });
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -91,10 +111,21 @@ const GestaoAgenteIA = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Gestão Agente IA</h1>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Bot className="h-8 w-8" />
+            Gestão Agente IA
+          </h1>
           <p className="text-muted-foreground">Monitoramento e configuração do agente IA SDR</p>
         </div>
         <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Atualizando...' : 'Atualizar'}
+          </Button>
           <Button variant="outline" onClick={handleRestartAgent}>
             Reiniciar Agente
           </Button>
@@ -110,7 +141,6 @@ const GestaoAgenteIA = () => {
           <TabsTrigger value="config">Configurações</TabsTrigger>
         </TabsList>
 
-        {/* Dashboard Tab */}
         <TabsContent value="dashboard" className="space-y-6">
           <AgentDashboard 
             agentMetrics={agentMetrics}
@@ -120,17 +150,14 @@ const GestaoAgenteIA = () => {
           />
         </TabsContent>
 
-        {/* Chat Tab */}
         <TabsContent value="chat" className="space-y-4">
           <AgentChatTab onDocumentUpload={handleDocumentUpload} />
         </TabsContent>
 
-        {/* Base de Conhecimento Tab */}
         <TabsContent value="conhecimento" className="space-y-4">
           <AgentKnowledgeBase onDocumentUpload={handleDocumentUpload} />
         </TabsContent>
 
-        {/* Configurações Tab */}
         <TabsContent value="config" className="space-y-4">
           <AgentConfigPanel 
             onSave={handleConfigSave} 
