@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { agentService, AgentConfig } from '@/services/agentService';
-import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
 
 interface AgentConfigPanelProps {
@@ -15,7 +14,6 @@ interface AgentConfigPanelProps {
 }
 
 export const AgentConfigPanel: React.FC<AgentConfigPanelProps> = ({ onSave, isAdmin = false }) => {
-  const { user } = useAuth();
   const [config, setConfig] = useState<AgentConfig>({
     agentName: '',
     personality: 'professional',
@@ -29,17 +27,14 @@ export const AgentConfigPanel: React.FC<AgentConfigPanelProps> = ({ onSave, isAd
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      loadConfig();
-    }
-  }, [user]);
+    loadConfig();
+  }, []);
 
   const loadConfig = async () => {
-    if (!user) return;
-
     setIsLoading(true);
     try {
-      const agentConfig = await agentService.getConfig(user.organizationId);
+      const organizationId = 'demo-org';
+      const agentConfig = await agentService.getConfig(organizationId);
       setConfig(agentConfig);
     } catch (error) {
       console.error('Error loading config:', error);
@@ -56,11 +51,10 @@ export const AgentConfigPanel: React.FC<AgentConfigPanelProps> = ({ onSave, isAd
   };
 
   const handleSave = async () => {
-    if (!user) return;
-
     setIsSaving(true);
     try {
-      await agentService.updateConfig(user.organizationId, config);
+      const organizationId = 'demo-org';
+      await agentService.updateConfig(organizationId, config);
       onSave(config);
     } catch (error) {
       console.error('Error saving config:', error);

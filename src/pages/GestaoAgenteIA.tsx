@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/context/AuthContext';
 import { agentService, AgentMetrics, AgentPerformanceData, AgentActivity } from '@/services/agentService';
 
 // Imported refactored components
@@ -14,7 +13,6 @@ import { AgentConfigPanel } from '@/components/agent/AgentConfigPanel';
 
 const GestaoAgenteIA = () => {
   const { toast } = useToast();
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [agentMetrics, setAgentMetrics] = useState<AgentMetrics>({
     mensagensEnviadas: 0,
@@ -28,20 +26,19 @@ const GestaoAgenteIA = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      loadAgentData();
-    }
-  }, [user]);
+    loadAgentData();
+  }, []);
 
   const loadAgentData = async () => {
-    if (!user) return;
-
     setIsLoading(true);
     try {
+      // Usando um ID de organização fixo para demonstração
+      const organizationId = 'demo-org';
+      
       const [metrics, performance, activities] = await Promise.all([
-        agentService.getMetrics(user.organizationId),
-        agentService.getPerformanceData(user.organizationId),
-        agentService.getRecentActivities(user.organizationId)
+        agentService.getMetrics(organizationId),
+        agentService.getPerformanceData(organizationId),
+        agentService.getRecentActivities(organizationId)
       ]);
 
       setAgentMetrics(metrics);
@@ -60,10 +57,9 @@ const GestaoAgenteIA = () => {
   };
 
   const handleConfigSave = async (config: any) => {
-    if (!user) return;
-
     try {
-      await agentService.updateConfig(user.organizationId, config);
+      const organizationId = 'demo-org';
+      await agentService.updateConfig(organizationId, config);
       toast({
         title: "Configurações salvas",
         description: "As configurações do agente foram atualizadas com sucesso.",
@@ -138,7 +134,7 @@ const GestaoAgenteIA = () => {
         <TabsContent value="config" className="space-y-4">
           <AgentConfigPanel 
             onSave={handleConfigSave} 
-            isAdmin={user?.isAdmin} 
+            isAdmin={true} 
           />
         </TabsContent>
       </Tabs>

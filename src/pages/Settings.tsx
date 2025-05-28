@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,19 +7,27 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useUserSettings } from '@/hooks/useUserSettings';
-import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
 const Settings = () => {
-  const { user } = useAuth();
   const { settings, isLoading, updateSettings } = useUserSettings();
   const { toast } = useToast();
   const [formData, setFormData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
+    name: '',
+    email: '',
     phone: '',
   });
+
+  useEffect(() => {
+    if (settings?.profile) {
+      setFormData({
+        name: settings.profile.name || '',
+        email: settings.profile.email || '',
+        phone: settings.profile.phone || '',
+      });
+    }
+  }, [settings]);
 
   const handleSave = async () => {
     try {
@@ -29,6 +37,7 @@ const Settings = () => {
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
+          avatar: settings?.profile?.avatar || '',
         }
       });
       
