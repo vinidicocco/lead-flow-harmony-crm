@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Search, Filter, Users, TrendingUp, Phone, Mail, Calendar, Loader2 } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface Lead {
   id: string;
@@ -20,28 +20,52 @@ interface Lead {
 }
 
 const Leads = () => {
-  const { user } = useAuth();
+  const { toast } = useToast();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
   useEffect(() => {
-    if (user) {
-      loadLeads();
-    }
-  }, [user]);
+    loadLeads();
+  }, []);
 
   const loadLeads = async () => {
     setIsLoading(true);
     try {
-      // TODO: Implementar chamada para API real
-      setLeads([]);
+      // Simular carregamento de dados do localStorage
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const stored = localStorage.getItem('leads_data');
+      if (stored) {
+        try {
+          setLeads(JSON.parse(stored));
+        } catch (error) {
+          console.error('Error parsing leads data:', error);
+          setLeads([]);
+        }
+      } else {
+        // Dados iniciais vazios
+        setLeads([]);
+        localStorage.setItem('leads_data', JSON.stringify([]));
+      }
     } catch (error) {
       console.error('Error loading leads:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível carregar os leads"
+      });
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleAddLead = () => {
+    toast({
+      title: "Funcionalidade em desenvolvimento",
+      description: "A criação de novos leads será implementada em breve."
+    });
   };
 
   const getStatusColor = (status: Lead['status']) => {
@@ -81,7 +105,7 @@ const Leads = () => {
           <h1 className="text-3xl font-bold">Leads</h1>
           <p className="text-muted-foreground">Gerencie seus prospects e oportunidades</p>
         </div>
-        <Button>
+        <Button onClick={handleAddLead}>
           <Plus className="mr-2 h-4 w-4" />
           Novo Lead
         </Button>
@@ -212,10 +236,10 @@ const Leads = () => {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" onClick={() => toast({ title: "Funcionalidade em desenvolvimento" })}>
                         Editar
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" onClick={() => toast({ title: "Funcionalidade em desenvolvimento" })}>
                         Contato
                       </Button>
                     </div>

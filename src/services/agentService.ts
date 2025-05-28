@@ -33,8 +33,17 @@ export interface AgentConfig {
   qualificationFlow: string;
 }
 
+export interface KnowledgeDocument {
+  id: string;
+  name: string;
+  size: number;
+  uploadedAt: string;
+  organizationId: string;
+}
+
 class AgentService {
   private readonly CONFIG_STORAGE_KEY = 'agent_config';
+  private readonly DOCUMENTS_STORAGE_KEY = 'agent_documents';
 
   async getMetrics(organizationId: string): Promise<AgentMetrics> {
     // Simular delay da API
@@ -128,6 +137,61 @@ class AgentService {
     
     localStorage.setItem(this.CONFIG_STORAGE_KEY, JSON.stringify(updated));
     console.log('Agent config updated:', config);
+  }
+
+  async sendMessage(organizationId: string, message: string): Promise<string> {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const responses = [
+      'Olá! Como posso ajudá-lo hoje?',
+      'Entendi sua solicitação. Vou processar as informações.',
+      'Baseado nos dados que tenho, posso sugerir algumas opções.',
+      'Preciso de mais detalhes para fornecer uma resposta mais precisa.',
+      'Vou verificar as informações na base de conhecimento.',
+    ];
+    
+    return responses[Math.floor(Math.random() * responses.length)];
+  }
+
+  async getDocuments(organizationId: string): Promise<KnowledgeDocument[]> {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const stored = localStorage.getItem(this.DOCUMENTS_STORAGE_KEY);
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch (error) {
+        console.error('Error parsing documents:', error);
+      }
+    }
+    
+    return [];
+  }
+
+  async uploadDocument(organizationId: string, file: File): Promise<void> {
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    const newDoc: KnowledgeDocument = {
+      id: Date.now().toString(),
+      name: file.name,
+      size: file.size,
+      uploadedAt: new Date().toISOString(),
+      organizationId,
+    };
+    
+    const existing = await this.getDocuments(organizationId);
+    const updated = [...existing, newDoc];
+    
+    localStorage.setItem(this.DOCUMENTS_STORAGE_KEY, JSON.stringify(updated));
+  }
+
+  async deleteDocument(organizationId: string, documentId: string): Promise<void> {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const existing = await this.getDocuments(organizationId);
+    const updated = existing.filter(doc => doc.id !== documentId);
+    
+    localStorage.setItem(this.DOCUMENTS_STORAGE_KEY, JSON.stringify(updated));
   }
 }
 

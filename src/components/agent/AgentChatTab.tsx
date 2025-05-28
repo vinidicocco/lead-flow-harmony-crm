@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { agentService } from '@/services/agentService';
-import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 import { Send, Loader2 } from 'lucide-react';
 
 interface ChatMessage {
@@ -20,13 +20,13 @@ interface AgentChatTabProps {
 }
 
 export const AgentChatTab: React.FC<AgentChatTabProps> = ({ onDocumentUpload }) => {
-  const { user } = useAuth();
+  const { toast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentMessage, setCurrentMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSendMessage = async () => {
-    if (!currentMessage.trim() || !user) return;
+    if (!currentMessage.trim()) return;
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -40,7 +40,8 @@ export const AgentChatTab: React.FC<AgentChatTabProps> = ({ onDocumentUpload }) 
     setIsLoading(true);
 
     try {
-      const response = await agentService.sendMessage(user.organizationId, currentMessage);
+      const organizationId = 'demo-org';
+      const response = await agentService.sendMessage(organizationId, currentMessage);
       
       const agentMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -61,6 +62,12 @@ export const AgentChatTab: React.FC<AgentChatTabProps> = ({ onDocumentUpload }) 
       };
 
       setMessages(prev => [...prev, errorMessage]);
+      
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível enviar a mensagem"
+      });
     } finally {
       setIsLoading(false);
     }

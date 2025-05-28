@@ -3,8 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { agentService, KnowledgeDocument } from '@/services/agentService';
-import { useAuth } from '@/context/AuthContext';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Loader2, File, Trash2, Upload } from 'lucide-react';
 
 interface AgentKnowledgeBaseProps {
@@ -12,23 +11,20 @@ interface AgentKnowledgeBaseProps {
 }
 
 export const AgentKnowledgeBase: React.FC<AgentKnowledgeBaseProps> = ({ onDocumentUpload }) => {
-  const { user } = useAuth();
+  const { toast } = useToast();
   const [documents, setDocuments] = useState<KnowledgeDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      loadDocuments();
-    }
-  }, [user]);
+    loadDocuments();
+  }, []);
 
   const loadDocuments = async () => {
-    if (!user) return;
-    
     setIsLoading(true);
     try {
-      const docs = await agentService.getDocuments(user.organizationId);
+      const organizationId = 'demo-org';
+      const docs = await agentService.getDocuments(organizationId);
       setDocuments(docs);
     } catch (error) {
       console.error('Error loading documents:', error);
@@ -44,11 +40,12 @@ export const AgentKnowledgeBase: React.FC<AgentKnowledgeBaseProps> = ({ onDocume
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !user) return;
+    if (!file) return;
     
     setIsUploading(true);
     try {
-      await agentService.uploadDocument(user.organizationId, file);
+      const organizationId = 'demo-org';
+      await agentService.uploadDocument(organizationId, file);
       toast({
         title: "Sucesso",
         description: "Documento enviado com sucesso"
@@ -72,7 +69,8 @@ export const AgentKnowledgeBase: React.FC<AgentKnowledgeBaseProps> = ({ onDocume
     if (!confirm("Deseja realmente excluir este documento?")) return;
     
     try {
-      await agentService.deleteDocument(user!.organizationId, documentId);
+      const organizationId = 'demo-org';
+      await agentService.deleteDocument(organizationId, documentId);
       toast({
         title: "Sucesso",
         description: "Documento excluído com sucesso"
@@ -111,18 +109,21 @@ export const AgentKnowledgeBase: React.FC<AgentKnowledgeBaseProps> = ({ onDocume
                 <Button 
                   disabled={isUploading}
                   className="cursor-pointer"
+                  asChild
                 >
-                  {isUploading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Enviando...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="mr-2 h-4 w-4" />
-                      Adicionar Documento
-                    </>
-                  )}
+                  <span>
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Enviando...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Adicionar Documento
+                      </>
+                    )}
+                  </span>
                 </Button>
               </label>
             </div>
