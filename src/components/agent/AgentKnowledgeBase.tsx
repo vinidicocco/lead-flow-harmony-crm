@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { knowledgeBaseService, checkStorageBucket } from '@/integrations/appwrite/knowledgebase';
+import { agentService, KnowledgeDocument } from '@/services/agentService';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 import { Loader2, File, Trash2, Upload } from 'lucide-react';
@@ -13,24 +13,14 @@ interface AgentKnowledgeBaseProps {
 
 export const AgentKnowledgeBase: React.FC<AgentKnowledgeBaseProps> = ({ onDocumentUpload }) => {
   const { user } = useAuth();
-  const [documents, setDocuments] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<KnowledgeDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
-  const [bucketExists, setBucketExists] = useState(false);
 
   useEffect(() => {
-    const checkBucket = async () => {
-      const exists = await checkStorageBucket();
-      setBucketExists(exists);
-      
-      if (exists && user) {
-        loadDocuments();
-      } else {
-        setIsLoading(false);
-      }
-    };
-    
-    checkBucket();
+    if (user) {
+      loadDocuments();
+    }
   }, [user]);
 
   const loadDocuments = async () => {
@@ -38,9 +28,7 @@ export const AgentKnowledgeBase: React.FC<AgentKnowledgeBaseProps> = ({ onDocume
     
     setIsLoading(true);
     try {
-      // We'll use the user's organization ID or tenant as the folder
-      const orgId = user.tenant === 'NEOIN' ? 'neoin' : 'salt-ghf';
-      const docs = await knowledgeBaseService.listDocuments(orgId);
+      const docs = await agentService.getDocuments(user.organizationId);
       setDocuments(docs);
     } catch (error) {
       console.error('Error loading documents:', error);
@@ -60,20 +48,12 @@ export const AgentKnowledgeBase: React.FC<AgentKnowledgeBaseProps> = ({ onDocume
     
     setIsUploading(true);
     try {
-      // Use tenant as folder structure
-      const orgId = user.tenant === 'NEOIN' ? 'neoin' : 'salt-ghf';
-      
-      // Create a safe filename
-      const timestamp = new Date().getTime();
-      const safeName = `${timestamp}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-      
-      await knowledgeBaseService.uploadDocument(safeName, file, orgId);
+      await agentService.uploadDocument(user.organizationId, file);
       toast({
         title: "Sucesso",
         description: "Documento enviado com sucesso"
       });
       
-      // Reload documents and notify parent
       await loadDocuments();
       onDocumentUpload();
     } catch (error: any) {
@@ -88,11 +68,11 @@ export const AgentKnowledgeBase: React.FC<AgentKnowledgeBaseProps> = ({ onDocume
     }
   };
 
-  const handleDelete = async (fileId: string) => {
+  const handleDelete = async (documentId: string) => {
     if (!confirm("Deseja realmente excluir este documento?")) return;
     
     try {
-      await knowledgeBaseService.deleteDocument(fileId);
+      await agentService.deleteDocument(user!.organizationId, documentId);
       toast({
         title: "Sucesso",
         description: "Documento excluído com sucesso"
@@ -106,32 +86,6 @@ export const AgentKnowledgeBase: React.FC<AgentKnowledgeBaseProps> = ({ onDocume
       });
     }
   };
-
-  if (!bucketExists) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Base de Conhecimento</CardTitle>
-          <CardDescription>
-            Gerencie os documentos e informações que o agente pode acessar
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4">
-            <Card className="bg-muted/50">
-              <CardContent className="p-4">
-                <p className="text-center text-muted-foreground py-8">
-                  É necessário configurar o bucket de armazenamento "knowledge-base" no Supabase.
-                  <br/>
-                  Por favor, configure o storage para gerenciar documentos.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card>
@@ -191,20 +145,20 @@ export const AgentKnowledgeBase: React.FC<AgentKnowledgeBaseProps> = ({ onDocume
           ) : (
             <div className="border rounded-lg divide-y">
               {documents.map((doc) => (
-                <div key={doc.name} className="flex items-center justify-between p-3 hover:bg-muted/50">
+                <div key={doc.id} className="flex items-center justify-between p-3 hover:bg-muted/50">
                   <div className="flex items-center space-x-3">
                     <File className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <p className="font-medium text-sm">{doc.name.split('-').slice(1).join('-')}</p>
+                      <p className="font-medium text-sm">{doc.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {(doc.metadata?.size / 1024).toFixed(2)} KB • Atualizado em {new Date(doc.updated_at).toLocaleDateString()}
+                        {(doc.size / 1024).toFixed(2)} KB • Atualizado em {new Date(doc.uploadedAt).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    onClick={() => handleDelete(`${user?.tenant === 'NEOIN' ? 'neoin' : 'salt-ghf'}/${doc.name}`)}
+                    onClick={() => handleDelete(doc.id)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

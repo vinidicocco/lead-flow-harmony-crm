@@ -1,10 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { agentService, AgentConfig } from '@/services/agentService';
+import { useAuth } from '@/context/AuthContext';
+import { Loader2 } from 'lucide-react';
 
 interface AgentConfigPanelProps {
   onSave: (config: any) => void;
@@ -12,26 +15,67 @@ interface AgentConfigPanelProps {
 }
 
 export const AgentConfigPanel: React.FC<AgentConfigPanelProps> = ({ onSave, isAdmin = false }) => {
-  const [config, setConfig] = useState({
-    agentName: 'Leandro',
+  const { user } = useAuth();
+  const [config, setConfig] = useState<AgentConfig>({
+    agentName: '',
     personality: 'professional',
     openaiApiKey: '',
     n8nWebhookUrl: '',
     whatsappInstance: 'default',
-    welcomeMessage: 'Olá, sou o assistente virtual da [Empresa]. Como posso ajudar você hoje?',
+    welcomeMessage: '',
     qualificationFlow: 'default',
   });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleChange = (field: string, value: string) => {
-    setConfig({
-      ...config,
+  useEffect(() => {
+    if (user) {
+      loadConfig();
+    }
+  }, [user]);
+
+  const loadConfig = async () => {
+    if (!user) return;
+
+    setIsLoading(true);
+    try {
+      const agentConfig = await agentService.getConfig(user.organizationId);
+      setConfig(agentConfig);
+    } catch (error) {
+      console.error('Error loading config:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleChange = (field: keyof AgentConfig, value: string) => {
+    setConfig(prev => ({
+      ...prev,
       [field]: value,
-    });
+    }));
   };
 
-  const handleSave = () => {
-    onSave(config);
+  const handleSave = async () => {
+    if (!user) return;
+
+    setIsSaving(true);
+    try {
+      await agentService.updateConfig(user.organizationId, config);
+      onSave(config);
+    } catch (error) {
+      console.error('Error saving config:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
@@ -69,11 +113,11 @@ export const AgentConfigPanel: React.FC<AgentConfigPanelProps> = ({ onSave, isAd
           </div>
           
           <div className="space-y-2">
-            <label className="text-sm font-medium">Exemplo de personalidade</label>
+            <label className="text-sm font-medium">Mensagem de Boas-vindas</label>
             <Textarea
               value={config.welcomeMessage}
               onChange={(e) => handleChange('welcomeMessage', e.target.value)}
-              placeholder="Digite aqui informações sobre a personalidade e ou comportamento especifico."
+              placeholder="Digite a mensagem que o agente enviará para novos contatos"
               rows={3}
             />
           </div>
@@ -143,23 +187,26 @@ export const AgentConfigPanel: React.FC<AgentConfigPanelProps> = ({ onSave, isAd
               </Select>
               <p className="text-xs text-muted-foreground">Instância da Evolution API a ser utilizada</p>
             </div>
-            
-            <div className="pt-4">
-              <Button className="w-full" onClick={handleSave}>
-                Salvar Configurações
-              </Button>
-            </div>
           </CardContent>
         </Card>
       )}
       
-      {!isAdmin && (
-        <div className="flex items-center justify-center">
-          <Button className="w-full mt-4" onClick={handleSave}>
-            Salvar Configurações
-          </Button>
-        </div>
-      )}
+      <div className="flex justify-end mt-4 md:col-span-2">
+        <Button 
+          onClick={handleSave} 
+          disabled={isSaving}
+          className="w-full md:w-auto"
+        >
+          {isSaving ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Salvando...
+            </>
+          ) : (
+            'Salvar Configurações'
+          )}
+        </Button>
+      </div>
     </div>
   );
 };

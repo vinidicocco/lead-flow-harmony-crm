@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { AgentMetricCard } from '@/components/agent/AgentMetricCard';
 import { AgentPerformanceChart } from '@/components/agent/AgentPerformanceChart';
 import { AgentActivityList } from '@/components/agent/AgentActivityList';
-import { BarChart2, MessageSquare, Users, Calendar } from 'lucide-react';
+import { BarChart2, MessageSquare, Users, Calendar, Loader2 } from 'lucide-react';
 
 interface AgentDashboardProps {
   agentMetrics: {
@@ -27,13 +27,23 @@ interface AgentDashboardProps {
     time: string;
     status: "success" | "pending" | "failed";
   }>;
+  isLoading?: boolean;
 }
 
 export const AgentDashboard: React.FC<AgentDashboardProps> = ({
   agentMetrics,
   performanceData,
-  recentActivities
+  recentActivities,
+  isLoading = false
 }) => {
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
@@ -42,40 +52,30 @@ export const AgentDashboard: React.FC<AgentDashboardProps> = ({
           value={agentMetrics.mensagensEnviadas}
           icon={<MessageSquare className="h-5 w-5" />}
           description="Total desde a ativação"
-          trend="+12% esta semana"
-          trendUp={true}
         />
         <AgentMetricCard 
           title="Conversas Ativas"
           value={agentMetrics.conversasAtivas}
           icon={<Users className="h-5 w-5" />}
           description="Leads em conversação"
-          trend="+3 desde ontem"
-          trendUp={true}
         />
         <AgentMetricCard 
           title="Leads Qualificados"
           value={agentMetrics.leadsQualificados}
           icon={<Users className="h-5 w-5" />}
           description="Total desde a ativação"
-          trend="+5 esta semana"
-          trendUp={true}
         />
         <AgentMetricCard 
           title="Reuniões Marcadas"
           value={agentMetrics.reunioesMarcadas}
           icon={<Calendar className="h-5 w-5" />}
           description="Total desde a ativação"
-          trend="+2 esta semana"
-          trendUp={true}
         />
         <AgentMetricCard 
           title="Taxa de Conversão"
           value={`${agentMetrics.taxaConversao}%`}
           icon={<BarChart2 className="h-5 w-5" />}
           description="Leads qualificados/reuniões"
-          trend="+2% esta semana"
-          trendUp={true}
         />
       </div>
 
@@ -86,7 +86,13 @@ export const AgentDashboard: React.FC<AgentDashboardProps> = ({
             <CardDescription>Atividade dos últimos 7 dias</CardDescription>
           </CardHeader>
           <CardContent>
-            <AgentPerformanceChart data={performanceData} />
+            {performanceData.length > 0 ? (
+              <AgentPerformanceChart data={performanceData} />
+            ) : (
+              <div className="flex justify-center items-center py-8 text-muted-foreground">
+                Nenhum dado de performance disponível
+              </div>
+            )}
           </CardContent>
         </Card>
         
@@ -96,7 +102,13 @@ export const AgentDashboard: React.FC<AgentDashboardProps> = ({
             <CardDescription>Últimas ações do agente</CardDescription>
           </CardHeader>
           <CardContent>
-            <AgentActivityList activities={recentActivities} />
+            {recentActivities.length > 0 ? (
+              <AgentActivityList activities={recentActivities} />
+            ) : (
+              <div className="flex justify-center items-center py-8 text-muted-foreground text-sm">
+                Nenhuma atividade recente
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

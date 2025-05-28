@@ -1,14 +1,16 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useProfile } from '@/context/ProfileContext';
 import { useAuth } from '@/context/AuthContext';
-import { LogOut, User, Camera } from 'lucide-react';
+import { LogOut, User, Camera, ChevronDown } from 'lucide-react';
 import TopNavMenu from './TopNavMenu';
-import ProfileSwitcher from './ProfileSwitcher';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { Profile } from '@/types';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -16,16 +18,10 @@ interface AppShellProps {
 
 const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const { user, logout, updateUserAvatar, currentTenant } = useAuth();
-  const { currentProfile } = useProfile();
+  const { currentProfile, setCurrentProfile, availableProfiles } = useProfile();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>('');
   const navigate = useNavigate();
-
-  const profileStyle = currentProfile === 'NEOIN' 
-    ? 'bg-neoin-light' 
-    : currentProfile === 'GHF' 
-      ? 'bg-salt-light' // Mesmo estilo para GHF
-      : 'bg-salt-light'; // SALT
 
   const handleAvatarChange = () => {
     if (avatarUrl) {
@@ -41,6 +37,11 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleProfileChange = (profile: Profile) => {
+    setCurrentProfile(profile);
+    toast.success(`Perfil alterado para ${profile}`);
   };
 
   const renderLogo = () => {
@@ -82,11 +83,10 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
       {/* Top Navigation Bar */}
       <header className="border-b bg-background">
         <div className="container mx-auto px-4 py-2 flex items-center justify-between">
-          {/* Left side - Logo and Profile */}
+          {/* Left side - Logo */}
           <div className="flex items-center gap-4">
             {renderLogo()}
             <h1 className="font-bold hidden sm:block">{currentProfile} CRM</h1>
-            <ProfileSwitcher />
           </div>
 
           {/* Center - Navigation */}
@@ -114,7 +114,7 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
                 </PopoverTrigger>
                 <PopoverContent className="w-80 p-4">
                   <div className="space-y-4">
-                    <h4 className="font-medium">Atualizar Foto de Perfil</h4>
+                    <h4 className="font-medium">Perfil do Usuário</h4>
                     <div className="flex items-center gap-3">
                       <Avatar className="w-16 h-16">
                         {avatarUrl ? (
@@ -132,8 +132,28 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
                         <p className="text-xs text-muted-foreground">{user?.email}</p>
                       </div>
                     </div>
+                    
+                    {/* Profile Switcher */}
+                    {availableProfiles.length > 1 && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Perfil Ativo</label>
+                        <Select value={currentProfile} onValueChange={handleProfileChange}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableProfiles.map((profile) => (
+                              <SelectItem key={profile} value={profile}>
+                                {profile}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                    
                     <div className="space-y-2">
-                      <label className="text-sm">URL da Imagem</label>
+                      <label className="text-sm font-medium">Atualizar Foto</label>
                       <input 
                         type="text" 
                         className="w-full px-3 py-2 border rounded-md text-sm"
